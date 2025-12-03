@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "properties": {
+      "cidrs": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "is_default": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "region": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "region",
+      "cidrs"
+    ],
+    "type": "object"
+  },
+  "title": "VPCList",
+  "type": "array"
+}

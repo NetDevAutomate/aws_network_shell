@@ -1,0 +1,347 @@
+"""Base shell class with hierarchy and context management."""
+
+import cmd2
+from typing import Optional
+from rich.console import Console
+from dataclasses import dataclass, field
+
+console = Console()
+
+# Cisco IOS-style command aliases
+ALIASES = {
+    "sh": "show",
+    "conf": "config",
+    "ex": "exit",
+    "int": "interface",
+    "no": "unset",
+}
+
+# Strict hierarchy: context_type -> {show: [...], set: [...], commands: [...]}
+HIERARCHY = {
+    None: {
+        "show": [
+            "version",
+            "global-networks",
+            "vpcs",
+            "transit_gateways",
+            "firewalls",
+            "dx-connections",
+            "enis",
+            "bgp-neighbors",
+            "ec2-instances",
+            "elbs",
+            "vpns",
+            "security-groups",
+            "unused-sgs",
+            "resolver-endpoints",
+            "resolver-rules",
+            "query-logs",
+            "peering-connections",
+            "prefix-lists",
+            "network-alarms",
+            "alarms-critical",
+            "client-vpn-endpoints",
+            "global-accelerators",
+            "ga-endpoint-health",
+            "endpoint-services",
+            "vpc-endpoints",
+            "config",
+            "running-config",
+            "cache",
+            "routing-cache",
+            "graph",
+        ],
+        "set": [
+            "global-network",
+            "vpc",
+            "transit-gateway",
+            "firewall",
+            "ec2-instance",
+            "elb",
+            "vpn",
+            "profile",
+            "regions",
+            "no-cache",
+            "output-format",
+            "output-file",
+            "watch",
+        ],
+        "commands": [
+            "show",
+            "set",
+            "write",
+            "trace",
+            "find_ip",
+            "find_prefix",
+            "find_null_routes",
+            "populate_cache",
+            "clear_cache",
+            "create_routing_cache",
+            "validate_graph",
+            "export_graph",
+            "clear",
+            "exit",
+        ],
+    },
+    "global-network": {
+        "show": ["detail", "core-networks"],
+        "set": ["core-network"],
+        "commands": ["show", "set", "exit", "end"],
+    },
+    "core-network": {
+        "show": [
+            "detail",
+            "segments",
+            "policy",
+            "routes",
+            "route-tables",
+            "blackhole-routes",
+            "policy-change-events",
+            "connect-attachments",
+            "connect-peers",
+            "rib",
+        ],
+        "set": ["route-table"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+    },
+    "route-table": {
+        "show": ["routes"],
+        "set": [],
+        "commands": ["show", "find_prefix", "find_null_routes", "exit", "end"],
+    },
+    "vpc": {
+        "show": [
+            "detail",
+            "route-tables",
+            "subnets",
+            "security-groups",
+            "nacls",
+            "internet-gateways",
+            "nat-gateways",
+            "endpoints",
+        ],
+        "set": ["route-table"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+    },
+    "transit-gateway": {
+        "show": ["detail", "route-tables", "attachments"],
+        "set": ["route-table"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+    },
+    "firewall": {
+        "show": ["detail", "rule-groups", "policy"],
+        "set": [],
+        "commands": ["show", "exit", "end"],
+    },
+    "ec2-instance": {
+        "show": ["detail", "security-groups", "enis", "routes"],
+        "set": [],
+        "commands": ["show", "exit", "end"],
+    },
+    "elb": {
+        "show": ["detail", "listeners", "targets", "health"],
+        "set": [],
+        "commands": ["show", "exit", "end"],
+    },
+    "vpn": {
+        "show": ["detail", "tunnels"],
+        "set": [],
+        "commands": ["show", "exit", "end"],
+    },
+}
+
+
+@dataclass
+class Context:
+    """Shell execution context."""
+
+    type: str
+    ref: str
+    name: str
+    data: dict = field(default_factory=dict)
+
+
+class AWSNetShellBase(cmd2.Cmd):
+    """Base shell with context management and navigation."""
+
+    intro = "AWS Network Tools CLI\nType '?' for help, 'show ?' for show options.\n"
+
+    def __init__(self):
+        super().__init__(allow_cli_args=False)
+        self.profile: Optional[str] = None
+        self.regions: list[str] = []
+        self.no_cache = False
+        self.output_format: str = "table"
+        self.watch_interval: int = 0
+        self.context_stack: list[Context] = []
+        self._cache: dict = {}
+
+        self.hidden_commands.extend(
+            [
+                "alias",
+                "macro",
+                "run_pyscript",
+                "run_script",
+                "shell",
+                "shortcuts",
+                "edit",
+                "py",
+                "ipy",
+                "history",
+                "quit",
+                "q",
+                "_relative_run_script",
+                "eof",
+                "eos",
+                "help",
+            ]
+        )
+        self._update_prompt()
+
+    @property
+    def ctx(self) -> Optional[Context]:
+        return self.context_stack[-1] if self.context_stack else None
+
+    @property
+    def ctx_type(self) -> Optional[str]:
+        return self.ctx.type if self.ctx else None
+
+    @property
+    def ctx_id(self) -> str:
+        return self.ctx.ref if self.ctx else ""
+
+    @property
+    def hierarchy(self) -> dict:
+        return HIERARCHY.get(self.ctx_type, HIERARCHY[None])
+
+    def _update_prompt(self):
+        if not self.context_stack:
+            self.prompt = "aws-net> "
+        else:
+            parts = [
+                f"{c.type[:2]}:{(c.name or c.ref)[:12]}" for c in self.context_stack
+            ]
+            self.prompt = f"aws-net/{'/'.join(parts)}> "
+
+    def _enter(self, ctx_type: str, res_id: str, name: str, data: dict = None):
+        """Enter a new context."""
+        self.context_stack.append(Context(ctx_type, res_id, name, data or {}))
+        self._update_prompt()
+
+    def _resolve(self, items: list, val: str) -> Optional[dict]:
+        """Resolve a resource by index, ID, or name."""
+        try:
+            idx = int(val)
+            if 1 <= idx <= len(items):
+                return items[idx - 1]
+        except ValueError:
+            pass
+        for item in items:
+            if item.get("id") == val or item.get("name", "").lower() == val.lower():
+                return item
+        return None
+
+    def _set_output_file(self, val):
+        """Set output file for saving results."""
+        self.output_file = val if val else None
+        if val:
+            console.print(f"[green]Output will be saved to: {val}[/]")
+        else:
+            console.print("[green]Output file cleared[/]")
+
+    def _save_output(self, data, filename: str = None):
+        """Save data to file in current output format."""
+        import json
+        import yaml
+
+        target = filename or getattr(self, "output_file", None)
+        if not target:
+            return False
+        try:
+            with open(target, "w") as f:
+                if self.output_format == "json":
+                    json.dump(data, f, indent=2, default=str)
+                elif self.output_format == "yaml":
+                    yaml.safe_dump(data, f, sort_keys=False)
+                else:
+                    f.write(str(data))
+            console.print(f"[green]Saved to {target}[/]")
+            return True
+        except Exception as e:
+            console.print(f"[red]Failed to save: {e}[/]")
+            return False
+
+    def do_exit(self, _):
+        """Go back one context level or quit."""
+        if self.context_stack:
+            self.context_stack.pop()
+            self._update_prompt()
+        else:
+            return True
+
+    def do_end(self, _):
+        """Return to root level."""
+        self.context_stack.clear()
+        self._update_prompt()
+
+    def do_clear(self, _):
+        """Clear the screen."""
+        console.clear()
+
+    def do_clear_cache(self, _):
+        """Clear all cached data."""
+        self._cache.clear()
+        console.print("[green]Cache cleared[/]")
+
+    def do_help(self, _):
+        """Show available commands."""
+        self._show_cmds()
+
+    def precmd(self, line: cmd2.Statement) -> cmd2.Statement:
+        """Expand aliases before command execution."""
+        raw = str(line).strip()
+        if not raw:
+            return line
+        # Expand aliases (e.g., 'sh vpcs' -> 'show vpcs')
+        parts = raw.split(maxsplit=1)
+        if parts[0] in ALIASES:
+            expanded = ALIASES[parts[0]] + (" " + parts[1] if len(parts) > 1 else "")
+            return cmd2.Statement(expanded)
+        return line
+
+    def _apply_pipe_filter(self, output: str, pipe_cmd: str) -> str:
+        """Apply pipe filter (include/exclude/grep) to output."""
+        parts = pipe_cmd.strip().split(maxsplit=1)
+        if len(parts) < 2:
+            return output
+        cmd, pattern = parts[0].lower(), parts[1]
+        lines = output.split("\n")
+        if cmd in ("include", "grep", "i"):
+            return "\n".join(line for line in lines if pattern.lower() in line.lower())
+        elif cmd in ("exclude", "e"):
+            return "\n".join(
+                line for line in lines if pattern.lower() not in line.lower()
+            )
+        return output
+
+    def default(self, stmt):
+        """Handle unknown commands and ? help."""
+        line = str(stmt).strip()
+        if line in ("?", ""):
+            self._show_cmds()
+        elif line.endswith("?"):
+            base = line[:-1].strip()
+            if base in ("show", "set"):
+                console.print(f"[bold]{base} options:[/]")
+                for opt in sorted(self.hierarchy.get(base, [])):
+                    console.print(f"  {base} {opt}")
+            else:
+                console.print(f"[red]Unknown: {base}[/]")
+        else:
+            console.print(f"[red]Unknown command: {line}[/]")
+
+    def _show_cmds(self):
+        """Display available commands for current context."""
+        console.print("[bold]Commands:[/]")
+        for cmd in sorted(self.hierarchy.get("commands", [])):
+            console.print(f"  {cmd}")

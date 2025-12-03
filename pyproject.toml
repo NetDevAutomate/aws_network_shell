@@ -1,0 +1,66 @@
+[project]
+name = "aws-network-tools"
+version = "0.1.0"
+description = "Modular AWS networking discovery and analysis tools"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "boto3>=1.34.0",
+    "rich>=13.0.0",
+    "typer>=0.12.0",
+    "pydantic>=2.0.0",
+    "thefuzz>=0.22.0",
+    "cmd2>=2.4.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "moto[all]>=5.0.0",
+]
+
+[project.scripts]
+aws-net = "aws_network_tools.cli:main"
+aws-net-shell = "aws_network_tools.shell:main"
+aws-trace = "aws_network_tools.traceroute.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aws_network_tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src/aws_network_tools",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=20",
+    "-m",
+    "not integration",
+    "-v",
+]
+markers = [
+    "integration: integration tests that require live AWS access"
+]
+
+[tool.coverage.run]
+source = ["src/aws_network_tools"]
+branch = true
+omit = [
+    "*/cli.py",  # CLI is alternative interface, less critical
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

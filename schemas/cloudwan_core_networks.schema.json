@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "properties": {
+      "global_network_id": {
+        "type": "string"
+      },
+      "global_network_name": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "regions": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "route_tables": {
+        "type": "array"
+      },
+      "segments": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "global_network_id"
+    ],
+    "type": "object"
+  },
+  "title": "CloudWanCoreNetworks",
+  "type": "array"
+}

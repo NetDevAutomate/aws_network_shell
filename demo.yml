@@ -1,0 +1,255 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: bash -l
+
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: /Users/taylaand/code/personal/aws_net_shell
+
+  # Export additional ENV variables
+  env:
+    recording: true
+
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 139
+
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 37
+
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: 0
+
+  # Quality
+  # 1 - 100
+  quality: 100
+
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: floating
+    title: Terminalizer
+    style:
+      border: 0px black solid
+      # boxShadow: none
+      # margin: 0px
+
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: block
+
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: "Monaco, Lucida Console, Ubuntu Mono, Monospace"
+
+  # The size of the font
+  fontSize: 12
+
+  # The height of lines
+  lineHeight: 1
+
+  # The spacing between letters
+  letterSpacing: 0
+
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#fc4384"
+    green: "#b3e33b"
+    yellow: "#ffa727"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff7fac"
+    brightGreen: "#c8ed71"
+    brightYellow: "#ebdf86"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+
+# Records, feel free to edit them
+records:
+  - delay: 356
+    content: "\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 5028
+    content: "\e[7mexport NO_SPINNER=1 \e[27m\r\n\r"
+  - delay: 1197
+    content: "\e[A\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[Cexport NO_SPINNER=1 \r\n\r\e[A\r\n\e[?2004l\r\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 5769
+    content: "\e[7mpython tests/test_all_commands_comprehensive.py -p taylaand+net-dev-Admin 2>&1 | tee /tmp/shell_test_o\e[27m\e[7mu\e[27m\e[7mtput.txt\e[27m"
+  - delay: 2200
+    content: "\e[A\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[C\e[Cpython tests/test_all_commands_comprehensive.py -p taylaand+net-dev-Admin 2>&1 | tee /tmp/shell_test_output.txt\r\n\e[?2004l\r"
+  - delay: 381
+    content: "AWS Network Shell - Comprehensive Command Tester\r\nProfile: taylaand+net-dev-Admin\r\nStarted: 2025-12-02T18:27:07.497184\r\nTesting: 78 commands\r\n================================================================================\r\n[  1/78] Testing: show version                                      "
+  - delay: 294
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show version\r\n        AWS Network Tools CLI\r\n          Version: 0.1.0\r\n          Python: 3.12.6\r\n          Platform: Darwin 25.1.0\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  2/78] Testing: show global-networks                              "
+  - delay: 1118
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show global-networks\r\n                                  Global Networks                          \r\n        ┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\r\n        ┃ # ┃ Name                     ┃ ID                               ┃\r\n        ┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩\r\n        │ 1 │ cloud-wan-global-network │ global-network-0c01c411650c19f69 │\r\n        └───┴──────────────────────────┴──────────────────────────────────┘\r\n        Use 'set global-network <#>' to select\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  3/78] Testing: show vpcs                                         "
+  - delay: 2837
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show vpcs\r\n                                                    VPCs                                             \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓\r\n        ┃ #  ┃ Name                      ┃ ID                    ┃ CIDRs           ┃ Region         ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩\r\n        │ 1  │                           │ vpc-bfdd27d9          │ 172.31.0.0/16   │ ap-northeast-1 │\r\n        │ 2  │                           │ vpc-4b900320          │ 172.31.0.0/16   │ ap-northeast-2 │\r\n        │ 3  │                           │ vpc-6344070a          │ 172.31.0.0/16   │ ap-northeast-3 │\r\n        │ 4  │                           │ vpc-230cc448          │ 172.31.0.0/16   │ ap-south-1     │\r\n        │ 5  │                           │ vpc-9529e2f3          │ 172.31.0.0/16   │ ap-southeast-1 │\r\n        │ 6  │ dev                       │ vpc-06f16b70f53c848cf │ 10.20.1.0/24    │ ap-southeast-2 │\r\n        │ 7  │ insp-ap-southeast-2       │ vpc-08d981c143483c657 │ 10.100.0.0/16   │ ap-southeast-2 │\r\n        │ 8  │ prod                      │ vpc-0dafde9673fc73bd7 │ 10.20.0.0/24    │ ap-southeast-2 │\r\n        │ 9  │                           │ vpc-d07b89b6          │ 172.31.0.0/16   │ ap-southeast-2 │\r\n        │ 10 │                           │ vpc-ccfac1a4          │ 172.31.0.0/16   │ ca-central-1   │\r\n        │ 11 │                           │ vpc-477ee82e          │ 172.31.0.0/16   │ eu-north-1     │\r\n        │ 12 │ on-premise                │ vpc-0e3c218f708dcc4ce │ 172.16.0.0/16   │ eu-west-1      │\r\n ✅ PASS\r\n\r\n[  4/78] Testing: show transit_gateways                             "
+  - delay: 12924
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show transit_gateways\r\n                         Transit Gateways                 \r\n        ┏━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓\r\n        ┃ # ┃ Name   ┃ ID                    ┃ Region    ┃\r\n        ┡━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩\r\n        │ 1 │        │ tgw-0c95a080fbcee0f8e │ eu-west-1 │\r\n        │ 2 │        │ tgw-0e6fa94ed138c1852 │ eu-west-2 │\r\n        │ 3 │ Pulumi │ tgw-0764f4cce8ca0b3bc │ us-east-2 │\r\n        │ 4 │ Pulumi │ tgw-0c7c0a005b74ba46b │ us-east-2 │\r\n        └───┴────────┴───────────────────────┴───────────┘\r\n        Use 'set transit-gateway <#>' to select\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  5/78] Testing: show firewalls                                    "
+  - delay: 5301
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show firewalls\r\n                        Network Firewalls                 \r\n        ┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓\r\n        ┃ # ┃ Name                      ┃ Region         ┃\r\n        ┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩\r\n        │ 1 │ anfw-sydney               │ ap-southeast-2 │\r\n        │ 2 │ npd-fw                    │ eu-west-1      │\r\n        │ 3 │ prd-fw                    │ eu-west-1      │\r\n        │ 4 │ shd-eu-west-1-internal-fw │ eu-west-1      │\r\n        │ 5 │ usr-fw                    │ eu-west-1      │\r\n        │ 6 │ npd-fw                    │ eu-west-2      │\r\n        │ 7 │ prd-fw                    │ eu-west-2      │\r\n        │ 8 │ shd-eu-west-2-internal-fw │ eu-west-2      │\r\n        │ 9 │ usr-fw                    │ eu-west-2      │\r\n        └───┴───────────────────────────┴────────────────┘\r\n        Use 'set firewall <#>' to select\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  6/78] Testing: show dx-connections                               "
+  - delay: 2622
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show dx-connections\r\n        No Direct Connect connections found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  7/78] Testing: show enis                                         "
+  - delay: 3322
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show enis\r\n                                                                    Interface Inventory                                                            \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓\r\n        ┃  # ┃ Region         ┃ Interface ID        ┃ Name ┃ Status ┃ Type                ┃ Private IP     ┃ Public IP      ┃ Attached To         ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩\r\n        │  1 │ ap-southeast-2 │ eni-04615e497abc44… │ -    │ in-use │ ec2_instance_conne… │ 10.20.0.46     │ -              │ Instance Connect    │\r\n        │    │                │                     │      │        │                     │                │                │ Endpoint (id:       │\r\n        │  2 │ ap-southeast-2 │ eni-0c6e3c9199e12a… │ -    │ in-use │ ec2_instance_conne… │ 10.20.1.36     │ -              │ Instance Connect    │\r\n        │    │                │                     │      │        │                     │                │                │ Endpoint (id:       │\r\n        │  3 │ ap-southeast-2 │ eni-022ed3504cb4b8… │ -    │ in-use │ interface           │ 10.20.0.71     │ -              │ Instance:           │\r\n        │    │                │                     │      │        │                     │                │                │ i-0298ce405a7b64e5c │\r\n        │  4 │ ap-southeast-2 │ eni-012dc74a2f7453… │ -    │ in-use │ interface           │ 10.20.1.76     │ -              │ Instance:           │\r\n        │    │                │                     │      │        │                     │                │                │ i-078ce62e4f7d103c6 │\r\n        │  5 │ ap-southeast-2 │ eni-07a59ca752923f… │ -    │ in-use │ interface           │ 10.20.1.93     │ -              │ Instance:           │\r\n        │    │                │                     │      │        │                     │                │                │ i-0c27ce9fa461bce4b │\r\n        │  6 │ ap-southeast-2 │ eni-0ae898fd928ef2… │ -    │ in-use │ interface           │ 10.20.0.87     │ -              │ Instance:           │\r\n        │    │                │                     │      │        │                     │                │                │ i-0f1f5808391cea868 │\r\n ✅ PASS\r\n\r\n[  8/78] Testing: show bgp-neighbors                                "
+  - delay: 63418
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show bgp-neighbors\r\n        No BGP neighbors found (VPN/TGW Connect)\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[  9/78] Testing: show ec2-instances                                "
+  - delay: 8262
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show ec2-instances\r\n                                                               EC2 Instances                                                       \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓\r\n        ┃ #  ┃ Name                                 ┃ ID                  ┃ Type     ┃ State   ┃ AZ              ┃ Region         ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩\r\n        │ 1  │ dev-instance-1-centralized-outbound  │ i-078ce62e4f7d103c6 │ t2.micro │ running │ ap-southeast-2a │ ap-southeast-2 │\r\n        │ 2  │ dev-instance-2-centralized-outbound  │ i-0c27ce9fa461bce4b │ t2.micro │ running │ ap-southeast-2b │ ap-southeast-2 │\r\n        │ 3  │ prod-instance-1-centralized-outbound │ i-0298ce405a7b64e5c │ t2.micro │ running │ ap-southeast-2a │ ap-southeast-2 │\r\n        │ 4  │ prod-instance-2-centralized-outbound │ i-0f1f5808391cea868 │ t2.micro │ running │ ap-southeast-2b │ ap-southeast-2 │\r\n        │ 5  │ workload-ldz-eu-west-1               │ i-04fe10555769735dc │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 6  │ workload-npd-eu-west-1               │ i-0178544c3d82093f8 │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 7  │ workload-npdDmz-eu-west-1            │ i-0d8be8253149dc9e8 │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 8  │ workload-prd-eu-west-1               │ i-04e3caa0a6e3b7bc7 │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 9  │ workload-prdDmz-eu-west-1            │ i-0fb86bd2ac219c91e │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 10 │ workload-qtn-eu-west-1               │ i-0f001e309861e63e5 │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 11 │ workload-shd-eu-west-1               │ i-0de6115412a72ce48 │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n        │ 12 │ workload-usr-eu-west-1               │ i-079e1ddc1d8228aae │ t3.micro │ running │ eu-west-1a      │ eu-west-1      │\r\n ✅ PASS\r\n\r\n[ 10/78] Testing: show elbs                                         "
+  - delay: 2898
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show elbs\r\n        No load balancers found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n\r\nProgress: 10/78 - 10 passed, 0 failed\r\n--------------------------------------------------------------------------------\r\n[ 11/78] Testing: show vpns                                         "
+  - delay: 63125
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show vpns\r\n        No VPN connections found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 12/78] Testing: show security-groups                              "
+  - delay: 27718
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show security-groups\r\n                                       Unused Security Groups                                \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\r\n        ┃  # ┃ Region         ┃ ID                   ┃ Name    ┃ Description                ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩\r\n        │  1 │ ca-central-1   │ sg-9a1722e0          │ default │ default VPC security group │\r\n        │  2 │ ap-northeast-1 │ sg-4b88740f          │ default │ default VPC security group │\r\n        │  3 │ eu-west-2      │ sg-01e584f46520818d2 │ default │ default VPC security group │\r\n        │  4 │ eu-west-2      │ sg-003b42db08a5f1478 │ default │ default VPC security group │\r\n        │  5 │ eu-west-2      │ sg-05deef17bad610e0b │ default │ default VPC security group │\r\n        │  6 │ eu-west-2      │ sg-09eb2e2559d4a9442 │ default │ default VPC security group │\r\n        │  7 │ eu-west-2      │ sg-00ba9f62bcaf7d89d │ default │ default VPC security group │\r\n        │  8 │ eu-west-1      │ sg-065af32e11072b639 │ default │ default VPC security group │\r\n        │  9 │ eu-west-1      │ sg-0980f490bb22eddf2 │ default │ default VPC security group │\r\n        │ 10 │ eu-west-1      │ sg-03833185c8371fb43 │ default │ default VPC security group │\r\n        │ 11 │ eu-west-1      │ sg-0f9b5b436c59d82de │ default │ default VPC security group │\r\n        │ 12 │ eu-west-1      │ sg-05438e55b4e119353 │ default │ default VPC security group │\r\n ✅ PASS\r\n\r\n[ 13/78] Testing: show unused-sgs                                   "
+  - delay: 31455
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show unused-sgs\r\n                                       Unused Security Groups                                \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\r\n        ┃  # ┃ Region         ┃ ID                   ┃ Name    ┃ Description                ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩\r\n        │  1 │ ca-central-1   │ sg-9a1722e0          │ default │ default VPC security group │\r\n        │  2 │ ap-northeast-3 │ sg-43e6d42f          │ default │ default VPC security group │\r\n        │  3 │ ap-northeast-1 │ sg-4b88740f          │ default │ default VPC security group │\r\n        │  4 │ eu-west-3      │ sg-83b351fa          │ default │ default VPC security group │\r\n        │  5 │ eu-north-1     │ sg-60773607          │ default │ default VPC security group │\r\n        │  6 │ eu-west-2      │ sg-01e584f46520818d2 │ default │ default VPC security group │\r\n        │  7 │ eu-west-2      │ sg-003b42db08a5f1478 │ default │ default VPC security group │\r\n        │  8 │ eu-west-2      │ sg-05deef17bad610e0b │ default │ default VPC security group │\r\n        │  9 │ eu-west-2      │ sg-09eb2e2559d4a9442 │ default │ default VPC security group │\r\n        │ 10 │ eu-west-2      │ sg-00ba9f62bcaf7d89d │ default │ default VPC security group │\r\n        │ 11 │ ap-northeast-2 │ sg-e6bf9699          │ default │ default VPC security group │\r\n        │ 12 │ eu-west-1      │ sg-065af32e11072b639 │ default │ default VPC security group │\r\n ✅ PASS\r\n\r\n[ 14/78] Testing: show resolver-endpoints                           "
+  - delay: 4126
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show resolver-endpoints\r\n        No Route 53 Resolver endpoints found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 15/78] Testing: show resolver-rules                               "
+  - delay: 4664
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show resolver-rules\r\n                                            Route 53 Resolver Rules                                    \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━┓\r\n        ┃  # ┃ Region         ┃ Name              ┃ Domain ┃ Type      ┃ Target IPs ┃ VPCs ┃ Status   ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━┩\r\n        │  1 │ ap-northeast-1 │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  2 │ ap-northeast-2 │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  3 │ ap-northeast-3 │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  4 │ ap-south-1     │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  5 │ ap-southeast-1 │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  6 │ ap-southeast-2 │ Internet Resolver │ .      │ RECURSIVE │            │    4 │ COMPLETE │\r\n        │  7 │ ca-central-1   │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │  8 │ eu-central-1   │ Internet Resolver │ .      │ RECURSIVE │            │    0 │ COMPLETE │\r\n        │  9 │ eu-north-1     │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n        │ 10 │ eu-west-1      │ Internet Resolver │ .      │ RECURSIVE │            │   16 │ COMPLETE │\r\n        │ 11 │ eu-west-2      │ Internet Resolver │ .      │ RECURSIVE │            │   13 │ COMPLETE │\r\n        │ 12 │ eu-west-3      │ Internet Resolver │ .      │ RECURSIVE │            │    1 │ COMPLETE │\r\n ✅ PASS\r\n\r\n[ 16/78] Testing: show query-logs                                   "
+  - delay: 3891
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show query-logs\r\n        No Route 53 Resolver query log configs found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 17/78] Testing: show peering-connections                          "
+  - delay: 2756
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show peering-connections\r\n        No VPC Peering connections found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 18/78] Testing: show prefix-lists                                 "
+  - delay: 69775
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show prefix-lists\r\n        No managed prefix lists found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 19/78] Testing: show network-alarms                               "
+  - delay: 3957
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show network-alarms\r\n        No network alarms found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 20/78] Testing: show alarms-critical                              "
+  - delay: 3852
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show alarms-critical\r\n        No network alarms found in ALARM state\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n\r\nProgress: 20/78 - 20 passed, 0 failed\r\n--------------------------------------------------------------------------------\r\n[ 21/78] Testing: show client-vpn-endpoints                         "
+  - delay: 3160
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show client-vpn-endpoints\r\n        No Client VPN endpoints found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 22/78] Testing: show global-accelerators                          "
+  - delay: 1183
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show global-accelerators\r\n        No Global Accelerators found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 23/78] Testing: show ga-endpoint-health                           "
+  - delay: 1885
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show ga-endpoint-health\r\n        No endpoints found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 24/78] Testing: show endpoint-services                            "
+  - delay: 63457
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show endpoint-services\r\n        No VPC Endpoint Services found\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 25/78] Testing: show vpc-endpoints                                "
+  - delay: 63670
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show vpc-endpoints\r\n                                                                 VPC Endpoints (Consumer)                                                          \r\n        ┏━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━┓\r\n        ┃  # ┃ Region         ┃ Name                      ┃ Service                 ┃ Type                ┃ VPC             ┃ Subnets ┃ State     ┃\r\n        ┡━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━┩\r\n        │  1 │ ap-southeast-2 │ anfw-sydney (ap-southeast │ Custom: 161b645e0309a79 │ GatewayLoadBalancer │ vpc-08d981c1434 │       1 │ available │\r\n        │  2 │ ap-southeast-2 │ anfw-sydney (ap-southeast │ Custom: cebec4dcf89944d │ GatewayLoadBalancer │ vpc-08d981c1434 │       1 │ available │\r\n        │  3 │ eu-west-1      │ npd-fw (eu-west-1a)       │ Custom: c9d26757b73f816 │ GatewayLoadBalancer │ vpc-0a5002cd51c │       1 │ available │\r\n        │  4 │ eu-west-1      │ npd-fw (eu-west-1b)       │ Custom: 9d7723d4763edce │ GatewayLoadBalancer │ vpc-0a5002cd51c │       1 │ available │\r\n        │  5 │ eu-west-1      │ usr-fw (eu-west-1a)       │ Custom: a6f193381622ac3 │ GatewayLoadBalancer │ vpc-016260b2494 │       1 │ available │\r\n        │  6 │ eu-west-1      │ usr-fw (eu-west-1b)       │ Custom: 53043d0800e1989 │ GatewayLoadBalancer │ vpc-016260b2494 │       1 │ available │\r\n        │  7 │ eu-west-1      │ prd-fw (eu-west-1b)       │ Custom: fa1a913b2cf3111 │ GatewayLoadBalancer │ vpc-0bb6702938f │       1 │ available │\r\n        │  8 │ eu-west-1      │ prd-fw (eu-west-1a)       │ Custom: 036f4c0efe271c2 │ GatewayLoadBalancer │ vpc-0bb6702938f │       1 │ available │\r\n        │  9 │ eu-west-1      │ shd-eu-west-1-internal-fw │ Custom: f76a5e65209462d │ GatewayLoadBalancer │ vpc-0d3d46bba41 │       1 │ available │\r\n        │ 10 │ eu-west-1      │ shd-eu-west-1-internal-fw │ Custom: 33e9603cfc58e02 │ GatewayLoadBalancer │ vpc-0d3d46bba41 │       1 │ available │\r\n        │ 11 │ eu-west-2      │ npd-fw (eu-west-2a)       │ Custom: 3289067c66c2453 │ GatewayLoadBalancer │ vpc-0d0174f2bc3 │       1 │ available │\r\n        │ 12 │ eu-west-2      │ npd-fw (eu-west-2b)       │ Custom: 5e60769dd9dfc6d │ GatewayLoadBalancer │ vpc-0d0174f2bc3 │       1 │ available │\r\n ✅ PASS\r\n\r\n[ 26/78] Testing: show config                                       "
+  - delay: 365
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show config\r\n        Profile: (default)\r\n        Regions: all\r\n        No-cache: off\r\n        Output-format: table\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 27/78] Testing: show running-config                               "
+  - delay: 309
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show running-config\r\n        Profile: (default)\r\n        Regions: all\r\n        No-cache: off\r\n        Output-format: table\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 28/78] Testing: show cache                                        "
+  - delay: 319
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show cache\r\n                    Cache Status             \r\n        ┏━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━┓\r\n        ┃ Cache     ┃ Entries ┃ Status      ┃\r\n        ┡━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━┩\r\n        │ In-memory │ 0       │ active      │\r\n        │ Topology  │ -       │ unavailable │\r\n        └───────────┴─────────┴─────────────┘\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 29/78] Testing: show routing-cache                                "
+  - delay: 268
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show routing-cache\r\n        Routing cache empty. Run 'create-routing-cache' to populate.\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 30/78] Testing: show graph                                        "
+  - delay: 301
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> show graph\r\n        ✓ aws-net\r\n          ✓ show version\r\n          ✓ show global-networks\r\n          ✓ show vpcs\r\n          ✓ show transit_gateways\r\n          ✓ show firewalls\r\n          ✓ show dx-connections\r\n          ✓ show enis\r\n          ✓ show bgp-neighbors\r\n          ✓ show ec2-instances\r\n          ✓ show elbs\r\n          ✓ show vpns\r\n          ✓ show security-groups\r\n          ✓ show unused-sgs\r\n          ✓ show resolver-endpoints\r\n          ✓ show resolver-rules\r\n ✅ PASS\r\n\r\n\r\nProgress: 30/78 - 30 passed, 0 failed\r\n--------------------------------------------------------------------------------\r\n[ 31/78] Testing: write                                             "
+  - delay: 310
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> write\r\n        Usage: write <filename>\r\n        Saves cached data in current output-format (table/json/yaml)\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 32/78] Testing: trace                                             "
+  - delay: 333
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> trace\r\n        Usage: trace <src_ip> <dst_ip> [--no-cache]\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 33/78] Testing: find_ip                                           "
+  - delay: 312
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> find_ip\r\n        Usage: find_ip <ip>\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 34/78] Testing: find_prefix                                       "
+  - delay: 292
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> find_prefix\r\n        Usage: find-prefix <cidr|prefix>\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 35/78] Testing: find_null_routes                                  "
+  - delay: 287
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> find_null_routes\r\n        Routing cache empty. Run 'create-routing-cache' first.\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 36/78] Testing: reachability                                      "
+  - delay: 273
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> reachability\r\n        Usage: reachability <src_ip> <dst_ip>\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 37/78] Testing: populate_cache                                    "
+  - delay: 294
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> populate_cache\r\n        Topology module not available: No module named 'aws_network_tools.shell.traceroute'\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 38/78] Testing: clear_cache                                       "
+  - delay: 303
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> clear_cache\r\n        Cache cleared\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 39/78] Testing: create_routing_cache                              "
+  - delay: 20872
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> create_routing_cache\r\n        Building routing cache...\r\n          VPC routes: 0\r\n          TGW routes: 49\r\n        Routing cache created: 49 routes\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 40/78] Testing: validate_graph                                    "
+  - delay: 494
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> validate_graph\r\n        ✓ Command graph is valid\r\n          All HIERARCHY entries have handlers\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n\r\nProgress: 40/78 - 40 passed, 0 failed\r\n--------------------------------------------------------------------------------\r\n[ 41/78] Testing: export_graph                                      "
+  - delay: 676
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> export_graph\r\n        Exported to command_hierarchy.md\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 42/78] Testing: set global-network                                "
+  - delay: 627
+    content: "        spawn uv run aws-net-shell -p taylaand+net-dev-Admin\r\n        AWS Network Tools CLI\r\n        Type '?' for help, 'show ?' for show options.\r\n        aws-net> set global-network\r\n        Usage: set global-network <#>\r\n        aws-net> exit\r\n ✅ PASS\r\n\r\n[ 43/78] Testing: set global-network → show detail                  "
+  - delay: 150004
+    content: "        TIMEOUT: Process exceeded time limit\r\n ❌ FAIL\r\n\r\n    Error: Command timed out (> 120s)\r\n    TIMEOUT: Process exceeded time limit\r\n[ 44/78] Testing: set global-network → show core-networks           "
+  - delay: 22038
+    content: ^C
+  - delay: 42
+    content: "\r\n\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 495
+    content: "^C\e[?2004l\r\e[?2004h\e[?2004l\r\r\n\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 2745
+    content: e
+  - delay: 231
+    content: x
+  - delay: 286
+    content: i
+  - delay: 15
+    content: u
+  - delay: 521
+    content: "\b\e[K"
+  - delay: 191
+    content: "\b\e[K"
+  - delay: 751
+    content: u
+  - delay: 199
+    content: t
+  - delay: 207
+    content: "\r\n\e[?2004l\rbash: exut: command not found\r\n\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 711
+    content: e
+  - delay: 249
+    content: x
+  - delay: 142
+    content: u
+  - delay: 183
+    content: t
+  - delay: 176
+    content: "\r\n\e[?2004l\rbash: exut: command not found\r\n\e[?2004h842f575e3614:aws_net_shell taylaand$ "
+  - delay: 682
+    content: e
+  - delay: 284
+    content: x
+  - delay: 157
+    content: i
+  - delay: 203
+    content: t
+  - delay: 242
+    content: "\r\n\e[?2004l\rlogout\r\n"
