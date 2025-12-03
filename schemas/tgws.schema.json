@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "properties": {
+      "attachments": {
+        "type": "array"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "region": {
+        "type": "string"
+      },
+      "route_tables": {
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "region"
+    ],
+    "type": "object"
+  },
+  "title": "TGWList",
+  "type": "array"
+}
