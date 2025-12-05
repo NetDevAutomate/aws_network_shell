@@ -303,7 +303,7 @@ class AWSNetShellBase(cmd2.Cmd):
                     indent = "  " * last_idx
                     prompt_text.append(Text(f"{indent}", style=separator_style))
                     prompt_text.append(prompt_parts[-1])
-                    prompt_text.append(Text(" $", style=separator_style))
+                    prompt_text.append(Text(" $ ", style=separator_style))
                 else:
                     # Only one context - add prompt marker on same line
                     prompt_text.append(Text(" $ ", style=separator_style))
