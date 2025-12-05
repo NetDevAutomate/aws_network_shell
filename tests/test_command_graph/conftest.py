@@ -14,6 +14,7 @@ from rich.console import Console
 
 # Import fixtures from main fixtures module
 from tests.fixtures import (
+    GLOBAL_NETWORK_FIXTURES,
     VPC_FIXTURES,
     SUBNET_FIXTURES,
     ROUTE_TABLE_FIXTURES,
@@ -38,6 +39,7 @@ from tests.fixtures import (
     RULE_GROUP_FIXTURES,
     IGW_FIXTURES,
     NAT_GATEWAY_FIXTURES,
+    get_global_network_by_id,
     get_vpc_detail,
     get_tgw_detail,
     get_core_network_detail,
@@ -239,13 +241,79 @@ def mock_cloudwan_client():
         def __init__(self, profile=None):
             self.profile = profile
             self.nm = MagicMock()
+            self._setup_nm_client()
+
+        def _setup_nm_client(self):
+            """Setup nm client to return fixture data."""
+            # Mock describe_global_networks - return ALL global networks from fixtures
+            def mock_describe_global_networks():
+                return {"GlobalNetworks": list(GLOBAL_NETWORK_FIXTURES.values())}
+
+            self.nm.describe_global_networks = mock_describe_global_networks
 
         def discover(self):
-            """Return all Core Networks as list."""
+            """Return all Core Networks as list (format expected by cloudwan module)."""
             core_networks = []
             for cn_id, cn_data in CLOUDWAN_FIXTURES.items():
-                core_networks.append(cn_data)
+                # Format matches what CloudWANClient.discover() returns
+                core_networks.append({
+                    "id": cn_data["CoreNetworkId"],
+                    "name": next(
+                        (t["Value"] for t in cn_data.get("Tags", []) if t["Key"] == "Name"),
+                        cn_id
+                    ),
+                    "arn": cn_data["CoreNetworkArn"],
+                    "global_network_id": cn_data["GlobalNetworkId"],
+                    "state": cn_data["State"],
+                    "regions": [edge["EdgeLocation"] for edge in cn_data.get("Edges", [])],
+                    "segments": [seg for seg in cn_data.get("Segments", [])],
+                    "route_tables": [],
+                    "policy": None,
+                    "core_networks": [],  # For compatibility
+                })
             return core_networks
+
+        def list_connect_peers(self, cn_id):
+            """Return connect peers from fixtures."""
+            from tests.fixtures.cloudwan_connect import CONNECT_PEER_FIXTURES
+
+            peers = []
+            for peer_id, peer_data in CONNECT_PEER_FIXTURES.items():
+                if peer_data.get("CoreNetworkId") == cn_id:
+                    config = peer_data.get("Configuration", {})
+                    peers.append({
+                        "id": peer_data["ConnectPeerId"],
+                        "name": next(
+                            (t["Value"] for t in peer_data.get("Tags", []) if t["Key"] == "Name"),
+                            peer_id
+                        ),
+                        "state": peer_data["State"],
+                        "edge_location": peer_data.get("EdgeLocation", ""),
+                        "protocol": config.get("Protocol", "GRE"),
+                        "bgp_configurations": config.get("BgpConfigurations", []),
+                    })
+            return peers
+
+        def list_connect_attachments(self, cn_id):
+            """Return connect attachments from fixtures."""
+            from tests.fixtures.cloudwan_connect import CONNECT_ATTACHMENT_FIXTURES
+
+            attachments = []
+            for att_id, att_data in CONNECT_ATTACHMENT_FIXTURES.items():
+                if att_data.get("CoreNetworkId") == cn_id:
+                    options = att_data.get("ConnectOptions", {})
+                    attachments.append({
+                        "id": att_data["AttachmentId"],
+                        "name": next(
+                            (t["Value"] for t in att_data.get("Tags", []) if t["Key"] == "Name"),
+                            att_id
+                        ),
+                        "state": att_data["State"],
+                        "edge_location": att_data.get("EdgeLocation", ""),
+                        "segment": att_data.get("SegmentName", ""),
+                        "protocol": options.get("Protocol", "GRE"),
+                    })
+            return attachments
 
     return MockCloudWANClient
 
@@ -384,8 +452,9 @@ def mock_firewall_client():
     return MockANFWClient
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_all_clients(
+    monkeypatch,
     mock_vpc_client,
     mock_tgw_client,
     mock_cloudwan_client,
@@ -394,22 +463,21 @@ def mock_all_clients(
     mock_vpn_client,
     mock_firewall_client,
 ):
-    """Mock all AWS clients at once."""
+    """AUTOMATICALLY mock all AWS clients for every test.
 
-    with patch("aws_network_tools.modules.vpc.VPCClient", mock_vpc_client), patch(
-        "aws_network_tools.modules.tgw.TGWClient", mock_tgw_client
-    ), patch(
-        "aws_network_tools.modules.cloudwan.CloudWANClient", mock_cloudwan_client
-    ), patch(
-        "aws_network_tools.modules.ec2.EC2Client", mock_ec2_client
-    ), patch(
-        "aws_network_tools.modules.elb.ELBClient", mock_elb_client
-    ), patch(
-        "aws_network_tools.modules.vpn.VPNClient", mock_vpn_client
-    ), patch(
-        "aws_network_tools.modules.anfw.ANFWClient", mock_firewall_client
-    ):
-        yield
+    This is the CRITICAL fixture that makes all tests work!
+    Uses monkeypatch to inject mock clients at module level.
+    """
+    # Patch all client classes at module level
+    monkeypatch.setattr("aws_network_tools.modules.vpc.VPCClient", mock_vpc_client)
+    monkeypatch.setattr("aws_network_tools.modules.tgw.TGWClient", mock_tgw_client)
+    monkeypatch.setattr("aws_network_tools.modules.cloudwan.CloudWANClient", mock_cloudwan_client)
+    monkeypatch.setattr("aws_network_tools.modules.ec2.EC2Client", mock_ec2_client)
+    monkeypatch.setattr("aws_network_tools.modules.elb.ELBClient", mock_elb_client)
+    monkeypatch.setattr("aws_network_tools.modules.vpn.VPNClient", mock_vpn_client)
+    monkeypatch.setattr("aws_network_tools.modules.anfw.ANFWClient", mock_firewall_client)
+
+    yield
 
 
 # =============================================================================

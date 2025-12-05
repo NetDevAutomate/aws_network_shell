@@ -28,6 +28,11 @@ from .tgw import (
     get_tgw_by_id,
     get_tgw_detail,
 )
+from .global_network import (
+    GLOBAL_NETWORK_FIXTURES,
+    get_global_network_by_id,
+    get_all_global_networks,
+)
 from .cloudwan import (
     CLOUDWAN_FIXTURES,
     CLOUDWAN_ATTACHMENT_FIXTURES,
@@ -84,6 +89,10 @@ from .gateways import (
 )
 
 __all__ = [
+    # Global Network
+    "GLOBAL_NETWORK_FIXTURES",
+    "get_global_network_by_id",
+    "get_all_global_networks",
     # VPC
     "VPC_FIXTURES",
     "SUBNET_FIXTURES",
