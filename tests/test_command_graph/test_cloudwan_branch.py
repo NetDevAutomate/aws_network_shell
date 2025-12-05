@@ -113,13 +113,14 @@ class TestCoreNetworkBranch:
         self, command_runner, isolated_shell, mock_cloudwan_client
     ):
         """Test: set core-network using # (enters core-network context)."""
-        # Enter global-network context
-        command_runner.run("set global-network global-network-0prod123")
+        # CRITICAL: Must follow show→set pattern for BOTH contexts
 
-        # Show core networks first
+        # Step 1: Enter global-network context (show→set)
+        command_runner.run("show global-networks")
+        command_runner.run("set global-network 1")  # Use #1 (global-network-0prod123 has core network)
+
+        # Step 2: Enter core-network context (show→set)
         command_runner.run("show core-networks")
-
-        # Enter core-network context by number
         result = command_runner.run("set core-network 1")
 
         assert_success(result)
