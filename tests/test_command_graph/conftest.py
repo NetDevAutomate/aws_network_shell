@@ -95,12 +95,22 @@ def command_runner(isolated_shell):
                 patches.append(patch_main)
                 patch_main.start()
 
-                # Patch root handler console
-                patch_root = patch(
-                    "aws_network_tools.shell.handlers.root.console", temp_console
-                )
-                patches.append(patch_root)
-                patch_root.start()
+                # Patch all handler consoles
+                handler_modules = [
+                    "aws_network_tools.shell.handlers.root",
+                    "aws_network_tools.shell.handlers.vpc",
+                    "aws_network_tools.shell.handlers.tgw",
+                    "aws_network_tools.shell.handlers.ec2",
+                    "aws_network_tools.shell.handlers.elb",
+                    "aws_network_tools.shell.handlers.vpn",
+                    "aws_network_tools.shell.handlers.firewall",
+                    "aws_network_tools.shell.handlers.cloudwan",
+                    "aws_network_tools.shell.handlers.utilities",
+                ]
+                for module in handler_modules:
+                    p = patch(f"{module}.console", temp_console)
+                    patches.append(p)
+                    p.start()
 
                 # Execute command
                 result = self.shell.onecmd(command)
@@ -404,8 +414,12 @@ def mock_ec2_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all EC2 instances as list."""
+        def discover(self, region=None):
+            """Return all EC2 instances as list.
+
+            Args:
+                region: Optional region filter (ignored in mock, returns all)
+            """
             instances = []
             for instance_id, instance_data in EC2_INSTANCE_FIXTURES.items():
                 instances.append(
@@ -463,6 +477,54 @@ def mock_elb_client():
             """Extract region from ARN."""
             parts = arn.split(":")
             return parts[3] if len(parts) > 3 else "us-east-1"
+
+        def get_elb_detail(self, elb_arn):
+            """Return detailed ELB information.
+
+            Args:
+                elb_arn: ELB ARN to get details for
+
+            Returns:
+                Dict with ELB details including listeners and target groups
+            """
+            elb_data = ELB_FIXTURES.get(elb_arn)
+            if not elb_data:
+                return {}
+
+            # Get associated listeners and target groups
+            listeners = [
+                {
+                    "arn": l["ListenerArn"],
+                    "port": l["Port"],
+                    "protocol": l["Protocol"],
+                }
+                for l in LISTENER_FIXTURES.values()
+                if l.get("LoadBalancerArn") == elb_arn
+            ]
+
+            target_groups = [
+                {
+                    "arn": tg["TargetGroupArn"],
+                    "name": tg["TargetGroupName"],
+                    "port": tg["Port"],
+                    "protocol": tg["Protocol"],
+                }
+                for tg in TARGET_GROUP_FIXTURES.values()
+                if tg.get("LoadBalancerArns") and elb_arn in tg["LoadBalancerArns"]
+            ]
+
+            return {
+                "arn": elb_arn,
+                "name": elb_data["LoadBalancerName"],
+                "type": elb_data["Type"],
+                "scheme": elb_data["Scheme"],
+                "state": elb_data["State"]["Code"],
+                "vpc_id": elb_data["VpcId"],
+                "dns_name": elb_data["DNSName"],
+                "region": self._get_region_from_arn(elb_arn),
+                "listeners": listeners,
+                "target_groups": target_groups,
+            }
 
     return MockELBClient
 

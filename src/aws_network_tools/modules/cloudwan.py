@@ -49,6 +49,9 @@ class CloudWANModule(ModuleInterface):
                 "routes",
                 "blackhole-routes",
                 "routing-policy-labels",
+                "rib",
+                "segments",
+                "policy",
             ],
         }
 

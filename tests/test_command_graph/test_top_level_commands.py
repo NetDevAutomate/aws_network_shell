@@ -69,19 +69,21 @@ class TestTopLevelShowCommands:
 
         assert_success(result, "show vpcs should succeed")
         assert_output_contains(result, "VPCs")
-        assert_output_contains(result, "vpc-0prod1234567890ab")
+        # Rich tables truncate long IDs with '…', so check for prefix
+        assert_output_contains(result, "vpc-0prod1234567")
         assert_output_contains(result, "production-vpc")
 
     @patch("aws_network_tools.modules.tgw.TGWClient")
     def test_show_transit_gateways(
         self, mock_client_class, command_runner, mock_tgw_client
     ):
-        """Test: show transit-gateways - displays all Transit Gateways."""
+        """Test: show transit_gateways - displays all Transit Gateways."""
         mock_client_class.return_value = mock_tgw_client()
 
-        result = command_runner.run("show transit-gateways")
+        # Command uses underscore (transit_gateways), not hyphen
+        result = command_runner.run("show transit_gateways")
 
-        assert_success(result, "show transit-gateways should succeed")
+        assert_success(result, "show transit_gateways should succeed")
         assert_output_contains(result, "Transit Gateways")
 
     @patch("aws_network_tools.modules.cloudwan.CloudWANClient")
