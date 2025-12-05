@@ -177,8 +177,66 @@ def mock_vpc_client():
             return vpcs
 
         def get_vpc_detail(self, vpc_id, region=None):
-            """Return detailed VPC information."""
-            return get_vpc_detail(vpc_id)
+            """Return detailed VPC information matching VPCClient format.
+
+            Real VPCClient returns: {id, name, region, cidrs, subnets, route_tables, ...}
+            NOT the fixture format: {vpc: {}, subnets: []}
+            """
+            # Get fixture data
+            fixture_detail = get_vpc_detail(vpc_id)
+            if not fixture_detail:
+                return {}
+
+            vpc_data = fixture_detail["vpc"]
+
+            # Transform to VPCClient format
+            return {
+                "id": vpc_id,
+                "name": next((t["Value"] for t in vpc_data.get("Tags", []) if t["Key"] == "Name"), vpc_id),
+                "region": region or self._get_region_from_id(vpc_id),
+                "cidrs": [vpc_data["CidrBlock"]],
+                "azs": [],
+                "subnets": [
+                    {
+                        "id": s["SubnetId"],
+                        "name": next((t["Value"] for t in s.get("Tags", []) if t["Key"] == "Name"), s["SubnetId"]),
+                        "az": s["AvailabilityZone"],
+                        "cidr": s["CidrBlock"]
+                    }
+                    for s in fixture_detail["subnets"]
+                ],
+                "igws": [],
+                "nats": [],
+                "route_tables": [
+                    {
+                        "id": rt["RouteTableId"],
+                        "name": next((t["Value"] for t in rt.get("Tags", []) if t["Key"] == "Name"), rt["RouteTableId"]),
+                        "main": any(a.get("Main", False) for a in rt.get("Associations", [])),
+                        "routes": []
+                    }
+                    for rt in fixture_detail["route_tables"]
+                ],
+                "security_groups": [
+                    {
+                        "id": sg["GroupId"],
+                        "name": sg.get("GroupName", ""),
+                        "description": sg.get("Description", "")
+                    }
+                    for sg in fixture_detail["security_groups"]
+                ],
+                "nacls": [
+                    {
+                        "id": nacl["NetworkAclId"],
+                        "name": next((t["Value"] for t in nacl.get("Tags", []) if t["Key"] == "Name"), nacl["NetworkAclId"])
+                    }
+                    for nacl in fixture_detail["nacls"]
+                ],
+                "attachments": [],
+                "endpoints": [],
+                "encrypted": [],
+                "no_ingress": [],
+                "tags": {}
+            }
 
         def _get_region_from_id(self, vpc_id: str) -> str:
             """Extract region from VPC ID pattern."""

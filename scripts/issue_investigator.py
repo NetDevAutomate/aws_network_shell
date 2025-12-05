@@ -18,6 +18,12 @@ Usage:
     # Output debug info to file
     uv run python scripts/issue_investigator.py --issue 5 --output debug_report.json
 
+    # Generate agent prompt (XML format - default, better for AI agents)
+    uv run python scripts/issue_investigator.py --issue 5 --agent-prompt
+
+    # Generate agent prompt in markdown format
+    uv run python scripts/issue_investigator.py --issue 5 --agent-prompt --format markdown
+
     # Verbose mode for more debug output
     uv run python scripts/issue_investigator.py --issue 5 --verbose
 """
@@ -89,8 +95,89 @@ class IssueInvestigation:
         """Convert to dictionary for JSON serialization."""
         return asdict(self)
 
-    def to_agent_prompt(self) -> str:
-        """Generate a structured prompt for an AI agent to work on this issue."""
+    def to_agent_prompt(self, fmt: str = "xml") -> str:
+        """Generate a structured prompt for an AI agent to work on this issue.
+        
+        Args:
+            fmt: Output format - "xml" (recommended for agents) or "markdown"
+        """
+        if fmt == "xml":
+            return self._to_xml_prompt()
+        return self._to_markdown_prompt()
+
+    def _to_xml_prompt(self) -> str:
+        """Generate XML-structured prompt (more efficient for AI agents)."""
+        lines = []
+        lines.append("<issue_investigation>")
+        
+        lines.append(f"  <issue number=\"{self.issue_number}\">")
+        lines.append(f"    <title>{self.issue_title}</title>")
+        lines.append(f"    <url>{self.issue_url}</url>")
+        lines.append(f"    <status>{self.status}</status>")
+        lines.append(f"    <reproduced>{self.reproduced}</reproduced>")
+        lines.append("  </issue>")
+        
+        lines.append("  <description>")
+        lines.append(self.issue_body or "No description provided")
+        lines.append("  </description>")
+        
+        if self.commands_run:
+            lines.append("  <commands_executed>")
+            for i, result in enumerate(self.commands_run, 1):
+                lines.append(f"    <command index=\"{i}\">")
+                lines.append(f"      <input>{result.command}</input>")
+                if result.has_error:
+                    lines.append(f"      <error type=\"{result.error_type}\">{result.error_message}</error>")
+                output = result.output[:1500] + ('...' if len(result.output) > 1500 else '')
+                lines.append(f"      <output><![CDATA[{output}]]></output>")
+                lines.append(f"      <duration_seconds>{result.duration_seconds:.2f}</duration_seconds>")
+                lines.append("    </command>")
+            lines.append("  </commands_executed>")
+        
+        if self.actual_errors:
+            lines.append("  <errors_detected>")
+            for error in self.actual_errors:
+                lines.append(f"    <error>{error}</error>")
+            lines.append("  </errors_detected>")
+        
+        if self.debug_info:
+            lines.append("  <debug_info>")
+            for key, value in self.debug_info.items():
+                lines.append(f"    <{key}>{value}</{key}>")
+            lines.append("  </debug_info>")
+        
+        lines.append("  <task>")
+        if self.reproduced:
+            lines.append("""    <objective>Fix the confirmed issue</objective>
+    <steps>
+      <step>Analyze the error messages and stack traces in commands_executed</step>
+      <step>Search the codebase for relevant code handling these commands</step>
+      <step>Identify the root cause of the issue</step>
+      <step>Propose and implement a fix</step>
+      <step>Add a test case to prevent regression</step>
+    </steps>""")
+        else:
+            lines.append("""    <objective>Investigate why issue could not be reproduced</objective>
+    <steps>
+      <step>Review the commands and output above</step>
+      <step>Check if the issue might be environment-specific</step>
+      <step>Look for any partial failures or warnings</step>
+      <step>Determine if the issue was already fixed or needs different reproduction steps</step>
+      <step>Update the issue status accordingly</step>
+    </steps>""")
+        lines.append("  </task>")
+        
+        if self.recommendations:
+            lines.append("  <recommendations>")
+            for rec in self.recommendations:
+                lines.append(f"    <recommendation>{rec}</recommendation>")
+            lines.append("  </recommendations>")
+        
+        lines.append("</issue_investigation>")
+        return "\n".join(lines)
+
+    def _to_markdown_prompt(self) -> str:
+        """Generate markdown prompt (better for human readability)."""
         sections = []
         
         sections.append(f"# GitHub Issue #{self.issue_number}: {self.issue_title}")
@@ -469,11 +556,12 @@ def display_investigation_results(investigation: IssueInvestigation, verbose: bo
         console.print(Panel(investigation.raw_output[:2000], title="Shell Output"))
 
 
-def save_investigation(investigation: IssueInvestigation, output_path: Path) -> None:
+def save_investigation(investigation: IssueInvestigation, output_path: Path, fmt: str = "xml") -> None:
     """Save investigation results to a file."""
     data = {
         "investigation": investigation.to_dict(),
-        "agent_prompt": investigation.to_agent_prompt()
+        "agent_prompt_xml": investigation.to_agent_prompt(fmt="xml"),
+        "agent_prompt_markdown": investigation.to_agent_prompt(fmt="markdown"),
     }
     
     with open(output_path, 'w') as f:
@@ -495,6 +583,8 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--agent-prompt", "-a", action="store_true", 
                         help="Print agent-ready prompt to stdout")
+    parser.add_argument("--format", "-f", choices=["xml", "markdown"], default="xml",
+                        help="Agent prompt format: xml (default, better for agents) or markdown")
     parser.add_argument("--list", "-l", action="store_true", help="Just list open issues")
     args = parser.parse_args()
 
@@ -533,9 +623,13 @@ def main():
         # Print agent prompt if requested
         if args.agent_prompt:
             console.print("\n" + "="*60)
-            console.print("[bold]AGENT PROMPT[/bold]")
+            console.print(f"[bold]AGENT PROMPT ({args.format.upper()})[/bold]")
             console.print("="*60 + "\n")
-            console.print(Markdown(investigation.to_agent_prompt()))
+            prompt = investigation.to_agent_prompt(fmt=args.format)
+            if args.format == "markdown":
+                console.print(Markdown(prompt))
+            else:
+                console.print(Syntax(prompt, "xml", theme="monokai"))
         
         # Exit code based on status
         if investigation.reproduced:

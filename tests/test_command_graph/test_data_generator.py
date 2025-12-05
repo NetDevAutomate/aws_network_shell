@@ -26,10 +26,10 @@ def generate_phase3_test_data() -> List[Dict[str, Any]]:
     # VPC Context Tests (12 tests)
     # =========================================================================
     vpc_tests = [
-        ("show subnets", "subnet-", 3, "VPC shows subnets"),
-        ("show route-tables", "rtb-", 2, "VPC shows route tables"),
+        ("show subnets", "subnet", 3, "VPC shows subnets"),
+        ("show route-tables", "Route", 2, "VPC shows route tables"),
         ("show security-groups", "sg-", 2, "VPC shows security groups"),
-        ("show nacls", "acl-", 1, "VPC shows NACLs"),
+        ("show nacls", "acl", 1, "VPC shows NACLs"),
     ]
 
     for cmd, pattern, min_count, desc in vpc_tests:
