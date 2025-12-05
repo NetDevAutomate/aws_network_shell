@@ -82,10 +82,21 @@ class ELBHandlersMixin:
         table.add_column("Protocol")
         table.add_column("Default Action")
         for listener in listeners:
+            # Build default action summary from default_actions list
+            actions = listener.get("default_actions", [])
+            action_strs = []
+            for action in actions:
+                action_type = action.get("type", "")
+                if action_type == "forward" and action.get("target_group"):
+                    tg_name = action["target_group"].get("name", "")
+                    action_strs.append(f"forward → {tg_name}")
+                else:
+                    action_strs.append(action_type)
+            default_action = ", ".join(action_strs) if action_strs else ""
             table.add_row(
                 str(listener.get("port", "")),
                 listener.get("protocol", ""),
-                listener.get("default_action", ""),
+                default_action,
             )
         console.print(table)
 
@@ -135,8 +146,10 @@ class ELBHandlersMixin:
                 if state == "unhealthy"
                 else "yellow"
             )
+            # Use 'id' field (module output) or fallback to 'target' for compatibility
+            target_id = h.get("id", h.get("target", ""))
             table.add_row(
-                h.get("target", ""),
+                target_id,
                 str(h.get("port", "")),
                 f"[{style}]{state}[/]",
                 h.get("reason", ""),
