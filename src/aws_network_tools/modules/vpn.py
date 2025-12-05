@@ -24,7 +24,14 @@ class VPNModule(ModuleInterface):
     @property
     def show_commands(self) -> Dict[str, List[str]]:
         return {
-            None: ["bgp-neighbors"],
+            None: ["vpns", "bgp-neighbors"],
+            "vpn": ["detail", "tunnels"],
+        }
+
+    @property
+    def context_commands(self) -> Dict[str, List[str]]:
+        return {
+            "vpn": [],
         }
 
     def execute(self, shell: Any, command: str, args: str):
