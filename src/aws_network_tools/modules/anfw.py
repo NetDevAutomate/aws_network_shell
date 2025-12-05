@@ -34,7 +34,7 @@ class ANFWModule(ModuleInterface):
 
     @property
     def show_commands(self) -> Dict[str, List[str]]:
-        return {None: ["firewalls"], "aws-network-firewall": ["detail", "rule-groups"]}
+        return {None: ["firewalls"], "aws-network-firewall": ["detail", "rule-groups", "policy"]}
 
     def execute(self, shell, command: str, args: str):
         """Enter firewall context"""
