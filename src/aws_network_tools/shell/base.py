@@ -136,7 +136,7 @@ HIERARCHY = {
         "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
     },
     "firewall": {
-        "show": ["detail", "rule-groups", "firewall-policy"],
+        "show": ["detail", "rule-groups", "policy", "firewall-policy"],
         "set": [],
         "commands": ["show", "exit", "end"],
     },
