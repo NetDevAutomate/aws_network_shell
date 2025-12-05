@@ -24,7 +24,6 @@ dev = [
 ]
 
 [project.scripts]
-aws-net = "aws_network_tools.cli:main"
 aws-net-shell = "aws_network_tools.shell:main"
 aws-trace = "aws_network_tools.traceroute.cli:main"
 

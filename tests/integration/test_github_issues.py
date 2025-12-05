@@ -46,7 +46,7 @@ class TestIssue10_ELB_NoOutput:
     def test_issue_10_show_listeners(self):
         """Binary: show listeners should return listener data, not 'No listeners'."""
         # Spawn real shell
-        child = pexpect.spawn('aws-net', timeout=10)
+        child = pexpect.spawn('aws-net-shell', timeout=10)
 
         try:
             # Wait for prompt
@@ -96,7 +96,7 @@ class TestIssue9_EC2_AllENIs:
     @pytest.mark.issue_9
     def test_issue_9_show_enis_filtered(self):
         """Binary: show enis should return ONLY instance ENI, not all account ENIs."""
-        child = pexpect.spawn('aws-net', timeout=10)
+        child = pexpect.spawn('aws-net-shell', timeout=10)
 
         try:
             child.expect('aws-net>')
