@@ -1,0 +1,20 @@
+{
+  "name": "dracula",
+  "description": "Dracula theme for AWS Network Shell",
+  "author": "Dracula Theme",
+  "upstream": "https://draculatheme.com/",
+  "colors": {
+    "root": "#f8f8f2",
+    "global-network": "#bd93f9",
+    "core-network": "#ff79c6",
+    "route-table": "#8be9fd",
+    "vpc": "#50fa7b",
+    "transit-gateway": "#ffb86c",
+    "firewall": "#ff5555",
+    "elb": "#f1fa8c",
+    "vpn": "#6272a4",
+    "ec2-instance": "#bd93f9",
+    "prompt_separator": "#6272a4",
+    "prompt_text": "#f8f8f2"
+  }
+}

@@ -133,7 +133,53 @@ class TGWClient(BaseClient):
                         (t["Value"] for t in rt.get("Tags", []) if t["Key"] == "Name"),
                         None,
                     )
-                    rt_data = {"id": rt_id, "name": rt_name, "routes": []}
+                    rt_data = {
+                        "id": rt_id,
+                        "name": rt_name,
+                        "routes": [],
+                        "associations": [],
+                        "propagations": [],
+                    }
+
+                    # Fetch Associations
+                    try:
+                        assoc_resp = ec2.get_transit_gateway_route_table_associations(
+                            TransitGatewayRouteTableId=rt_id
+                        )
+                        for assoc in assoc_resp.get("Associations", []):
+                            rt_data["associations"].append(
+                                {
+                                    "id": assoc.get("TransitGatewayAttachmentId"),
+                                    "resource_id": assoc.get("ResourceId"),
+                                    "type": assoc.get("ResourceType"),
+                                    "state": assoc.get("State"),
+                                }
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to fetch associations for RT %s: %s", rt_id, e
+                        )
+
+                    # Fetch Propagations
+                    try:
+                        prop_resp = ec2.get_transit_gateway_route_table_propagations(
+                            TransitGatewayRouteTableId=rt_id
+                        )
+                        for prop in prop_resp.get(
+                            "TransitGatewayRouteTablePropagations", []
+                        ):
+                            rt_data["propagations"].append(
+                                {
+                                    "id": prop.get("TransitGatewayAttachmentId"),
+                                    "resource_id": prop.get("ResourceId"),
+                                    "type": prop.get("ResourceType"),
+                                    "state": prop.get("State"),
+                                }
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to fetch propagations for RT %s: %s", rt_id, e
+                        )
 
                     routes_resp = ec2.search_transit_gateway_routes(
                         TransitGatewayRouteTableId=rt_id,
@@ -320,6 +366,42 @@ class TGWDisplay(BaseDisplay):
                 Text(route["state"], style=state_style),
             )
         self.console.print(table)
+
+        if rt.get("associations"):
+            self.console.print()
+            assoc_table = Table(
+                title="Associations", show_header=True, header_style="bold"
+            )
+            assoc_table.add_column("Attachment ID", style="cyan")
+            assoc_table.add_column("Resource ID", style="green")
+            assoc_table.add_column("Type", style="yellow")
+            assoc_table.add_column("State", style="white")
+            for assoc in rt["associations"]:
+                assoc_table.add_row(
+                    assoc.get("id", "-"),
+                    assoc.get("resource_id", "-"),
+                    assoc.get("type", "-"),
+                    assoc.get("state", "-"),
+                )
+            self.console.print(assoc_table)
+
+        if rt.get("propagations"):
+            self.console.print()
+            prop_table = Table(
+                title="Propagations", show_header=True, header_style="bold"
+            )
+            prop_table.add_column("Attachment ID", style="cyan")
+            prop_table.add_column("Resource ID", style="green")
+            prop_table.add_column("Type", style="yellow")
+            prop_table.add_column("State", style="white")
+            for prop in rt["propagations"]:
+                prop_table.add_row(
+                    prop.get("id", "-"),
+                    prop.get("resource_id", "-"),
+                    prop.get("type", "-"),
+                    prop.get("state", "-"),
+                )
+            self.console.print(prop_table)
 
     def show_matches(self, matches: list[dict], query: str):
         if not matches:
