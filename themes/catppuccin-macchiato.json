@@ -1,0 +1,20 @@
+{
+  "name": "catppuccin-macchiato",
+  "description": "Catppuccin Macchiato - Dark theme with vibrant, medium contrast",
+  "author": "Catppuccin Theme",
+  "upstream": "https://github.com/catppuccin/catppuccin",
+  "colors": {
+    "root": "#cad3f5",
+    "global-network": "#c6a0f6",
+    "core-network": "#f5bde6",
+    "route-table": "#7dc4e4",
+    "vpc": "#a6da95",
+    "transit-gateway": "#f5a97f",
+    "firewall": "#ed8796",
+    "elb": "#eed49f",
+    "vpn": "#939ab7",
+    "ec2-instance": "#c6a0f6",
+    "prompt_separator": "#939ab7",
+    "prompt_text": "#cad3f5"
+  }
+}

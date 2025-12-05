@@ -33,23 +33,54 @@ DRACULA_THEME = Theme("dracula", {
     "prompt_text": "#f8f8f2",
 })
 
-CATPPUCCIN_THEME = Theme("catppuccin", {
-    "root": "#cad3f5",           # Text
-    "global-network": "#c6a0f6", # Mauve
-    "core-network": "#f5bde6",   # Pink
-    "route-table": "#7dc4e4",    # Sky
-    "vpc": "#a6da95",            # Green
-    "transit-gateway": "#f5a97f", # Peach
-    "firewall": "#ed8796",       # Red
-    "elb": "#eed49f",           # Yellow
-    "vpn": "#939ab7",            # Subtext0
-    "ec2-instance": "#c6a0f6",   # Mauve
+# Catppuccin variants
+CATPPUCCIN_LATTE_THEME = Theme("catppuccin-latte", {
+    "root": "#4c4f69",
+    "global-network": "#8839ef",
+    "core-network": "#ea76cb",
+    "route-table": "#04a5e5",
+    "vpc": "#40a02b",
+    "transit-gateway": "#fe640b",
+    "firewall": "#d20f39",
+    "elb": "#df8e1d",
+    "vpn": "#6c6f85",
+    "ec2-instance": "#8839ef",
+    "prompt_separator": "#6c6f85",
+    "prompt_text": "#4c4f69",
+})
+
+CATPPUCCIN_MACCHIATO_THEME = Theme("catppuccin-macchiato", {
+    "root": "#cad3f5",
+    "global-network": "#c6a0f6",
+    "core-network": "#f5bde6",
+    "route-table": "#7dc4e4",
+    "vpc": "#a6da95",
+    "transit-gateway": "#f5a97f",
+    "firewall": "#ed8796",
+    "elb": "#eed49f",
+    "vpn": "#939ab7",
+    "ec2-instance": "#c6a0f6",
     "prompt_separator": "#939ab7",
     "prompt_text": "#cad3f5",
 })
 
-# Default theme
-DEFAULT_THEME = CATPPUCCIN_THEME
+CATPPUCCIN_MOCHA_THEME = Theme("catppuccin-mocha", {
+    "root": "#cdd6f4",
+    "global-network": "#cba6f7",
+    "core-network": "#f5c2e7",
+    "route-table": "#89dceb",
+    "vpc": "#a6e3a1",
+    "transit-gateway": "#fab387",
+    "firewall": "#f38ba8",
+    "elb": "#f9e2af",
+    "vpn": "#6c7086",
+    "ec2-instance": "#cba6f7",
+    "prompt_separator": "#6c7086",
+    "prompt_text": "#cdd6f4",
+})
+
+# Default theme (Mocha - the darkest Catppuccin variant)
+DEFAULT_THEME = CATPPUCCIN_MOCHA_THEME
 
 
 def load_theme_from_file(path: Path) -> Optional[Theme]:

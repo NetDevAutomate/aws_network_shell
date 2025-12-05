@@ -1,0 +1,20 @@
+{
+  "name": "catppuccin-latte",
+  "description": "Catppuccin Latte - Light theme with soft, muted colors",
+  "author": "Catppuccin Theme",
+  "upstream": "https://github.com/catppuccin/catppuccin",
+  "colors": {
+    "root": "#4c4f69",
+    "global-network": "#8839ef",
+    "core-network": "#ea76cb",
+    "route-table": "#04a5e5",
+    "vpc": "#40a02b",
+    "transit-gateway": "#fe640b",
+    "firewall": "#d20f39",
+    "elb": "#df8e1d",
+    "vpn": "#6c6f85",
+    "ec2-instance": "#8839ef",
+    "prompt_separator": "#6c6f85",
+    "prompt_text": "#4c4f69"
+  }
+}
