@@ -1,0 +1,30 @@
+# CloudWAN Navigation Workflow - Tests complete navigation chain
+# This workflow tests the show→set pattern works correctly
+
+id: cloudwan_basic
+title: "CloudWAN Navigation: Global Network → Core Network"
+tags: [cloudwan, navigation, smoke]
+
+workflow:
+  - command: "show global-networks"
+    description: "List all global networks"
+    assertions:
+      - type: "contains"
+        value: "Global Networks"
+        severity: critical
+      - type: "contains"
+        value: "global-network-"
+
+  - command: "set global-network 1"
+    description: "Enter first global network context"
+    assertions:
+      - type: "contains"
+        value: "gl:"
+
+  - command: "show core-networks"
+    description: "Show core networks in this global network"
+    assertions:
+      - type: "contains_any"
+        values: ["Core Networks", "No core networks"]
+
+expected_outcome: "Successfully navigate into global network context and list core networks"

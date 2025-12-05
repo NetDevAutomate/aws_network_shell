@@ -1,0 +1,29 @@
+# GitHub Issue #9: EC2 context show enis returns ALL ENIs
+# Expected: Should return only instance-specific ENIs
+
+id: issue_9
+title: "EC2 show enis returns ALL account ENIs"
+issue_url: "https://github.com/NetDevAutomate/aws_network_shell/issues/9"
+severity: high
+tags: [ec2, filtering, bug]
+
+workflow:
+  - command: "set ec2-instance i-011280e2844a5f00d"
+    description: "Enter EC2 instance context directly by ID"
+    expect_contains: "ec:AWS-Github"
+
+  - command: "show enis"
+    description: "Show ENIs for this instance only"
+    assertions:
+      - type: "not_contains"
+        value: "No ENIs"
+        severity: critical
+      - type: "eni_count"
+        operator: "<="
+        value: 5
+        message: "Should show instance ENIs only (1-2), not all account ENIs (100+)"
+      - type: "contains"
+        value: "eni-0989f6e6ce4dfc707"
+        message: "Should show the instance's actual ENI"
+
+expected_outcome: "Show 1-2 ENIs for the instance, not 100+ ENIs from entire account"

@@ -1,0 +1,59 @@
+# GitHub Issue #10: ELB show commands return no output
+# Expected: show listeners/targets/health should display data
+
+id: issue_10
+title: "ELB show commands return no data"
+issue_url: "https://github.com/NetDevAutomate/aws_network_shell/issues/10"
+severity: high
+tags: [elb, commands, bug]
+
+workflow:
+  - command: "set elb Github-ALB"
+    description: "Enter ELB context"
+    expect_contains: "el:Github-ALB"
+
+  - command: "show detail"
+    description: "Verify ELB detail works (baseline)"
+    assertions:
+      - type: "contains"
+        value: "Load Balancer"
+        severity: critical
+
+  - command: "show listeners"
+    description: "Show listeners (currently returns 'No listeners' or Invalid)"
+    assertions:
+      - type: "not_contains"
+        value: "No listeners"
+        severity: critical
+      - type: "not_contains"
+        value: "Invalid"
+        severity: critical
+      - type: "contains_any"
+        values: ["Listener", "Port", "Protocol"]
+        message: "Should display listener information"
+
+  - command: "show targets"
+    description: "Show target groups"
+    assertions:
+      - type: "not_contains"
+        value: "No target groups"
+        severity: critical
+      - type: "not_contains"
+        value: "Invalid"
+        severity: critical
+      - type: "contains_any"
+        values: ["Target", "Health"]
+
+  - command: "show health"
+    description: "Show target health"
+    assertions:
+      - type: "not_contains"
+        value: "No health data"
+        severity: critical
+      - type: "not_contains"
+        value: "Invalid"
+        severity: critical
+      - type: "contains_any"
+        values: ["healthy", "unhealthy", "Target"]
+
+expected_outcome: "All ELB show commands display data, not error messages"

@@ -30,7 +30,7 @@ class ELBModule(ModuleInterface):
     @property
     def context_commands(self) -> Dict[str, List[str]]:
         return {
-            "elb": ["target-group"],
+            "elb": ["target-group", "listeners", "targets", "health"],
         }
 
     @property
@@ -133,6 +133,81 @@ class ELBClient(BaseClient):
             for future in concurrent.futures.as_completed(futures):
                 all_elbs.extend(future.result())
         return sorted(all_elbs, key=lambda x: (x["region"], x["name"]))
+
+    def get_listeners(self, elb_arn: str, region: str) -> list[dict]:
+        """Get listeners for a specific load balancer.
+
+        Args:
+            elb_arn: Load balancer ARN
+            region: AWS region
+
+        Returns:
+            List of listener dictionaries
+        """
+        client = self.session.client('elbv2', region_name=region)
+        try:
+            resp = client.describe_listeners(LoadBalancerArn=elb_arn)
+            return resp.get('Listeners', [])
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to get listeners for {elb_arn}: {e}")
+            return []
+
+    def get_target_groups(self, elb_arn: str, region: str) -> list[dict]:
+        """Get target groups associated with a load balancer.
+
+        Args:
+            elb_arn: Load balancer ARN
+            region: AWS region
+
+        Returns:
+            List of target group dictionaries
+        """
+        client = self.session.client('elbv2', region_name=region)
+        try:
+            # Get listeners first to find target groups
+            listeners = self.get_listeners(elb_arn, region)
+
+            # Collect unique target group ARNs
+            tg_arns = set()
+            for listener in listeners:
+                for action in listener.get('DefaultActions', []):
+                    if action.get('TargetGroupArn'):
+                        tg_arns.add(action['TargetGroupArn'])
+
+            # Fetch target group details
+            if tg_arns:
+                resp = client.describe_target_groups(TargetGroupArns=list(tg_arns))
+                return resp.get('TargetGroups', [])
+            return []
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to get target groups for {elb_arn}: {e}")
+            return []
+
+    def get_target_health(self, tg_arns: list[str], region: str) -> dict:
+        """Get health status for targets in specified target groups.
+
+        Args:
+            tg_arns: List of target group ARNs
+            region: AWS region
+
+        Returns:
+            Dict mapping target group ARN to list of health descriptions
+        """
+        client = self.session.client('elbv2', region_name=region)
+        health_status = {}
+
+        for tg_arn in tg_arns:
+            try:
+                resp = client.describe_target_health(TargetGroupArn=tg_arn)
+                health_status[tg_arn] = resp.get('TargetHealthDescriptions', [])
+            except Exception as e:
+                import logging
+                logging.warning(f"Failed to get health for {tg_arn}: {e}")
+                health_status[tg_arn] = []
+
+        return health_status
 
     def get_elb_detail(self, elb_arn: str, region: str) -> dict:
         client = self.session.client("elbv2", region_name=region)
