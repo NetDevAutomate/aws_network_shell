@@ -190,11 +190,13 @@ class RootHandlersMixin:
         )
         direct_connect.DXDisplay(console).show_connections_list(connections)
 
-    def _show_enis(self, _):
+    def _show_enis(self, arg):
         # Issue #9 fix: Delegate to context-specific handler when in EC2 instance context
         # EC2HandlersMixin._show_enis shows instance-specific ENIs from ctx.data
         if self.ctx_type == "ec2-instance":
-            return  # Let EC2HandlersMixin handle this
+            from .ec2 import EC2HandlersMixin
+            EC2HandlersMixin._show_enis(self, arg)
+            return
 
         from ...modules import eni
 
@@ -218,7 +220,9 @@ class RootHandlersMixin:
         # Issue #9 fix: Delegate to context-specific handler when in VPC or EC2 context
         # VPCHandlersMixin._show_security_groups shows context-specific SGs from ctx.data
         if self.ctx_type in ("vpc", "ec2-instance"):
-            return  # Let VPCHandlersMixin handle this
+            from .vpc import VPCHandlersMixin
+            VPCHandlersMixin._show_security_groups(self, arg)
+            return
 
         from ...modules import security
 
