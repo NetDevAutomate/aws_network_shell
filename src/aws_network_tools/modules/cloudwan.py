@@ -686,7 +686,7 @@ class CloudWANDisplay(BaseDisplay):
                 str(i),
                 cn["name"],
                 cn["id"],
-                cn["global_network_name"],
+                cn.get("global_network_name", ""),
                 str(len(cn["regions"])),
                 str(len(cn["segments"])),
                 str(len(cn["route_tables"])),
@@ -700,7 +700,7 @@ class CloudWANDisplay(BaseDisplay):
             return
         tree = Tree(f"[bold blue]🌐 Core Network: {cn['name']}[/]")
         tree.add(f"[dim]ID: {cn['id']}[/]")
-        tree.add(f"[dim]Global Network: {cn['global_network_name']}[/]")
+        tree.add(f"[dim]Global Network: {cn.get('global_network_name', 'N/A')}[/]")
 
         if cn["regions"]:
             reg_branch = tree.add("[yellow]🌍 Regions[/]")
