@@ -10,10 +10,6 @@ import pytest
 from unittest.mock import MagicMock, patch
 from io import StringIO
 
-# Import the module under test
-import sys
-sys.path.insert(0, '/Users/taylaand/code/personal/aws_network_shell_worktrees/issue-2-core-network-detail/src')
-
 from aws_network_tools.modules.cloudwan import CloudWANDisplay
 
 

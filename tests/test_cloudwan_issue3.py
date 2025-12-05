@@ -82,13 +82,17 @@ def mock_cloudwan_client(sample_policy_document):
 
 
 @pytest.fixture
-def shell_in_global_context():
-    """Create shell in global-network context with cached core networks."""
+def shell_in_global_context(mock_cloudwan_client):
+    """Create shell in global-network context with cached core networks.
+    
+    Note: Depends on mock_cloudwan_client to ensure mock is active before shell creation.
+    """
     from aws_network_tools.shell import AWSNetShell
     from aws_network_tools.core import Context
 
     shell = AWSNetShell()
-    # Don't set no_cache - let caching work normally
+    # Clear any stale cache from previous tests
+    shell._cache.clear()
 
     # Enter global-network context
     shell.context_stack = [
@@ -110,7 +114,7 @@ def shell_in_global_context():
         }
     ]
 
-    yield shell
+    yield shell, mock_cloudwan_client
     shell._cache.clear()
     shell.context_stack.clear()
 
@@ -128,10 +132,9 @@ class TestCloudWANIssue3:
         print(f"Mock class: {MockClass}")
         assert cloudwan.CloudWANClient is MockClass, "Mock not applied!"
 
-    def test_debug_fetch_function(self, shell_in_global_context, mock_cloudwan_client):
+    def test_debug_fetch_function(self, shell_in_global_context):
         """Debug what happens inside fetch_full_cn function."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Manually execute the fetch_full_cn logic to isolate the problem
         from aws_network_tools.modules import cloudwan
@@ -168,11 +171,10 @@ class TestCloudWANIssue3:
             traceback.print_exc()
 
     def test_set_core_network_fetches_policy(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document, capsys
+        self, shell_in_global_context, sample_policy_document, capsys
     ):
         """Test that setting core-network context fetches the policy document."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Execute: set core-network to enter context (DON'T patch console to see real errors)
         shell._set_core_network("1")
@@ -198,11 +200,10 @@ class TestCloudWANIssue3:
         )
 
     def test_show_segments_returns_data_after_fix(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test that 'show segments' returns data after entering core-network context."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Capture console output
         output = StringIO()
@@ -222,11 +223,10 @@ class TestCloudWANIssue3:
         assert "production" in result or "development" in result
 
     def test_show_policy_returns_data_after_fix(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test that 'show policy' returns data after entering core-network context."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter core-network context
         shell._set_core_network("1")
@@ -297,11 +297,10 @@ class TestCloudWANIssue3:
         shell.context_stack.clear()
 
     def test_policy_data_is_cached(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test that fetched policy data is cached for subsequent access."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter core-network context twice
         shell._set_core_network("1")
@@ -312,11 +311,10 @@ class TestCloudWANIssue3:
         assert mock_instance.get_policy_document.call_count == 1
 
     def test_context_entry_by_name(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test entering core-network context by name."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter by name
         shell._set_core_network("WorkDay Glob")
@@ -326,10 +324,9 @@ class TestCloudWANIssue3:
         assert "policy" in shell.ctx.data
         assert shell.ctx.data["policy"] is not None
 
-    def test_context_entry_by_id(self, shell_in_global_context, mock_cloudwan_client):
+    def test_context_entry_by_id(self, shell_in_global_context):
         """Test entering core-network context by ID."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter by ID
         shell._set_core_network("core-network-05124a7b0180598f2")
@@ -343,11 +340,10 @@ class TestCloudWANSegmentsDisplay:
     """Test segment display formatting."""
 
     def test_segments_table_columns(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test that segments table has expected columns."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter core-network context
         shell._set_core_network("1")
@@ -365,11 +361,10 @@ class TestCloudWANPolicyDisplay:
     """Test policy display formatting."""
 
     def test_policy_json_format(
-        self, shell_in_global_context, mock_cloudwan_client, sample_policy_document
+        self, shell_in_global_context, sample_policy_document
     ):
         """Test that policy is displayed as JSON."""
-        MockClass, mock_instance = mock_cloudwan_client
-        shell = shell_in_global_context
+        shell, (MockClass, mock_instance) = shell_in_global_context
 
         # Enter core-network context
         shell._set_core_network("1")

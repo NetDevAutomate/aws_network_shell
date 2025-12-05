@@ -25,6 +25,7 @@ class Context:
     ref: str
     name: str
     data: dict = field(default_factory=dict)
+    selection_index: int = 0
 
 
 class BaseClient:
