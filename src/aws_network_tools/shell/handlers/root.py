@@ -39,7 +39,7 @@ class RootHandlersMixin:
     _show_running_config = _show_config
 
     def _show_cache(self, _):
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         table = Table(title="Cache Status")
         table.add_column("Cache")
@@ -47,21 +47,20 @@ class RootHandlersMixin:
         table.add_column("Status")
         table.add_row("In-memory", str(len(self._cache)), "active")
         try:
-            from ...traceroute.topology import TopologyDiscovery
+            from ...core.cache import Cache
 
-            discovery = TopologyDiscovery(profile=self.profile)
-            topo = discovery._load_cache()
-            if topo:
-                age = (datetime.now() - topo.cached_at).total_seconds()
-                table.add_row(
-                    "Topology",
-                    str(len(topo.enis)),
-                    f"age: {int(age)}s" if age < 900 else "stale",
-                )
+            topo_cache = Cache("topology")
+            info = topo_cache.get_info()
+            if info:
+                age = int(info["age_seconds"])
+                status = f"age: {age}s" if not info["expired"] else "stale"
+                data = topo_cache.get(ignore_expiry=True)
+                entries = len(data.get("eni_index", {})) if data else 0
+                table.add_row("Topology", str(entries), status)
             else:
                 table.add_row("Topology", "0", "empty")
-        except Exception:
-            table.add_row("Topology", "-", "unavailable")
+        except Exception as e:
+            table.add_row("Topology", "-", f"error: {e}")
         console.print(table)
 
     def _show_global_networks(self, _):

@@ -1,8 +1,7 @@
 {
-  "name": "catppuccin-mocha",
-  "description": "Catppuccin Mocha - Dark theme with vibrant colors for prompts",
-  "author": "Catppuccin Theme",
-  "upstream": "https://github.com/catppuccin/catppuccin",
+  "name": "catppuccin-mocha-vibrant",
+  "description": "Catppuccin Mocha with more vibrant, saturated colors for dark terminals",
+  "author": "aws-network-shell",
   "colors": {
     "root": "#89b4fa",
     "global-network": "#cba6f7",
@@ -15,6 +14,10 @@
     "vpn": "#b4befe",
     "ec2-instance": "#cba6f7",
     "prompt_separator": "#9399b2",
-    "prompt_text": "#89b4fa"
+    "prompt_text": "#89b4fa",
+    "table_header": "#cba6f7",
+    "table_border": "#6c7086",
+    "table_row_odd": "#45475a",
+    "table_row_even": "#313244"
   }
 }

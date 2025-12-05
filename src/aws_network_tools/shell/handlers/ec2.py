@@ -46,13 +46,61 @@ class EC2HandlersMixin:
 
     def _set_ec2_instance(self, val):
         if not val:
-            console.print("[red]Usage: set ec2-instance <#>[/]")
+            console.print("[red]Usage: set ec2-instance <#|instance-id>[/]")
             return
+
+        # CRITICAL FIX (Issue #9): Allow direct instance ID without show first
         key = f"ec2-instance:{','.join(self.regions) if self.regions else 'all'}"
         items = self._cache.get(key, [])
+
+        # If cache empty AND val looks like instance ID, fetch directly
+        if not items and val.startswith('i-'):
+            from ...modules.ec2 import EC2Client
+            from ...core import run_with_spinner
+
+            # Try to fetch this specific instance from all regions
+            target_instance = None
+            regions_to_try = self.regions if self.regions else ['us-east-1', 'eu-west-1', 'ap-southeast-2']
+
+            for region in regions_to_try:
+                try:
+                    detail = EC2Client(self.profile).get_instance_detail(val, region)
+                    if detail:  # Found it
+                        target_instance = {
+                            "id": val,
+                            "name": detail.get("name", val),
+                            "region": region
+                        }
+                        break
+                except:
+                    continue
+
+            if not target_instance:
+                console.print(f"[red]Instance {val} not found in accessible regions[/]")
+                return
+
+            # Fetch detail for this instance
+            detail = run_with_spinner(
+                lambda: EC2Client(self.profile).get_instance_detail(
+                    target_instance["id"], target_instance["region"]
+                ),
+                "Fetching instance",
+                console=console,
+            )
+
+            self._enter(
+                "ec2-instance", target_instance["id"],
+                target_instance.get("name") or target_instance["id"],
+                detail, 1
+            )
+            print()
+            return
+
+        # Original behavior: Use cache from show command
         if not items:
             console.print("[yellow]Run 'show ec2-instances' first[/]")
             return
+
         target = self._resolve(items, val)
         if not target:
             console.print(f"[red]Not found: {val}[/]")

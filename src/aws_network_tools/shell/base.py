@@ -97,7 +97,6 @@ HIERARCHY = {
         "show": [
             "detail",
             "segments",
-            "policy",
             "policy-documents",
             "live-policy",
             "routes",

@@ -1,0 +1,85 @@
+# Issue test definitions
+# Run with: uv run python scripts/run_issue_tests.py [--issue N]
+
+issues:
+  1:
+    title: "Error retrieving RIB info from CloudWAN Core Network"
+    commands:
+      - show global-networks
+      - set global-network 3  # cloud-wan-global-network
+      - show core-networks
+      - set core-network 1
+      - show rib InsideTrust
+    expect_error: "KeyError"
+
+  2:
+    title: "Error trying to view Core Network detail"
+    commands:
+      - show global-networks
+      - set global-network 3
+      - show core-networks
+      - set core-network 1
+      - show detail
+
+  3:
+    title: "No data returned for several CloudWAN commands"
+    commands:
+      - show global-networks
+      - set global-network 3
+      - show core-networks
+      - set core-network 1
+      - show live-policy
+      - show segments
+    # These should now show data (issue should be fixed)
+
+  4:
+    title: "Error retrieving CloudWAN policy change events"
+    commands:
+      - show global-networks
+      - set global-network 3
+      - show core-networks
+      - set core-network 1
+      - show policy-changes
+
+  5:
+    title: "Can't set Transit Gateway Route Table"
+    commands:
+      - show transit_gateways
+      - set transit-gateway 1
+      - show route-tables
+      - set route-table 1
+    expect_error: "Run 'show route-tables' first"
+
+  7:
+    title: "Can't display Firewall Policy"
+    commands:
+      - show firewalls
+      - set firewall 1
+      - show policy
+
+  8:
+    title: "Error trying to set VPC"
+    commands:
+      - show vpcs
+      - set vpc 1
+      - show subnets
+
+  9:
+    title: "EC2 instance context returns all ENIs instead of instance-specific"
+    commands:
+      - set ec2-instance i-011280e2844a5f00d
+      - show enis
+    expect_max_rows: 5  # Should show 1-2, not 150+
+
+  10:
+    title: "ELB commands return no output"
+    commands:
+      - set elb Github-ALB
+      - show detail
+      - show listeners
+      - show targets
+      - show health
+    expect_not_contains:
+      - "No listeners"
+      - "No target groups"
+      - "No health data"

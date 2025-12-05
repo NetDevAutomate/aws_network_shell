@@ -65,18 +65,18 @@ CATPPUCCIN_MACCHIATO_THEME = Theme("catppuccin-macchiato", {
 })
 
 CATPPUCCIN_MOCHA_THEME = Theme("catppuccin-mocha", {
-    "root": "#cdd6f4",
-    "global-network": "#cba6f7",
-    "core-network": "#f5c2e7",
-    "route-table": "#89dceb",
-    "vpc": "#a6e3a1",
-    "transit-gateway": "#fab387",
-    "firewall": "#f38ba8",
-    "elb": "#f9e2af",
-    "vpn": "#6c7086",
-    "ec2-instance": "#cba6f7",
-    "prompt_separator": "#6c7086",
-    "prompt_text": "#cdd6f4",
+    "root": "#89b4fa",            # Blue (more vibrant than grey)
+    "global-network": "#cba6f7",  # Mauve
+    "core-network": "#f5c2e7",    # Pink
+    "route-table": "#94e2d5",     # Teal (brighter than sky)
+    "vpc": "#a6e3a1",             # Green
+    "transit-gateway": "#fab387", # Peach
+    "firewall": "#f38ba8",        # Red
+    "elb": "#f9e2af",             # Yellow
+    "vpn": "#b4befe",             # Lavender (brighter than overlay)
+    "ec2-instance": "#cba6f7",    # Mauve
+    "prompt_separator": "#9399b2", # Overlay1 (brighter)
+    "prompt_text": "#89b4fa",     # Blue
 })
 
 # Default theme (Mocha - the darkest Catppuccin variant)

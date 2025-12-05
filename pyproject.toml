@@ -49,7 +49,9 @@ addopts = [
     "-v",
 ]
 markers = [
-    "integration: integration tests that require live AWS access"
+    "integration: integration tests using real CLI via pexpect",
+    "issue_9: Tests for GitHub Issue #9 (EC2 ENI filtering)",
+    "issue_10: Tests for GitHub Issue #10 (ELB no output)",
 ]
 
 [tool.coverage.run]
