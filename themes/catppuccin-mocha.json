@@ -1,0 +1,20 @@
+{
+  "name": "catppuccin-mocha",
+  "description": "Catppuccin Mocha - Dark theme with rich, saturated colors",
+  "author": "Catppuccin Theme",
+  "upstream": "https://github.com/catppuccin/catppuccin",
+  "colors": {
+    "root": "#cdd6f4",
+    "global-network": "#cba6f7",
+    "core-network": "#f5c2e7",
+    "route-table": "#89dceb",
+    "vpc": "#a6e3a1",
+    "transit-gateway": "#fab387",
+    "firewall": "#f38ba8",
+    "elb": "#f9e2af",
+    "vpn": "#6c7086",
+    "ec2-instance": "#cba6f7",
+    "prompt_separator": "#6c7086",
+    "prompt_text": "#cdd6f4"
+  }
+}
