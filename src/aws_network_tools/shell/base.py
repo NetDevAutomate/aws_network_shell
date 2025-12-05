@@ -328,7 +328,7 @@ class AWSNetShellBase(cmd2.Cmd):
         except ValueError:
             pass
         for item in items:
-            if item.get("id") == val or item.get("name", "").lower() == val.lower():
+            if item.get("id") == val or (item.get("name") or "").lower() == val.lower():
                 return item
         return None
 
