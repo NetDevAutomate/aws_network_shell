@@ -35,7 +35,7 @@ class ELBModule(ModuleInterface):
 
     @property
     def show_commands(self) -> Dict[str, List[str]]:
-        return {None: ["elbs"], "elb": ["detail", "listeners", "targets"]}
+        return {None: ["elbs"], "elb": ["detail", "listeners", "targets", "health"]}
 
     def complete_elb(self, text, line, begidx, endidx):
         """Tab completion for elb command"""
