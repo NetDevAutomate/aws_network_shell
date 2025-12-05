@@ -1,0 +1,323 @@
+#!/usr/bin/env python3
+"""Site-to-Site VPN management CLI for strongSwan test instance."""
+
+import argparse
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+try:
+    import boto3
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+except ImportError:
+    print("Missing dependencies. Run: pip install boto3 rich")
+    sys.exit(1)
+
+console = Console()
+REGION = "us-east-1"
+RESOURCES_FILE = Path(__file__).parent.parent / "terraform" / "test_resources.json"
+
+
+def load_resources():
+    if not RESOURCES_FILE.exists():
+        console.print("[red]Error: test_resources.json not found. Run terraform apply first.[/red]")
+        sys.exit(1)
+    return json.loads(RESOURCES_FILE.read_text())
+
+
+def get_session(profile=None):
+    """Create boto3 session with optional profile."""
+    if profile:
+        return boto3.Session(profile_name=profile, region_name=REGION)
+    return boto3.Session(region_name=REGION)
+
+
+def cmd_status(args):
+    """Show VPN and tunnel status."""
+    session = get_session(args.profile)
+    ec2 = session.client("ec2")
+    
+    if args.all:
+        # Show all VPN connections
+        vpns = ec2.describe_vpn_connections()["VpnConnections"]
+        if not vpns:
+            console.print("[yellow]No VPN connections found[/yellow]")
+            return
+        
+        table = Table(title="All VPN Connections", show_header=True)
+        table.add_column("#", style="dim")
+        table.add_column("VPN ID", style="cyan")
+        table.add_column("Name")
+        table.add_column("State", style="bold")
+        table.add_column("Gateway ID", style="blue")
+        table.add_column("Tunnels", style="white", justify="right")
+        
+        for i, vpn in enumerate(vpns, 1):
+            name = next((t["Value"] for t in vpn.get("Tags", []) if t["Key"] == "Name"), "N/A")
+            gw_id = vpn.get("TransitGatewayId") or vpn.get("VpnGatewayId") or "N/A"
+            tunnel_count = len(vpn.get("VgwTelemetry", []))
+            
+            state = vpn["State"]
+            style = "green" if state == "available" else "yellow"
+            
+            table.add_row(
+                str(i),
+                vpn["VpnConnectionId"],
+                name,
+                f"[{style}]{state}[/{style}]",
+                gw_id,
+                str(tunnel_count)
+            )
+        
+        console.print(table)
+        console.print("\n[dim]To see details for a specific VPN, update test_resources.json or use:[/dim]")
+        console.print("[dim]  terraform output vpn_id  # Get current VPN ID[/dim]")
+        return
+    
+    # Try specific VPN from resources file
+    try:
+        res = load_resources()
+        vpn_id = res.get("strongswan_vpn_id")
+        instance_id = res.get("strongswan_instance_id")
+        
+        if not vpn_id:
+            console.print("[red]Error: No strongswan_vpn_id in test_resources.json[/red]")
+            console.print("[yellow]Hint: Run with --all to see all VPN connections, or update test_resources.json[/yellow]")
+            console.print("[dim]  terraform output vpn_id  # Get current VPN ID from Terraform[/dim]")
+            return
+        
+        try:
+            vpn = ec2.describe_vpn_connections(VpnConnectionIds=[vpn_id])["VpnConnections"][0]
+        except Exception as e:
+            if "InvalidVpnConnectionID.NotFound" in str(e):
+                console.print(f"[red]Error: VPN connection {vpn_id} not found[/red]")
+                console.print("[yellow]Possible reasons:[/yellow]")
+                console.print("  • VPN was deleted via AWS console or CLI")
+                console.print("  • Terraform state changed (run terraform output)")
+                console.print("  • The VPN connection is in a different region/profile")
+                console.print()
+                console.print("[dim]Solutions:[/dim]")
+                console.print("  1. [dim]Run:[/dim] terraform output -raw vpn_id")
+                console.print("  2. Update test_resources.json with the new VPN ID")
+                console.print("  3. Or run with [dim]./scripts/s2svpn status --all[/dim] to see all connections")
+                return
+            else:
+                raise
+    except FileNotFoundError:
+        console.print("[red]Error: test_resources.json not found[/red]")
+        console.print("[yellow]Run terraform apply first, or use --all flag[/yellow]")
+        return
+    
+    inst = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0]["Instances"][0]
+    
+    table = Table(title="Site-to-Site VPN Status", show_header=True)
+    table.add_column("Property", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("VPN ID", vpn_id)
+    table.add_row("VPN State", vpn["State"])
+    table.add_row("Instance ID", instance_id)
+    table.add_row("Instance State", inst["State"]["Name"])
+    table.add_row("Public IP", res.get("strongswan_public_ip", "N/A"))
+    table.add_row("Customer Gateway", vpn.get("CustomerGatewayId", "N/A"))
+    
+    console.print(table)
+    
+    tunnel_table = Table(title="Tunnel Status", show_header=True)
+    tunnel_table.add_column("Tunnel", style="cyan")
+    tunnel_table.add_column("Outside IP", style="white")
+    tunnel_table.add_column("Status", style="bold")
+    tunnel_table.add_column("Details")
+    
+    for i, telem in enumerate(vpn.get("VgwTelemetry", []), 1):
+        status = telem["Status"]
+        style = "green" if status == "UP" else "red"
+        tunnel_table.add_row(
+            f"Tunnel {i}",
+            telem["OutsideIpAddress"],
+            f"[{style}]{status}[/{style}]",
+            telem.get("StatusMessage", "")
+        )
+    
+    console.print(tunnel_table)
+
+
+def cmd_stop(args):
+    """Stop the strongSwan instance."""
+    try:
+        res = load_resources()
+        instance_id = res["strongswan_instance_id"]
+    except (FileNotFoundError, KeyError):
+        console.print("[red]Error: strongswan_instance_id not in test_resources.json[/red]")
+        console.print("[yellow]Hint: Run terraform apply first, or specify --all for VPN status[/yellow]")
+        return
+    
+    session = get_session(args.profile)
+    ec2 = session.client("ec2")
+    
+    # Verify instance exists
+    try:
+        ec2.describe_instances(InstanceIds=[instance_id])
+    except Exception:
+        console.print(f"[red]Error: Instance {instance_id} not found[/red]")
+        console.print("[yellow]The strongSwan instance may have been terminated[/yellow]")
+        return
+    
+    console.print(f"[yellow]Stopping instance {instance_id}...[/yellow]")
+    ec2.stop_instances(InstanceIds=[instance_id])
+    console.print("[green]Stop initiated. VPN tunnels will go DOWN.[/green]")
+
+
+def cmd_start(args):
+    """Start the strongSwan instance."""
+    try:
+        res = load_resources()
+        instance_id = res["strongswan_instance_id"]
+    except (FileNotFoundError, KeyError):
+        console.print("[red]Error: strongswan_instance_id not in test_resources.json[/red]")
+        console.print("[yellow]Hint: Run terraform apply first, or specify --all for VPN status[/yellow]")
+        return
+    
+    session = get_session(args.profile)
+    ec2 = session.client("ec2")
+    
+    console.print(f"[yellow]Starting instance {instance_id}...[/yellow]")
+    ec2.start_instances(InstanceIds=[instance_id])
+    console.print("[green]Start initiated. VPN tunnels will come UP in ~2-3 minutes.[/green]")
+
+
+def cmd_restart(args):
+    """Restart the strongSwan instance."""
+    try:
+        res = load_resources()
+        instance_id = res["strongswan_instance_id"]
+    except (FileNotFoundError, KeyError):
+        console.print("[red]Error: strongswan_instance_id not in test_resources.json[/red]")
+        console.print("[yellow]Hint: Run terraform apply first, or specify --all for VPN status[/yellow]")
+        return
+    
+    session = get_session(args.profile)
+    ec2 = session.client("ec2")
+    
+    # Verify instance exists
+    try:
+        ec2.describe_instances(InstanceIds=[instance_id])
+    except Exception:
+        console.print(f"[red]Error: Instance {instance_id} not found[/red]")
+        console.print("[yellow]The strongSwan instance may have been terminated[/yellow]")
+        return
+    
+    console.print(f"[yellow]Rebooting instance {instance_id}...[/yellow]")
+    ec2.reboot_instances(InstanceIds=[instance_id])
+    console.print("[green]Reboot initiated. VPN tunnels will reconnect in ~1-2 minutes.[/green]")
+
+
+def cmd_monitor(args):
+    """Live monitor VPN tunnel status."""
+    session = get_session(args.profile)
+    ec2 = session.client("ec2")
+    
+    if args.all:
+        # Monitor all VPN connections
+        console.print("[cyan]Monitoring all VPN tunnels (Ctrl+C to stop)...[/cyan]\n")
+        try:
+            while True:
+                vpns = ec2.describe_vpn_connections()["VpnConnections"]
+                
+                console.clear()
+                for vpn in vpns:
+                    vpn_id = vpn["VpnConnectionId"]
+                    name = next((t["Value"] for t in vpn.get("Tags", []) if t["Key"] == "Name"), "N/A")
+                    
+                    table = Table(title=f"VPN: {name} ({vpn_id}) - {time.strftime('%H:%M:%S')}")
+                    table.add_column("Tunnel")
+                    table.add_column("IP")
+                    table.add_column("Status")
+                    table.add_column("Message")
+                    
+                    for i, t in enumerate(vpn.get("VgwTelemetry", []), 1):
+                        status = t["Status"]
+                        style = "green" if status == "UP" else "red"
+                        table.add_row(f"T{i}", t["OutsideIpAddress"], f"[{style}]{status}[/{style}]", t.get("StatusMessage", ""))
+                    
+                    console.print(table)
+                    console.print()
+                
+                time.sleep(5)
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Monitoring stopped.[/yellow]")
+        return
+    
+    # Monitor specific VPN from resources
+    try:
+        res = load_resources()
+        vpn_id = res["strongswan_vpn_id"]
+    except (FileNotFoundError, KeyError):
+        console.print("[red]Error: strongswan_vpn_id not in test_resources.json[/red]")
+        console.print("[yellow]Hint: Use --all to monitor all VPN connections[/yellow]")
+        return
+    
+    console.print("[cyan]Monitoring VPN tunnels (Ctrl+C to stop)...[/cyan]\n")
+    
+    try:
+        while True:
+            vpn = ec2.describe_vpn_connections(VpnConnectionIds=[vpn_id])["VpnConnections"][0]
+            
+            table = Table(title=f"VPN {vpn_id} - {time.strftime('%H:%M:%S')}")
+            table.add_column("Tunnel")
+            table.add_column("IP")
+            table.add_column("Status")
+            table.add_column("Message")
+            
+            for i, t in enumerate(vpn.get("VgwTelemetry", []), 1):
+                status = t["Status"]
+                style = "green" if status == "UP" else "red"
+                table.add_row(f"T{i}", t["OutsideIpAddress"], f"[{style}]{status}[/{style}]", t.get("StatusMessage", ""))
+            
+            console.clear()
+            console.print(table)
+            time.sleep(5)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Monitoring stopped.[/yellow]")
+    except Exception as e:
+        if "InvalidVpnConnectionID" in str(e):
+            console.print(f"[red]Error: VPN {vpn_id} not found[/red]")
+            console.print("[yellow]The VPN connection may have been deleted. Use --all to see available VPNs.[/yellow]")
+        else:
+            raise
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Site-to-Site VPN management CLI")
+    parser.add_argument("-p", "--profile", help="AWS profile name")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    
+    status_parser = subparsers.add_parser("status", help="Show VPN and tunnel status")
+    status_parser.add_argument("-a", "--all", action="store_true", help="Show all VPN connections instead of just strongSwan")
+    
+    subparsers.add_parser("stop", help="Stop strongSwan instance")
+    subparsers.add_parser("start", help="Start strongSwan instance")
+    subparsers.add_parser("restart", help="Restart strongSwan instance")
+    
+    monitor_parser = subparsers.add_parser("monitor", help="Live monitor tunnel status (Ctrl+C to stop)")
+    monitor_parser.add_argument("-a", "--all", action="store_true", help="Monitor all VPN connections")
+    
+    args = parser.parse_args()
+    
+    commands = {
+        "status": cmd_status,
+        "stop": cmd_stop,
+        "start": cmd_start,
+        "restart": cmd_restart,
+        "monitor": cmd_monitor,
+    }
+    
+    commands[args.command](args)
+
+
+if __name__ == "__main__":
+    main()

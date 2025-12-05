@@ -26,7 +26,9 @@ class TGWHandlersMixin:
     def _show_transit_gateway_route_tables(self):
         t = self.ctx.data
         rts = t.get("route_tables", [])
-        self._cache["route_table"] = rts
+        # Issue #5 fix: Use correct cache key format to match _set_route_table expectations
+        cache_key = f"route-table:{self.ctx_id}"
+        self._cache[cache_key] = rts
         if not rts:
             console.print("[yellow]No route tables[/]")
             return
