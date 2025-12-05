@@ -398,7 +398,23 @@ class AWSNetShell(
 
 
 def main():
-    AWSNetShell().cmdloop()
+    import argparse
+    parser = argparse.ArgumentParser(description='AWS Network Tools Interactive Shell')
+    parser.add_argument('--profile', '-p', help='AWS profile to use')
+    parser.add_argument('--no-cache', action='store_true', help='Disable caching')
+    parser.add_argument('--format', choices=['table', 'json', 'yaml'], default='table', help='Output format')
+
+    args, unknown = parser.parse_known_args()
+
+    shell = AWSNetShell()
+    if args.profile:
+        shell.profile = args.profile
+    if args.no_cache:
+        shell.no_cache = True
+    if args.format:
+        shell.output_format = args.format
+
+    shell.cmdloop()
 
 
 if __name__ == "__main__":

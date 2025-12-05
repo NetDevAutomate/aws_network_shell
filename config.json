@@ -1,0 +1,17 @@
+{
+  "prompt": {
+    "style": "short",
+    "theme": "catppuccin-mocha",
+    "show_indices": true,
+    "max_length": 50
+  },
+  "display": {
+    "output_format": "table",
+    "colors": true,
+    "pager": false
+  },
+  "cache": {
+    "enabled": true,
+    "expire_minutes": 30
+  }
+}

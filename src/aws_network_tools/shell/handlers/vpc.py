@@ -33,9 +33,26 @@ class VPCHandlersMixin:
         )
         self._enter("vpc", v["id"], v.get("name", v["id"]), detail)
 
+    def _set_vpc_route_table(self, val):
+        """Set route-table context from VPC context."""
+        if self.ctx_type != "vpc":
+            return
+        if not val:
+            console.print("[red]Usage: set route-table <#>[/]")
+            return
+        rts = self._cache.get(f"route-table:{self.ctx_id}", [])
+        if not rts:
+            console.print("[yellow]Run 'show route-tables' first[/]")
+            return
+        rt = self._resolve(rts, val)
+        if not rt:
+            console.print(f"[red]Not found: {val}[/]")
+            return
+        self._enter("route-table", rt["id"], rt.get("name") or rt["id"], rt)
+
     def _show_vpc_route_tables(self):
         rts = self.ctx.data.get("route_tables", [])
-        self._cache["route_table"] = rts
+        self._cache[f"route-table:{self.ctx_id}"] = rts
         if not rts:
             console.print("[yellow]No route tables[/]")
             return

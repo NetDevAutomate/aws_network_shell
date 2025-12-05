@@ -111,6 +111,7 @@ class ANFWClient(BaseClient):
         try:
             resp = client.describe_firewall_policy(FirewallPolicyArn=policy_arn)
             policy = resp.get("FirewallPolicy", {})
+            policy_response = resp.get("FirewallPolicyResponse", {})
 
             # Get stateless rule groups with type info
             stateless_groups = []
@@ -140,15 +141,23 @@ class ANFWClient(BaseClient):
                     }
                 )
 
+            # Get stateful engine options
+            stateful_engine = policy.get("StatefulEngineOptions", {})
+
             return {
-                "name": resp.get("FirewallPolicyResponse", {}).get(
-                    "FirewallPolicyName", "N/A"
-                ),
+                "name": policy_response.get("FirewallPolicyName", "N/A"),
+                "arn": policy_arn,
                 "rule_group_refs": stateless_groups + stateful_groups,
-                "stateless_default_actions": policy.get("StatelessDefaultActions", []),
-                "stateless_fragment_actions": policy.get(
-                    "StatelessFragmentDefaultActions", []
-                ),
+                "stateless_default_actions": {
+                    "full_packets": policy.get("StatelessDefaultActions", []),
+                    "fragmented": policy.get("StatelessFragmentDefaultActions", []),
+                },
+                "stateful_engine_options": {
+                    "rule_order": stateful_engine.get("RuleOrder", "N/A"),
+                    "stream_exception_policy": stateful_engine.get(
+                        "StreamExceptionPolicy", "N/A"
+                    ),
+                },
             }
         except Exception:
             return {}
@@ -370,12 +379,20 @@ class ANFWDisplay(BaseDisplay):
                     str(len(rg.get("rules", []))),
                     f"{rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}",
                 )
-            if fw["policy"].get("stateless_default_actions"):
+            stateless_defaults = fw["policy"].get("stateless_default_actions", {})
+            if stateless_defaults:
+                # Handle both old (list) and new (dict) formats for backwards compatibility
+                if isinstance(stateless_defaults, dict):
+                    full_packets = stateless_defaults.get("full_packets", [])
+                    actions_str = ", ".join(full_packets) if full_packets else "N/A"
+                else:
+                    # Legacy list format
+                    actions_str = ", ".join(stateless_defaults)
                 table.add_row(
                     "-",
                     "DEFAULT",
                     "Stateless Default",
-                    ", ".join(fw["policy"]["stateless_default_actions"]),
+                    actions_str,
                     "",
                 )
             self.console.print(table)

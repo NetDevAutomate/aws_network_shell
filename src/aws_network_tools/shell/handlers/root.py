@@ -191,6 +191,11 @@ class RootHandlersMixin:
         direct_connect.DXDisplay(console).show_connections_list(connections)
 
     def _show_enis(self, _):
+        # Issue #9 fix: Delegate to context-specific handler when in EC2 instance context
+        # EC2HandlersMixin._show_enis shows instance-specific ENIs from ctx.data
+        if self.ctx_type == "ec2-instance":
+            return  # Let EC2HandlersMixin handle this
+
         from ...modules import eni
 
         enis_list = self._cached(
@@ -210,6 +215,11 @@ class RootHandlersMixin:
 
     def _show_security_groups(self, arg):
         """Show security groups. Use 'unused' to show only unused groups."""
+        # Issue #9 fix: Delegate to context-specific handler when in VPC or EC2 context
+        # VPCHandlersMixin._show_security_groups shows context-specific SGs from ctx.data
+        if self.ctx_type in ("vpc", "ec2-instance"):
+            return  # Let VPCHandlersMixin handle this
+
         from ...modules import security
 
         data = self._cached(
@@ -406,6 +416,40 @@ class RootHandlersMixin:
         except ValueError:
             console.print("[red]Usage: set watch <seconds> (0 to disable)[/]")
 
+    def _set_theme(self, theme_name):
+        """Set color theme (dracula, catppuccin, or custom)."""
+        if not theme_name:
+            console.print(f"[red]Usage: set theme <name>[/]")
+            console.print(f"[dim]Available themes: dracula, catppuccin[/]")
+            console.print(f"[dim]Custom themes in: {get_theme_dir()}[/]")
+            return
+        
+        from ..themes import load_theme
+        
+        try:
+            self.theme = load_theme(theme_name)
+            self.config.set("prompt.theme", theme_name)
+            self.config.save()
+            console.print(f"[green]Theme set to: {self.theme.name}[/]")
+            self._update_prompt()  # Refresh prompt colors
+        except Exception as e:
+            console.print(f"[red]Error loading theme '{theme_name}': {e}[/]")
+            console.print("[dim]Available themes: dracula, catppuccin[/]")
+
+    def _set_prompt(self, style):
+        """Set prompt style (short or long)."""
+        if not style or style not in ("short", "long"):
+            console.print("[red]Usage: set prompt <short|long>[/]")
+            console.print(f"[dim]Current: {self.config.get_prompt_style()}[/]")
+            console.print("[dim]  short: Compact prompt with indices (gl:1>co:1>)[/]")
+            console.print("[dim]  long:  Multi-line with full names[/]")
+            return
+        
+        self.config.set("prompt.style", style)
+        self.config.save()
+        console.print(f"[green]Prompt style set to: {style}[/]")
+        self._update_prompt()
+
     def _set_global_network(self, val):
         if not val:
             console.print("[red]Usage: set global-network <#>[/]")
@@ -453,28 +497,37 @@ class RootHandlersMixin:
         # VPC routes
         def fetch_vpc_routes():
             from ...modules import vpc
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
-            vpcs = vpc.VPCClient(self.profile).discover()
+            client = vpc.VPCClient(self.profile)
+            vpcs = client.discover()
             routes = []
-            for v in vpcs:
-                for rt in v.get("route_tables", []):
-                    for r in rt.get("routes", []):
-                        routes.append(
-                            {
-                                "source": "vpc",
-                                "vpc_id": v["id"],
-                                "vpc_name": v.get("name", v["id"]),
-                                "region": v["region"],
-                                "route_table": rt.get("id"),
-                                "destination": r.get("DestinationCidrBlock")
-                                or r.get("DestinationPrefixListId", ""),
-                                "target": r.get("GatewayId")
-                                or r.get("NatGatewayId")
-                                or r.get("TransitGatewayId")
-                                or r.get("NetworkInterfaceId", ""),
-                                "state": r.get("State", ""),
-                            }
-                        )
+
+            def fetch_detail(v):
+                try:
+                    return client.get_vpc_detail(v["id"], v.get("region"))
+                except Exception:
+                    return None
+
+            with ThreadPoolExecutor(max_workers=8) as ex:
+                for fut in as_completed([ex.submit(fetch_detail, v) for v in vpcs]):
+                    detail = fut.result()
+                    if not detail:
+                        continue
+                    for rt in detail.get("route_tables", []):
+                        for r in rt.get("routes", []):
+                            routes.append(
+                                {
+                                    "source": "vpc",
+                                    "vpc_id": detail["id"],
+                                    "vpc_name": detail.get("name", detail["id"]),
+                                    "region": detail.get("region", ""),
+                                    "route_table": rt.get("id"),
+                                    "destination": r.get("destination", ""),
+                                    "target": r.get("target", ""),
+                                    "state": r.get("state", ""),
+                                }
+                            )
             return routes
 
         # TGW routes
@@ -501,6 +554,31 @@ class RootHandlersMixin:
                         )
             return routes
 
+        # CloudWAN routes
+        def fetch_cloudwan_routes():
+            from ...modules import cloudwan
+
+            core_networks = cloudwan.CloudWANClient(self.profile).discover()
+            routes = []
+            for cn in core_networks:
+                for rt in cn.get("route_tables", []):
+                    for r in rt.get("routes", []):
+                        routes.append(
+                            {
+                                "source": "cloudwan",
+                                "core_network_id": cn["id"],
+                                "core_network_name": cn.get("name", cn["id"]),
+                                "global_network_id": cn["global_network_id"],
+                                "region": rt["region"],
+                                "segment": rt["name"],
+                                "destination": r.get("prefix", ""),
+                                "target": r.get("target", ""),
+                                "state": r.get("state", ""),
+                                "type": r.get("type", ""),
+                            }
+                        )
+            return routes
+
         console.print("[bold]Building routing cache...[/]")
 
         try:
@@ -516,6 +594,15 @@ class RootHandlersMixin:
             console.print(f"  TGW routes: {len(tgw_routes)}")
         except Exception as e:
             console.print(f"  [red]TGW routes failed: {e}[/]")
+
+        try:
+            cloudwan_routes = run_with_spinner(
+                fetch_cloudwan_routes, "Fetching CloudWAN routes"
+            )
+            cache["cloudwan"] = {"routes": cloudwan_routes}
+            console.print(f"  CloudWAN routes: {len(cloudwan_routes)}")
+        except Exception as e:
+            console.print(f"  [red]CloudWAN routes failed: {e}[/]")
 
         self._cache["routing-cache"] = cache
         total = sum(len(d.get("routes", [])) for d in cache.values())

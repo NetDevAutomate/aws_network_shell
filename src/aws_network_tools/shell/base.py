@@ -3,7 +3,10 @@
 import cmd2
 from typing import Optional
 from rich.console import Console
+from rich.text import Text
 from dataclasses import dataclass, field
+from ..themes import load_theme, get_theme_dir
+from ..config import get_config
 
 console = Console()
 
@@ -65,6 +68,8 @@ HIERARCHY = {
             "output-format",
             "output-file",
             "watch",
+            "theme",
+            "prompt",
         ],
         "commands": [
             "show",
@@ -93,6 +98,8 @@ HIERARCHY = {
             "detail",
             "segments",
             "policy",
+            "policy-documents",
+            "live-policy",
             "routes",
             "route-tables",
             "blackhole-routes",
@@ -129,7 +136,7 @@ HIERARCHY = {
         "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
     },
     "firewall": {
-        "show": ["detail", "rule-groups", "policy"],
+        "show": ["detail", "rule-groups", "policy", "firewall-policy"],
         "set": [],
         "commands": ["show", "exit", "end"],
     },
@@ -175,6 +182,11 @@ class AWSNetShellBase(cmd2.Cmd):
         self.watch_interval: int = 0
         self.context_stack: list[Context] = []
         self._cache: dict = {}
+        
+        # Load theme and config
+        self.config = get_config()
+        theme_name = self.config.get_theme_name()
+        self.theme = load_theme(theme_name)
 
         self.hidden_commands.extend(
             [
@@ -215,13 +227,92 @@ class AWSNetShellBase(cmd2.Cmd):
         return HIERARCHY.get(self.ctx_type, HIERARCHY[None])
 
     def _update_prompt(self):
+        """Update prompt based on context stack and theme."""
         if not self.context_stack:
             self.prompt = "aws-net> "
+            return
+        
+        # Get prompt configuration
+        style = self.config.get_prompt_style()  # "short" or "long"
+        show_indices = self.config.show_indices()
+        max_length = self.config.get_max_length()
+        
+        prompt_parts = []
+        
+        for i, ctx in enumerate(self.context_stack):
+            # Get color for this context type
+            color = self.theme.get(ctx.type, "white")
+            
+            if style == "short" or show_indices:
+                # Use index like gl:1, co:1
+                ctx_name = f"{ctx.type} [{i+1}]" if style == "long" else f"{ctx.type[:2] if ctx.type != 'core-network' else 'cn'}:{i+1}"
+            else:
+                # Use full name
+                display_name = ctx.name or ctx.ref
+                if len(display_name) > max_length:
+                    display_name = display_name[:max_length-3] + "..."
+                ctx_name = f"{ctx.type}:{display_name}"
+            
+            # Create colored text part
+            from rich.text import Text
+            if i == 0:
+                # First part after root
+                colored_part = Text(f"{ctx_name}", style=color)
+            else:
+                # Subsequent parts - indent for long mode
+                if style == "long":
+                    colored_part = Text(f"\n  {'  ' * i}{ctx_name}", style=color)
+                else:
+                    colored_part = Text(f">{ctx_name}", style=color)
+            
+            prompt_parts.append(colored_part)
+        
+        # Create the full prompt
+        if style == "long":
+            # Multi-line prompt with continuation markers
+            # First line: root context with first child, no space after aws-net
+            if prompt_parts:
+                root_part = prompt_parts[0]
+                prompt_text = Text("aws-net>", style=self.theme.get("prompt_text"))
+                prompt_text.append(root_part)
+                prompt_text.append("\n")
+                
+                # Middle lines: indented contexts with > continuation marker at END
+                # (all except the very last one)
+                for i, part in enumerate(prompt_parts[1:-1], 1):
+                    depth = i
+                    leading_spaces = " " * (1 + depth)  # 1 + depth spaces before content
+                    prompt_text.append(Text(leading_spaces))  # Leading spaces
+                    prompt_text.append(part)  # The context
+                    prompt_text.append(Text(" >\n", style=self.theme.get("prompt_separator")))  # Continuation at END
+                
+                # LAST context line: add the command prompt marker at END of same line
+                if len(prompt_parts) > 1:
+                    last_part = prompt_parts[-1]
+                    last_depth = len(prompt_parts) - 1
+                    last_spaces = " " * (1 + last_depth)
+                    prompt_text.append(Text(last_spaces))  # Leading spaces
+                    prompt_text.append(last_part)  # The last context
+                    prompt_text.append(Text(" $", style=self.theme.get("prompt_separator")))  # Command prompt at END
+                else:
+                    # Only one context (just root and one child)
+                    final_spaces = " " * 1
+                    prompt_text.append(Text(final_spaces + "$ ", style=self.theme.get("prompt_separator")))
+            else:
+                # No context stack, just show root prompt with command marker
+                prompt_text = Text("  aws-net> $", style=self.theme.get("prompt_text"))
         else:
-            parts = [
-                f"{c.type[:2]}:{(c.name or c.ref)[:12]}" for c in self.context_stack
-            ]
-            self.prompt = f"aws-net/{'/'.join(parts)}> "
+            # Single line prompt (unchanged)
+            separator_color = self.theme.get("prompt_separator")
+            prompt_text = Text("aws-net", style=self.theme.get("prompt_text"))
+            if prompt_parts:
+                for part in prompt_parts:
+                    prompt_text.append(f">", style=separator_color)
+                    prompt_text.append(part)
+            prompt_text.append("> ", style=separator_color)
+        
+        # Store as string with ANSI codes
+        self.prompt = prompt_text.plain
 
     def _enter(self, ctx_type: str, res_id: str, name: str, data: dict = None):
         """Enter a new context."""

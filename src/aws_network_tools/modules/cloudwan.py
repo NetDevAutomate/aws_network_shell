@@ -219,7 +219,16 @@ class CloudWANClient(BaseClient):
         except Exception:
             pass
 
-        return sorted(events, key=lambda x: (x.get("created_at") or ""), reverse=True)
+        # Sort by created_at, handling mixed datetime/None values
+        from datetime import datetime
+        def sort_key(x):
+            val = x.get("created_at")
+            if val is None:
+                return datetime.min
+            if isinstance(val, datetime):
+                return val
+            return datetime.min
+        return sorted(events, key=sort_key, reverse=True)
 
     def get_policy_document(
         self, cn_id: str, version: Optional[int] = None

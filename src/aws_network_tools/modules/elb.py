@@ -154,14 +154,27 @@ class ELBClient(BaseClient):
             "azs": [az["ZoneName"] for az in lb.get("AvailabilityZones", [])],
             "region": region,
             "listeners": [],
+            "target_groups": [],  # Issue #10 fix: aggregate at top level
+            "target_health": [],  # Issue #10 fix: aggregate at top level
         }
+
+        # Track unique target groups to avoid duplicates
+        seen_target_groups = set()
 
         # Get Listeners
         try:
             listeners_resp = client.describe_listeners(LoadBalancerArn=elb_arn)
-            for listener in listeners_resp.get("Listeners", []):
-                listener = {
-                    "arn": listener["ListenerArn"],
+            listeners = listeners_resp.get("Listeners", [])
+            if not listeners:
+                # Still continue to check target groups even if no listeners
+                pass
+                
+            for listener in listeners:
+                listener_arn = listener["ListenerArn"]
+                original_default_actions = listener.get("DefaultActions", [])
+
+                listener_data = {
+                    "arn": listener_arn,
                     "port": listener["Port"],
                     "protocol": listener["Protocol"],
                     "ssl_certs": listener.get("Certificates", []),
@@ -169,22 +182,36 @@ class ELBClient(BaseClient):
                     "rules": [],  # Only for ALB
                 }
 
-                # Process default actions
-                for action in listener.get("DefaultActions", []):
+                # Process default actions - use original_default_actions (not shadowed)
+                for action in original_default_actions:
                     act = {
                         "type": action["Type"],
                         "target_group_arn": action.get("TargetGroupArn"),
                     }
                     if act["target_group_arn"]:
-                        act["target_group"] = self._get_target_group_detail(
+                        tg_detail = self._get_target_group_detail(
                             client, act["target_group_arn"]
                         )
-                    listener["default_actions"].append(act)
+                        act["target_group"] = tg_detail
 
-                # If ALB, get rules (optional but good for completeness if we want full path)
+                        # Issue #10 fix: Aggregate target_groups at top level
+                        if act["target_group_arn"] not in seen_target_groups:
+                            seen_target_groups.add(act["target_group_arn"])
+                            detail["target_groups"].append(tg_detail)
+                            # Aggregate target_health from each target group
+                            for target in tg_detail.get("targets", []):
+                                detail["target_health"].append({
+                                    "target_group_arn": act["target_group_arn"],
+                                    "target_group_name": tg_detail.get("name"),
+                                    **target,
+                                })
+
+                    listener_data["default_actions"].append(act)
+
+                # If ALB, get rules - use listener_arn (not shadowed variable)
                 if lb["Type"] == "application":
                     rules_resp = client.describe_rules(
-                        ListenerArn=listener["ListenerArn"]
+                        ListenerArn=listener_arn
                     )
                     for r in rules_resp.get("Rules", []):
                         if r["IsDefault"]:
@@ -201,17 +228,36 @@ class ELBClient(BaseClient):
                                 "target_group_arn": action.get("TargetGroupArn"),
                             }
                             if act["target_group_arn"]:
-                                act["target_group"] = self._get_target_group_detail(
+                                tg_detail = self._get_target_group_detail(
                                     client, act["target_group_arn"]
                                 )
+                                act["target_group"] = tg_detail
+
+                                # Issue #10 fix: Also aggregate from rules
+                                if act["target_group_arn"] not in seen_target_groups:
+                                    seen_target_groups.add(act["target_group_arn"])
+                                    detail["target_groups"].append(tg_detail)
+                                    for target in tg_detail.get("targets", []):
+                                        detail["target_health"].append({
+                                            "target_group_arn": act["target_group_arn"],
+                                            "target_group_name": tg_detail.get("name"),
+                                            **target,
+                                        })
+
                             rule["actions"].append(act)
-                        listener["rules"].append(rule)
+                        listener_data["rules"].append(rule)
 
-                detail["listeners"].append(listener)
-        except Exception:
-            # Log or handle error
-            pass
+                detail["listeners"].append(listener_data)
+        except Exception as e:
+            # Issue #10: Log error but don't abort - continue to return what we have
+            import logging
+            logging.getLogger(__name__).warning(f"Error fetching listeners for {elb_arn}: {e}")
 
+        # Issue #10: If no listeners found, still try to get target groups from ARN patterns
+        # Some load balancers have target groups but listeners aren't attached
+        if not detail["listeners"] and detail["target_groups"]:
+            pass  # We already have target groups from above or will get them below
+            
         return detail
 
     def _get_target_group_detail(self, client, tg_arn: str) -> dict:

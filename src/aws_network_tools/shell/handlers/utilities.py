@@ -57,38 +57,42 @@ class UtilityHandlersMixin:
         if not ip:
             console.print("[red]Usage: find_ip <ip>[/]")
             return
-        from ...core.ip_resolver import IpResolver
 
-        resolver = IpResolver(profile=self.profile)
-        regions = self.regions or resolver.session.get_available_regions("ec2")
-        eni_id = resolver.resolve_ip(ip, regions)
-        if not eni_id:
+        # Use the optimized ip_finder module which has proper timeouts
+        from ...modules import ip_finder
+
+        console.print(f"[dim]Searching for {ip} across regions...[/]")
+        result = ip_finder.find_ip(ip, self.profile)
+
+        if not result:
             console.print(f"[yellow]No ENI found for {ip}[/]")
             return
-        for region in regions:
-            try:
-                ec2 = boto3.Session(profile_name=self.profile).client(
-                    "ec2", region_name=region
-                )
-                resp = ec2.describe_network_interfaces(NetworkInterfaceIds=[eni_id])
-                if resp.get("NetworkInterfaces"):
-                    eni = resp["NetworkInterfaces"][0]
-                    console.print(
-                        {
-                            "eni_id": eni_id,
-                            "region": region,
-                            "vpc_id": eni.get("VpcId"),
-                            "subnet_id": eni.get("SubnetId"),
-                            "private_ip": eni.get("PrivateIpAddress"),
-                            "public_ip": eni.get("Association", {}).get("PublicIp"),
-                            "attachment": eni.get("Attachment", {}).get("InstanceId")
-                            or eni.get("InterfaceType"),
-                        }
-                    )
-                    return
-            except Exception:
-                continue
-        console.print(f"[yellow]Found ENI {eni_id} but could not fetch details[/]")
+
+        # Format and display the result nicely
+        table = Table(title=f"IP Resolution: {ip}")
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="white")
+
+        table.add_row("Region", result["region"])
+        table.add_row("ENI ID", result.get("eni_id", "N/A"))
+        table.add_row("VPC ID", result.get("vpc_id", "N/A"))
+        table.add_row("Subnet ID", result.get("subnet_id", "N/A"))
+        table.add_row("Resource Type", result["resource_type"])
+
+        if "resource_id" in result:
+            table.add_row("Resource ID", result["resource_id"])
+
+        if "resource_name" in result:
+            table.add_row("Resource Name", result["resource_name"])
+
+        if "ip" in result:
+            table.add_row("IP Address", result["ip"])
+
+        if result.get("extra"):
+            for key, value in result["extra"].items():
+                table.add_row(key, str(value))
+
+        console.print(table)
 
     def do_run(self, args):
         """run <instance-id|ip> <command> - Run a shell command via SSM."""
