@@ -315,6 +315,26 @@ def mock_cloudwan_client():
                     })
             return attachments
 
+        def get_core_network_detail(self, cn_id):
+            """Return detailed core network info (per Nova Premier).
+
+            This is CRITICAL for context entry - cloudwan module calls this
+            to get full detail before entering context.
+            """
+            from tests.fixtures.cloudwan import get_core_network_detail
+            return get_core_network_detail(cn_id)
+
+        def get_policy_document(self, cn_id):
+            """Return policy document for core network.
+
+            Handler calls this to get policy when entering context.
+            """
+            cn_data = CLOUDWAN_FIXTURES.get(cn_id)
+            if not cn_data:
+                return None
+            # Return the policy from fixture
+            return cn_data.get("Policy", {})
+
     return MockCloudWANClient
 
 
