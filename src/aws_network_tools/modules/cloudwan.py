@@ -113,14 +113,10 @@ class CloudWANClient(BaseClient):
     ):
         super().__init__(profile, session)
         self._nm = None
-        # Use profile's region, env override, or fallback to us-west-2
-        if nm_region:
-            self._nm_region = nm_region
-        elif os.getenv("AWS_NETWORK_MANAGER_REGION"):
-            self._nm_region = os.getenv("AWS_NETWORK_MANAGER_REGION")
-        else:
-            # Try to get region from session/profile
-            self._nm_region = self.session.region_name or "us-west-2"
+        # Default to us-east-1, allow override via parameter or env
+        self._nm_region = nm_region or os.getenv(
+            "AWS_NETWORK_MANAGER_REGION", "us-east-1"
+        )
 
     @property
     def nm(self):
@@ -223,15 +219,16 @@ class CloudWANClient(BaseClient):
         except Exception:
             pass
 
-        def _normalize_datetime(val):
-            """Convert datetime objects to ISO strings for consistent sorting."""
+        # Sort by created_at, handling mixed datetime/None values
+        from datetime import datetime
+        def sort_key(x):
+            val = x.get("created_at")
             if val is None:
-                return ""
-            if hasattr(val, 'isoformat'):
-                return val.isoformat()
-            return str(val)
-
-        return sorted(events, key=lambda x: _normalize_datetime(x.get("created_at")), reverse=True)
+                return datetime.min
+            if isinstance(val, datetime):
+                return val
+            return datetime.min
+        return sorted(events, key=sort_key, reverse=True)
 
     def get_policy_document(
         self, cn_id: str, version: Optional[int] = None
@@ -539,17 +536,10 @@ class CloudWANClient(BaseClient):
                 CoreNetworkId=cn_id, SegmentName=segment, EdgeLocation=edge_location
             ):
                 for route in page.get("CoreNetworkRoutingInformation", []):
-                    # Handle NextHop - can be dict or string
-                    next_hop_raw = route.get("NextHop", "")
-                    if isinstance(next_hop_raw, dict):
-                        # Format as "ResourceType:ResourceId" for display
-                        next_hop = f"{next_hop_raw.get('ResourceType', '')}:{next_hop_raw.get('ResourceId', '')}"
-                    else:
-                        next_hop = next_hop_raw
                     routes.append(
                         {
                             "prefix": route.get("DestinationCidrBlock", ""),
-                            "next_hop": next_hop,
+                            "next_hop": route.get("NextHop", ""),
                             "next_hop_type": route.get("NextHopType", ""),
                             "next_hop_resource": route.get("NextHopResource", ""),
                             "local_preference": route.get("LocalPreference"),
@@ -705,7 +695,7 @@ class CloudWANDisplay(BaseDisplay):
                 str(i),
                 cn["name"],
                 cn["id"],
-                cn.get("global_network_name", "N/A"),
+                cn["global_network_name"],
                 str(len(cn["regions"])),
                 str(len(cn["segments"])),
                 str(len(cn["route_tables"])),
@@ -717,33 +707,29 @@ class CloudWANDisplay(BaseDisplay):
         if not cn:
             self.console.print("[red]Core Network not found[/]")
             return
-        tree = Tree(f"[bold blue]🌐 Core Network: {cn.get('name', cn.get('id', 'N/A'))}[/]")
-        tree.add(f"[dim]ID: {cn.get('id', 'N/A')}[/]")
-        tree.add(f"[dim]Global Network: {cn.get('global_network_name', 'N/A')}[/]")
+        tree = Tree(f"[bold blue]🌐 Core Network: {cn['name']}[/]")
+        tree.add(f"[dim]ID: {cn['id']}[/]")
+        tree.add(f"[dim]Global Network: {cn['global_network_name']}[/]")
 
-        regions = cn.get("regions", [])
-        if regions:
-            reg_branch = tree.add("[yellow]Regions[/]")
-            for r in regions:
+        if cn["regions"]:
+            reg_branch = tree.add("[yellow]🌍 Regions[/]")
+            for r in cn["regions"]:
                 reg_branch.add(f"[green]{r}[/]")
 
-        segments = cn.get("segments", [])
-        if segments:
-            seg_branch = tree.add("[magenta]Segments[/]")
-            for s in segments:
+        if cn["segments"]:
+            seg_branch = tree.add("[magenta]📊 Segments[/]")
+            for s in cn["segments"]:
                 seg_branch.add(f"[white]{s}[/]")
 
-        nfgs = cn.get("nfgs", [])
-        if nfgs:
-            nfg_branch = tree.add("[red]Network Function Groups[/]")
-            for n in nfgs:
+        if cn["nfgs"]:
+            nfg_branch = tree.add("[red]🔧 Network Function Groups[/]")
+            for n in cn["nfgs"]:
                 nfg_branch.add(f"[white]{n}[/]")
 
         self.console.print(tree)
         self.console.print()
 
-        route_tables = cn.get("route_tables", [])
-        if route_tables:
+        if cn["route_tables"]:
             rt_table = Table(
                 title="Route Tables", show_header=True, header_style="bold"
             )
@@ -752,13 +738,9 @@ class CloudWANDisplay(BaseDisplay):
             rt_table.add_column("Region", style="yellow")
             rt_table.add_column("Type", style="magenta")
             rt_table.add_column("Routes", style="white", justify="right")
-            for i, rt in enumerate(route_tables, 1):
+            for i, rt in enumerate(cn["route_tables"], 1):
                 rt_table.add_row(
-                    str(i),
-                    rt.get("name", ""),
-                    rt.get("region", ""),
-                    rt.get("type", ""),
-                    str(len(rt.get("routes", []))),
+                    str(i), rt["name"], rt["region"], rt["type"], str(len(rt["routes"]))
                 )
             self.console.print(rt_table)
 
@@ -1215,7 +1197,7 @@ class CloudWANDisplay(BaseDisplay):
                 table.add_row(
                     str(i),
                     route.get("prefix", ""),
-                    str(route.get("next_hop", "") or route.get("next_hop_resource", "") or "")[:25],
+                    route.get("next_hop", route.get("next_hop_resource", ""))[:25],
                     lp_str,
                     as_path_str or "-",
                     med_str,
