@@ -39,9 +39,8 @@ class CloudWANModule(ModuleInterface):
     def show_commands(self) -> Dict[str, List[str]]:
         return {
             None: ["global-networks"],
-            "global-network": ["core-networks", "detail"],
+            "global-network": ["core-networks"],
             "core-network": [
-                "detail",
                 "policy-documents",
                 "live-policy",
                 "policy-document",
