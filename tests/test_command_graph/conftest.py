@@ -274,6 +274,35 @@ def mock_tgw_client():
             """Return all Transit Gateways as list."""
             tgws = []
             for tgw_id, tgw_data in TGW_FIXTURES.items():
+                # Get attachments for this TGW
+                attachments = [
+                    {
+                        "id": att["TransitGatewayAttachmentId"],
+                        "name": next(
+                            (t["Value"] for t in att.get("Tags", []) if t["Key"] == "Name"),
+                            att["TransitGatewayAttachmentId"],
+                        ),
+                        "type": att.get("ResourceType", ""),
+                        "state": att.get("State", ""),
+                    }
+                    for att in TGW_ATTACHMENT_FIXTURES.values()
+                    if att.get("TransitGatewayId") == tgw_data["TransitGatewayId"]
+                ]
+
+                # Get route tables for this TGW
+                route_tables = [
+                    {
+                        "id": rt["TransitGatewayRouteTableId"],
+                        "name": next(
+                            (t["Value"] for t in rt.get("Tags", []) if t["Key"] == "Name"),
+                            rt["TransitGatewayRouteTableId"],
+                        ),
+                        "routes": [],
+                    }
+                    for rt in TGW_ROUTE_TABLE_FIXTURES.values()
+                    if rt.get("TransitGatewayId") == tgw_data["TransitGatewayId"]
+                ]
+
                 tgws.append(
                     {
                         "id": tgw_data["TransitGatewayId"],
@@ -287,8 +316,8 @@ def mock_tgw_client():
                         ),
                         "region": self._get_region_from_id(tgw_id),
                         "state": tgw_data["State"],
-                        "route_tables": [],
-                        "attachments": [],
+                        "route_tables": route_tables,
+                        "attachments": attachments,
                     }
                 )
             return tgws
@@ -336,6 +365,7 @@ def mock_cloudwan_client():
                     "state": cn_data["State"],
                     "regions": [edge["EdgeLocation"] for edge in cn_data.get("Edges", [])],
                     "segments": [seg for seg in cn_data.get("Segments", [])],
+                    "nfgs": [],  # Network Function Groups - required by CloudWANDisplay.show_detail
                     "route_tables": [],
                     "policy": None,
                     "core_networks": [],  # For compatibility
@@ -397,12 +427,32 @@ def mock_cloudwan_client():
             """Return policy document for core network.
 
             Handler calls this to get policy when entering context.
+            The policy document contains segments array that _show_segments reads.
             """
+            from tests.fixtures.cloudwan import CLOUDWAN_POLICY_FIXTURE
+
             cn_data = CLOUDWAN_FIXTURES.get(cn_id)
             if not cn_data:
                 return None
-            # Return the policy from fixture
-            return cn_data.get("Policy", {})
+            # Return the PolicyDocument content (contains segments, segment-actions, etc.)
+            return CLOUDWAN_POLICY_FIXTURE.get("PolicyDocument", {})
+
+        def list_policy_versions(self, cn_id):
+            """Return policy versions for core network."""
+            from tests.fixtures.cloudwan import CLOUDWAN_POLICY_FIXTURE
+
+            cn_data = CLOUDWAN_FIXTURES.get(cn_id)
+            if not cn_data:
+                return []
+            # Return mock policy versions
+            return [
+                {
+                    "version": 1,
+                    "alias": "LIVE",
+                    "change_set_state": "READY_TO_EXECUTE",
+                    "created_at": "2024-01-10T08:00:00+00:00",
+                }
+            ]
 
     return MockCloudWANClient
 
@@ -445,6 +495,44 @@ def mock_ec2_client():
                 )
             return instances
 
+        def get_instance_detail(self, instance_id, region=None):
+            """Return detailed EC2 instance information.
+
+            Args:
+                instance_id: EC2 instance ID
+                region: Optional region (ignored in mock)
+
+            Returns:
+                Dict with instance details
+            """
+            instance_data = EC2_INSTANCE_FIXTURES.get(instance_id)
+            if not instance_data:
+                return {}
+
+            return {
+                "id": instance_data["InstanceId"],
+                "name": next(
+                    (t["Value"] for t in instance_data.get("Tags", []) if t["Key"] == "Name"),
+                    instance_id,
+                ),
+                "type": instance_data["InstanceType"],
+                "state": instance_data["State"]["Name"],
+                "az": instance_data["Placement"]["AvailabilityZone"],
+                "region": instance_data["Placement"]["AvailabilityZone"][:-1],
+                "vpc_id": instance_data["VpcId"],
+                "subnet_id": instance_data["SubnetId"],
+                "private_ip": instance_data["PrivateIpAddress"],
+                "enis": [
+                    {"id": eni["NetworkInterfaceId"], "private_ip": eni.get("PrivateIpAddress", "")}
+                    for eni in ENI_FIXTURES.values()
+                    if eni.get("Attachment", {}).get("InstanceId") == instance_id
+                ],
+                "security_groups": [
+                    {"id": sg["GroupId"], "name": sg.get("GroupName", "")}
+                    for sg in instance_data.get("SecurityGroups", [])
+                ],
+            }
+
     return MockEC2Client
 
 
@@ -479,11 +567,12 @@ def mock_elb_client():
             parts = arn.split(":")
             return parts[3] if len(parts) > 3 else "us-east-1"
 
-        def get_elb_detail(self, elb_arn):
+        def get_elb_detail(self, elb_arn, region=None):
             """Return detailed ELB information.
 
             Args:
                 elb_arn: ELB ARN to get details for
+                region: Optional region (ignored in mock)
 
             Returns:
                 Dict with ELB details including listeners and target groups
