@@ -270,7 +270,7 @@ class AWSNetShellBase(cmd2.Cmd):
         # Create the full prompt
         if style == "long":
             # Multi-line prompt with continuation markers
-            # First line: root context with first child, no separator after aws-net
+            # First line: root context with first child, no space after aws-net
             if prompt_parts:
                 root_part = prompt_parts[0]
                 prompt_text = Text("aws-net>", style=self.theme.get("prompt_text"))
@@ -278,19 +278,28 @@ class AWSNetShellBase(cmd2.Cmd):
                 prompt_text.append("\n")
                 
                 # Middle lines: indented contexts with > continuation marker at END
-                for i, part in enumerate(prompt_parts[1:], 1):
+                # (all except the very last one)
+                for i, part in enumerate(prompt_parts[1:-1], 1):
                     depth = i
                     leading_spaces = " " * (1 + depth)  # 1 + depth spaces before content
                     prompt_text.append(Text(leading_spaces))  # Leading spaces
                     prompt_text.append(part)  # The context
                     prompt_text.append(Text(" >\n", style=self.theme.get("prompt_separator")))  # Continuation at END
                 
-                # Final line: just the command prompt marker (different character)
-                final_depth = len(prompt_parts) - 1
-                final_spaces = " " * (1 + final_depth)
-                prompt_text.append(Text(final_spaces + "$ ", style=self.theme.get("prompt_separator")))
+                # LAST context line: add the command prompt marker at END of same line
+                if len(prompt_parts) > 1:
+                    last_part = prompt_parts[-1]
+                    last_depth = len(prompt_parts) - 1
+                    last_spaces = " " * (1 + last_depth)
+                    prompt_text.append(Text(last_spaces))  # Leading spaces
+                    prompt_text.append(last_part)  # The last context
+                    prompt_text.append(Text(" $", style=self.theme.get("prompt_separator")))  # Command prompt at END
+                else:
+                    # Only one context (just root and one child)
+                    final_spaces = " " * 1
+                    prompt_text.append(Text(final_spaces + "$ ", style=self.theme.get("prompt_separator")))
             else:
-                # No context stack, just show root prompt
+                # No context stack, just show root prompt with command marker
                 prompt_text = Text("  aws-net> $", style=self.theme.get("prompt_text"))
         else:
             # Single line prompt (unchanged)

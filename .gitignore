@@ -74,6 +74,9 @@ temp/
 *.temp
 *.bak
 
+# Demo files
+demo/
+
 # AI/Agent files and directories
 .agent/
 .claude/
