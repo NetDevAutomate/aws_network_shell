@@ -717,7 +717,7 @@ class CloudWANDisplay(BaseDisplay):
         if not cn:
             self.console.print("[red]Core Network not found[/]")
             return
-        tree = Tree(f"[bold blue]Core Network: {cn.get('name', cn.get('id', 'N/A'))}[/]")
+        tree = Tree(f"[bold blue]🌐 Core Network: {cn.get('name', cn.get('id', 'N/A'))}[/]")
         tree.add(f"[dim]ID: {cn.get('id', 'N/A')}[/]")
         tree.add(f"[dim]Global Network: {cn.get('global_network_name', 'N/A')}[/]")
 
