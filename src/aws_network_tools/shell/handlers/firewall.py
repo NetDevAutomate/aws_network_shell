@@ -21,7 +21,12 @@ class FirewallHandlersMixin:
         if not fw:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("firewall", fw.get("arn", ""), fw.get("name", ""), fw)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("firewall", fw.get("arn", ""), fw.get("name", ""), fw, selection_idx)
+        print()  # Add blank line before next prompt
 
     def _show_rule_groups(self, _):
         if self.ctx_type != "firewall":

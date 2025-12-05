@@ -466,7 +466,12 @@ class RootHandlersMixin:
         if not gn:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("global-network", gn["id"], gn["name"], gn)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("global-network", gn["id"], gn["name"], gn, selection_idx)
+        print()  # Add blank line before next prompt
 
     # Routing cache commands
     def _show_routing_cache(self, _):

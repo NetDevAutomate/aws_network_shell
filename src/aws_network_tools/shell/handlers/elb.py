@@ -32,7 +32,12 @@ class ELBHandlersMixin:
             "Fetching ELB details",
             console=console,
         )
-        self._enter("elb", e["arn"], e.get("name", e["arn"]), detail)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("elb", e["arn"], e.get("name", e["arn"]), detail, selection_idx)
+        print()  # Add blank line before next prompt
 
     def _show_elbs(self, _):
         """Show load balancers."""

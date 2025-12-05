@@ -67,9 +67,14 @@ class EC2HandlersMixin:
             "Fetching instance",
             console=console,
         )
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
         self._enter(
-            "ec2-instance", target["id"], target.get("name") or target["id"], detail
+            "ec2-instance", target["id"], target.get("name") or target["id"], detail, selection_idx
         )
+        print()  # Add blank line before next prompt
 
     def _show_enis(self, _):
         if self.ctx_type != "ec2-instance":

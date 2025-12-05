@@ -21,7 +21,12 @@ class VPNHandlersMixin:
         if not v:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("vpn", v["id"], v.get("name", v["id"]), v)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("vpn", v["id"], v.get("name", v["id"]), v, selection_idx)
+        print()  # Add blank line before next prompt
 
     def _show_vpns(self, _):
         """Show Site-to-Site VPN connections."""

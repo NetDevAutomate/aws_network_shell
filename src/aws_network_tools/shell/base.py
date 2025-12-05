@@ -166,6 +166,7 @@ class Context:
     ref: str
     name: str
     data: dict = field(default_factory=dict)
+    selection_index: int = 0  # The index from the show command (1-based)
 
 
 class AWSNetShellBase(cmd2.Cmd):
@@ -243,64 +244,73 @@ class AWSNetShellBase(cmd2.Cmd):
             # Get color for this context type
             color = self.theme.get(ctx.type, "white")
             
-            if style == "short" or show_indices:
-                # Use index like gl:1, co:1
-                ctx_name = f"{ctx.type} [{i+1}]" if style == "long" else f"{ctx.type[:2] if ctx.type != 'core-network' else 'cn'}:{i+1}"
+            # Get abbreviation for context type
+            if ctx.type == "global-network":
+                abbrev = "gl"
+            elif ctx.type == "core-network":
+                abbrev = "cn"
+            elif ctx.type == "transit-gateway":
+                abbrev = "tg"
+            elif ctx.type == "ec2-instance":
+                abbrev = "ec"
             else:
-                # Use full name
-                display_name = ctx.name or ctx.ref
-                if len(display_name) > max_length:
-                    display_name = display_name[:max_length-3] + "..."
-                ctx_name = f"{ctx.type}:{display_name}"
+                abbrev = ctx.type[:2]
             
-            # Create colored text part
-            from rich.text import Text
-            if i == 0:
-                # First part after root
-                colored_part = Text(f"{ctx_name}", style=color)
-            else:
-                # Subsequent parts - indent for long mode
-                if style == "long":
-                    colored_part = Text(f"\n  {'  ' * i}{ctx_name}", style=color)
+            if style == "short":
+                # Short format: use index number like gl:1, cn:1
+                ctx_name = f"{abbrev}:{ctx.selection_index}"
+            else:  # long format
+                if show_indices:
+                    # Long format with indices: gl:1:name or gl:1
+                    if ctx.name:
+                        ctx_name = f"{abbrev}:{ctx.selection_index}:{ctx.name}"
+                    else:
+                        ctx_name = f"{abbrev}:{ctx.selection_index}"
                 else:
-                    colored_part = Text(f">{ctx_name}", style=color)
+                    # Long format without indices: gl:name
+                    display_name = ctx.name or ctx.ref
+                    if len(display_name) > max_length:
+                        display_name = display_name[:max_length-3] + "..."
+                    ctx_name = f"{abbrev}:{display_name}"
             
+            # Create colored text part (no newlines embedded)
+            from rich.text import Text
+            colored_part = Text(f"{ctx_name}", style=color)
             prompt_parts.append(colored_part)
         
         # Create the full prompt
         if style == "long":
             # Multi-line prompt with continuation markers
-            # First line: root context with first child, no space after aws-net
+            prompt_text = Text("aws-net> ", style=self.theme.get("prompt_text"))
+            separator_style = self.theme.get("prompt_separator")
+            
             if prompt_parts:
-                root_part = prompt_parts[0]
-                prompt_text = Text("aws-net>", style=self.theme.get("prompt_text"))
-                prompt_text.append(root_part)
-                prompt_text.append("\n")
+                # First context on same line as aws-net>
+                prompt_text.append(prompt_parts[0])
                 
-                # Middle lines: indented contexts with > continuation marker at END
-                # (all except the very last one)
-                for i, part in enumerate(prompt_parts[1:-1], 1):
-                    depth = i
-                    leading_spaces = " " * (1 + depth)  # 1 + depth spaces before content
-                    prompt_text.append(Text(leading_spaces))  # Leading spaces
-                    prompt_text.append(part)  # The context
-                    prompt_text.append(Text(" >\n", style=self.theme.get("prompt_separator")))  # Continuation at END
-                
-                # LAST context line: add the command prompt marker at END of same line
                 if len(prompt_parts) > 1:
-                    last_part = prompt_parts[-1]
-                    last_depth = len(prompt_parts) - 1
-                    last_spaces = " " * (1 + last_depth)
-                    prompt_text.append(Text(last_spaces))  # Leading spaces
-                    prompt_text.append(last_part)  # The last context
-                    prompt_text.append(Text(" $", style=self.theme.get("prompt_separator")))  # Command prompt at END
+                    # Multiple contexts - use multi-line format
+                    prompt_text.append(Text(" >\n", style=separator_style))
+                    
+                    # Middle contexts (all except first and last)
+                    for i, part in enumerate(prompt_parts[1:-1], 1):
+                        indent = "  " * i  # Two spaces per level
+                        prompt_text.append(Text(f"{indent}", style=separator_style))
+                        prompt_text.append(part)
+                        prompt_text.append(Text(" >\n", style=separator_style))
+                    
+                    # Last context
+                    last_idx = len(prompt_parts) - 1
+                    indent = "  " * last_idx
+                    prompt_text.append(Text(f"{indent}", style=separator_style))
+                    prompt_text.append(prompt_parts[-1])
+                    prompt_text.append(Text(" $", style=separator_style))
                 else:
-                    # Only one context (just root and one child)
-                    final_spaces = " " * 1
-                    prompt_text.append(Text(final_spaces + "$ ", style=self.theme.get("prompt_separator")))
+                    # Only one context - add prompt marker on same line
+                    prompt_text.append(Text(" $ ", style=separator_style))
             else:
-                # No context stack, just show root prompt with command marker
-                prompt_text = Text("  aws-net> $", style=self.theme.get("prompt_text"))
+                # No contexts - just root
+                prompt_text.append(Text(" $ ", style=separator_style))
         else:
             # Single line prompt (unchanged)
             separator_color = self.theme.get("prompt_separator")
@@ -311,12 +321,16 @@ class AWSNetShellBase(cmd2.Cmd):
                     prompt_text.append(part)
             prompt_text.append("> ", style=separator_color)
         
-        # Store as string with ANSI codes
-        self.prompt = prompt_text.plain
+        # Render Text to ANSI codes for cmd2
+        from rich.console import Console
+        render_console = Console(force_terminal=True, color_system="standard")
+        with render_console.capture() as capture:
+            render_console.print(prompt_text, end="")
+        self.prompt = capture.get()
 
-    def _enter(self, ctx_type: str, res_id: str, name: str, data: dict = None):
+    def _enter(self, ctx_type: str, res_id: str, name: str, data: dict = None, selection_index: int = 1):
         """Enter a new context."""
-        self.context_stack.append(Context(ctx_type, res_id, name, data or {}))
+        self.context_stack.append(Context(ctx_type, res_id, name, data or {}, selection_index))
         self._update_prompt()
 
     def _resolve(self, items: list, val: str) -> Optional[dict]:

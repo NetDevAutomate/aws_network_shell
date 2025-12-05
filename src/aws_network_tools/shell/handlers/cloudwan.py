@@ -134,7 +134,12 @@ class CloudWANHandlersMixin:
         full_cn = self._cached(
             f"cn-detail:{cn['id']}", fetch_full_cn, "Fetching core network details"
         )
-        self._enter("core-network", cn["id"], cn["name"], full_cn)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("core-network", cn["id"], cn["name"], full_cn, selection_idx)
+        print()  # Add blank line before next prompt
 
     def do_show(self, args):
         """Override show to handle policy document-diff command."""
@@ -424,7 +429,12 @@ class CloudWANHandlersMixin:
         if not rt:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("route-table", rt["id"], rt["name"], rt)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("route-table", rt["id"], rt["name"], rt, selection_idx)
+        print()  # Add blank line before next prompt
 
     def do_find_prefix(self, args):
         if self.ctx_type != "route-table":

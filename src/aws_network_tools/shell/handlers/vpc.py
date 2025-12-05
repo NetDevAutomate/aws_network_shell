@@ -31,7 +31,12 @@ class VPCHandlersMixin:
             "Fetching VPC details",
             console=console,
         )
-        self._enter("vpc", v["id"], v.get("name", v["id"]), detail)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("vpc", v["id"], v.get("name", v["id"]), detail, selection_idx)
+        print()  # Add blank line before next prompt
 
     def _set_vpc_route_table(self, val):
         """Set route-table context from VPC context."""
@@ -48,7 +53,12 @@ class VPCHandlersMixin:
         if not rt:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("route-table", rt["id"], rt.get("name") or rt["id"], rt)
+        try:
+            selection_idx = int(val)
+        except ValueError:
+            selection_idx = 1
+        self._enter("route-table", rt["id"], rt.get("name") or rt["id"], rt, selection_idx)
+        print()  # Add blank line before next prompt
 
     def _show_vpc_route_tables(self):
         rts = self.ctx.data.get("route_tables", [])
