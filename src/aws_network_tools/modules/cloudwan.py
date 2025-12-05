@@ -39,12 +39,14 @@ class CloudWANModule(ModuleInterface):
     def show_commands(self) -> Dict[str, List[str]]:
         return {
             None: ["global-networks"],
-            "global-network": ["core-networks"],
+            "global-network": ["core-networks", "detail"],
             "core-network": [
+                "detail",
                 "policy-documents",
                 "live-policy",
                 "policy-document",
                 "policy-diff",
+                "policy-change-events",
                 "route-tables",
                 "routes",
                 "blackhole-routes",
@@ -52,6 +54,11 @@ class CloudWANModule(ModuleInterface):
                 "rib",
                 "segments",
                 "policy",
+                "attachments",
+                "vpc-attachments",
+                "vpn-attachments",
+                "connect-attachments",
+                "connect-peers",
             ],
         }
 

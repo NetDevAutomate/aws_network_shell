@@ -97,6 +97,7 @@ def command_runner(isolated_shell):
 
                 # Patch all handler consoles
                 handler_modules = [
+                    "aws_network_tools.shell.base",  # Base shell class
                     "aws_network_tools.shell.handlers.root",
                     "aws_network_tools.shell.handlers.vpc",
                     "aws_network_tools.shell.handlers.tgw",
