@@ -478,7 +478,7 @@ class RootHandlersMixin:
         cache = self._cache.get("routing-cache", {})
         if not cache:
             console.print(
-                "[yellow]Routing cache empty. Run 'create-routing-cache' to populate.[/]"
+                "[yellow]Routing cache empty. Run 'create_routing_cache' to populate.[/]"
             )
             return
 
@@ -627,7 +627,7 @@ class RootHandlersMixin:
 
         if not cache:
             console.print(
-                "[yellow]Routing cache empty. Run 'create-routing-cache' first.[/]"
+                "[yellow]Routing cache empty. Run 'create_routing_cache' first.[/]"
             )
             return
 
@@ -675,7 +675,7 @@ class RootHandlersMixin:
 
         if not cache:
             console.print(
-                "[yellow]Routing cache empty. Run 'create-routing-cache' first.[/]"
+                "[yellow]Routing cache empty. Run 'create_routing_cache' first.[/]"
             )
             return
 
