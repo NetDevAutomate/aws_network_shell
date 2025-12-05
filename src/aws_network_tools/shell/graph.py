@@ -145,6 +145,10 @@ class CommandGraph:
         "_show_cloudwan_route_tables",
         "_show_vpc_route_tables",
         "_show_transit_gateway_route_tables",
+        "_show_command_path",
+        "_set_vpc_route_table",
+        "_show_core_network_policy",
+        "_show_policy_document_diff",
     }
 
     # Navigation commands (not real handlers)
@@ -595,6 +599,84 @@ class CommandGraph:
             "implemented": implemented,
             "contexts": len([c for c in HIERARCHY if c]),
             "paths": len(self.get_all_paths()),
+        }
+
+    def find_command_path(self, command: str) -> list[dict]:
+        """Find all paths to reach a command.
+        
+        Returns list of dicts with:
+        - path: list of commands to reach the target
+        - context: the context where command is available
+        - is_global: True if command is at root level
+        """
+        results = []
+        command_lower = command.lower().strip()
+        
+        # Search all nodes for matching commands
+        for node_id, node in self.nodes.items():
+            node_name_lower = node.name.lower()
+            
+            # Match by full name or partial
+            if command_lower == node_name_lower or command_lower in node_name_lower:
+                path_info = self._build_path_to_node(node)
+                if path_info:
+                    results.append(path_info)
+        
+        return results
+
+    def _build_path_to_node(self, target_node: CommandNode) -> Optional[dict]:
+        """Build the path from root to a target node."""
+        if target_node.node_type == NodeType.ROOT:
+            return None
+            
+        # Find path by traversing from root
+        path = []
+        
+        def find_path(node: CommandNode, current_path: list) -> bool:
+            if node.id == target_node.id:
+                path.extend(current_path + [node.name])
+                return True
+            for child in node.children:
+                if find_path(child, current_path + ([node.name] if node.node_type != NodeType.ROOT else [])):
+                    return True
+            return False
+        
+        find_path(self.root, [])
+        
+        if not path:
+            return None
+            
+        # Determine if global (root level) or requires context navigation
+        is_global = target_node.context is None
+        
+        # Build prerequisite show command for context-entering sets
+        prereq_show = None
+        if not is_global and len(path) > 1:
+            # Find the set command that enters this context
+            for i, cmd in enumerate(path[:-1]):
+                if cmd.startswith("set "):
+                    resource = cmd.replace("set ", "")
+                    # Map to corresponding show command
+                    show_map = {
+                        "vpc": "show vpcs",
+                        "transit-gateway": "show transit_gateways", 
+                        "global-network": "show global-networks",
+                        "core-network": "show core-networks",
+                        "firewall": "show firewalls",
+                        "ec2-instance": "show ec2-instances",
+                        "elb": "show elbs",
+                        "vpn": "show vpns",
+                        "route-table": "show route-tables",
+                    }
+                    prereq_show = show_map.get(resource)
+        
+        return {
+            "command": target_node.name,
+            "path": path,
+            "context": target_node.context,
+            "is_global": is_global,
+            "prereq_show": prereq_show,
+            "implemented": target_node.implemented,
         }
 
 

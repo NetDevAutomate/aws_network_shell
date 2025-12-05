@@ -84,7 +84,7 @@ class AWSNetShell(
                 parts = parts[:idx]
             except Exception:
                 watch_n = None
-        arg = parts[1] if len(parts) > 1 else None
+        arg = " ".join(parts[1:]) if len(parts) > 1 else None
 
         # Special nested: 'show vpc <sub>'
         if opt == "vpc":
