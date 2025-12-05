@@ -1,14 +1,8 @@
 """TDD Tests for CloudWAN issues #1, #2, #3, #4."""
 
-import sys
 from unittest.mock import MagicMock
 from datetime import datetime
 import pytest
-
-# Mock cmd2 before imports
-mock_cmd2 = MagicMock()
-mock_cmd2.Cmd = MagicMock
-sys.modules['cmd2'] = mock_cmd2
 
 
 class TestShowRibKeyError:

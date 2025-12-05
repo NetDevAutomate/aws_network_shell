@@ -693,12 +693,12 @@ class CloudWANDisplay(BaseDisplay):
         for i, cn in enumerate(networks, 1):
             table.add_row(
                 str(i),
-                cn["name"],
-                cn["id"],
-                cn["global_network_name"],
-                str(len(cn["regions"])),
-                str(len(cn["segments"])),
-                str(len(cn["route_tables"])),
+                cn.get("name", "Unknown"),
+                cn.get("id", "Unknown"),
+                cn.get("global_network_name", "N/A"),
+                str(len(cn.get("regions", []))),
+                str(len(cn.get("segments", []))),
+                str(len(cn.get("route_tables", []))),
             )
         self.console.print(table)
         self.console.print(f"\n[dim]Total: {len(networks)} Core Network(s)[/]")
@@ -707,16 +707,16 @@ class CloudWANDisplay(BaseDisplay):
         if not cn:
             self.console.print("[red]Core Network not found[/]")
             return
-        tree = Tree(f"[bold blue]🌐 Core Network: {cn['name']}[/]")
-        tree.add(f"[dim]ID: {cn['id']}[/]")
-        tree.add(f"[dim]Global Network: {cn['global_network_name']}[/]")
+        tree = Tree(f"[bold blue]🌐 Core Network: {cn.get('name', 'Unknown')}[/]")
+        tree.add(f"[dim]ID: {cn.get('id', 'Unknown')}[/]")
+        tree.add(f"[dim]Global Network: {cn.get('global_network_name', 'N/A')}[/]")
 
-        if cn["regions"]:
+        if cn.get("regions"):
             reg_branch = tree.add("[yellow]🌍 Regions[/]")
             for r in cn["regions"]:
                 reg_branch.add(f"[green]{r}[/]")
 
-        if cn["segments"]:
+        if cn.get("segments"):
             seg_branch = tree.add("[magenta]📊 Segments[/]")
             for s in cn["segments"]:
                 seg_branch.add(f"[white]{s}[/]")
@@ -1194,10 +1194,16 @@ class CloudWANDisplay(BaseDisplay):
                 med = route.get("med")
                 med_str = str(med) if med is not None else "-"
 
+                # Handle next_hop which can be dict or string
+                next_hop_val = route.get("next_hop", route.get("next_hop_resource", ""))
+                if isinstance(next_hop_val, dict):
+                    next_hop_val = next_hop_val.get("CoreNetworkArn", str(next_hop_val))
+                next_hop_str = str(next_hop_val)[:25] if next_hop_val else ""
+
                 table.add_row(
                     str(i),
                     route.get("prefix", ""),
-                    route.get("next_hop", route.get("next_hop_resource", ""))[:25],
+                    next_hop_str,
                     lp_str,
                     as_path_str or "-",
                     med_str,

@@ -12,6 +12,7 @@ dependencies = [
     "thefuzz>=0.22.0",
     "cmd2>=2.4.0",
     "PyYAML>=6.0",
+    "pexpect>=4.9.0",
 ]
 
 [project.optional-dependencies]
