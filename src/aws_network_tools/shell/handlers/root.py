@@ -715,10 +715,11 @@ class RootHandlersMixin:
 
     # Graph commands
     def _show_graph(self, arg):
-        """Show command hierarchy graph. Options: stats, validate, mermaid"""
+        """Show command hierarchy graph. Options: stats, validate, mermaid, parent <cmd>"""
         from ..graph import build_graph, validate_graph
 
         graph = build_graph(self.__class__)
+        arg = arg or ""
 
         if arg == "stats":
             stats = graph.stats()
@@ -744,18 +745,75 @@ class RootHandlersMixin:
             md = graph.to_mermaid()
             console.print(md)
 
+        elif arg.startswith("parent "):
+            # Show path to reach a command
+            cmd = arg[7:].strip()
+            self._show_command_path(graph, cmd)
+
         else:
             # Default: show tree structure
             self._print_graph_tree(graph.root, 0)
 
+    def _show_command_path(self, graph, command: str):
+        """Show the path to reach a specific command."""
+        results = graph.find_command_path(command)
+        
+        if not results:
+            console.print(f"[yellow]No command found matching '{command}'[/]")
+            return
+        
+        console.print(f"[bold]Paths to '{command}':[/]\n")
+        
+        for result in results:
+            marker = "✓" if result["implemented"] else "○"
+            
+            if result["is_global"]:
+                console.print(f"{marker} [cyan]{result['command']}[/]")
+                console.print("  [green]Global command[/] - available at root level")
+            else:
+                console.print(f"{marker} [cyan]{result['command']}[/]")
+                console.print(f"  Context: [yellow]{result['context']}[/]")
+                
+                # Build the full navigation path
+                path_parts = []
+                if result.get("prereq_show"):
+                    path_parts.append(result["prereq_show"])
+                
+                for p in result["path"][:-1]:  # Exclude the command itself
+                    path_parts.append(p)
+                
+                if path_parts:
+                    console.print(f"  Path: [blue]{' → '.join(path_parts)} → {result['command']}[/]")
+            
+            console.print()
+
     def _print_graph_tree(self, node, depth: int):
-        """Print graph as tree."""
+        """Print graph as tree with prerequisite show commands for context-entering sets."""
         indent = "  " * depth
         marker = "✓" if node.implemented else "○"
+        
+        # Map set commands to their prerequisite show commands
+        prereq_show_map = {
+            "set vpc": "show vpcs",
+            "set transit-gateway": "show transit_gateways",
+            "set global-network": "show global-networks",
+            "set core-network": "show core-networks",
+            "set firewall": "show firewalls",
+            "set ec2-instance": "show ec2-instances",
+            "set elb": "show elbs",
+            "set vpn": "show vpns",
+            "set route-table": "show route-tables",
+        }
+        
         if node.enters_context:
-            console.print(f"{indent}{marker} {node.name} → [{node.enters_context}]")
+            # Show prerequisite show command before set command
+            prereq = prereq_show_map.get(node.name)
+            if prereq:
+                console.print(f"{indent}[dim]({prereq} first)[/]")
+            console.print(f"{indent}{marker} {node.name} →")
         else:
             console.print(f"{indent}{marker} {node.name}")
+        
         for child in node.children:
             self._print_graph_tree(child, depth + 1)
 
