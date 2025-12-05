@@ -120,7 +120,21 @@ class CloudWANHandlersMixin:
         if not cn:
             console.print(f"[red]Not found: {val}[/]")
             return
-        self._enter("core-network", cn["id"], cn["name"], cn)
+
+        # Fetch full core network data including policy
+        from ...modules import cloudwan
+
+        def fetch_full_cn():
+            client = cloudwan.CloudWANClient(self.profile)
+            policy = client.get_policy_document(cn["id"])
+            full_data = dict(cn)
+            full_data["policy"] = policy
+            return full_data
+
+        full_cn = self._cached(
+            f"cn-detail:{cn['id']}", fetch_full_cn, "Fetching core network details"
+        )
+        self._enter("core-network", cn["id"], cn["name"], full_cn)
 
     def do_show(self, args):
         """Override show to handle policy document-diff command."""
