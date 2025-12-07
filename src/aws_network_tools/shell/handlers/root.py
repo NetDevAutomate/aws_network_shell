@@ -557,21 +557,31 @@ class RootHandlersMixin:
 
     def _show_vpc_routes_table(self, routes):
         """Display VPC routes in detailed table."""
-        table = Table(title=f"VPC Routes ({len(routes)} total)")
-        table.add_column("VPC", style="cyan")
-        table.add_column("Region", style="dim")
-        table.add_column("Route Table", style="yellow")
-        table.add_column("Destination", style="green")
-        table.add_column("Target")
-        table.add_column("State")
+        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
 
-        for r in routes[:100]:  # Limit to 100 for display
+        table = Table(
+            title=f"VPC Routes ({len(routes)} total)",
+            show_header=True,
+            header_style="bold cyan",
+            expand=True
+        )
+
+        table.add_column("VPC Name", style="cyan", no_wrap=not allow_truncate)
+        table.add_column("VPC ID", style="dim", no_wrap=not allow_truncate)
+        table.add_column("Region", style="blue", no_wrap=True)
+        table.add_column("Route Table", style="yellow", no_wrap=not allow_truncate)
+        table.add_column("Destination", style="green", no_wrap=True)
+        table.add_column("Target", style="magenta", no_wrap=not allow_truncate)
+        table.add_column("State", style="bold green", no_wrap=True)
+
+        for r in routes[:100]:
             table.add_row(
-                (r.get("vpc_name") or "")[:20],
+                r.get("vpc_name") or "",
+                r.get("vpc_id") or "",
                 r.get("region") or "",
-                (r.get("route_table") or "")[:20],
+                r.get("route_table") or "",
                 r.get("destination") or "",
-                (r.get("target") or "")[:30],
+                r.get("target") or "",
                 r.get("state") or ""
             )
 
@@ -581,22 +591,34 @@ class RootHandlersMixin:
 
     def _show_transit_gateway_routes_table(self, routes):
         """Display Transit Gateway routes in detailed table."""
-        table = Table(title=f"Transit Gateway Routes ({len(routes)} total)")
-        table.add_column("Transit Gateway", style="cyan")
-        table.add_column("Region", style="dim")
-        table.add_column("Route Table", style="yellow")
-        table.add_column("Destination", style="green")
-        table.add_column("Attachment", style="magenta")
-        table.add_column("State")
-        table.add_column("Type")
+        # Check terminal width and config
+        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
+
+        table = Table(
+            title=f"Transit Gateway Routes ({len(routes)} total)",
+            show_header=True,
+            header_style="bold cyan",
+            expand=True  # Use full terminal width
+        )
+
+        # Add columns with proper styling and no width limits
+        table.add_column("Transit Gateway", style="cyan", no_wrap=not allow_truncate)
+        table.add_column("TGW ID", style="dim", no_wrap=not allow_truncate)
+        table.add_column("Region", style="blue", no_wrap=True)
+        table.add_column("Route Table", style="yellow", no_wrap=not allow_truncate)
+        table.add_column("Destination", style="green", no_wrap=True)
+        table.add_column("Attachment", style="magenta", no_wrap=not allow_truncate)
+        table.add_column("State", style="bold green", no_wrap=True)
+        table.add_column("Type", style="white", no_wrap=True)
 
         for r in routes[:100]:
             table.add_row(
-                (r.get("tgw_name") or "")[:20],
+                r.get("tgw_name") or "",
+                r.get("tgw_id") or "",
                 r.get("region") or "",
-                (r.get("route_table") or "")[:20],
+                r.get("route_table") or "",
                 r.get("destination") or "",
-                (r.get("target") or "")[:25],
+                r.get("target") or "",
                 r.get("state") or "",
                 r.get("type") or ""
             )
@@ -607,23 +629,33 @@ class RootHandlersMixin:
 
     def _show_cloud_wan_routes_table(self, routes):
         """Display Cloud WAN routes in detailed table."""
-        table = Table(title=f"Cloud WAN Routes ({len(routes)} total)")
-        table.add_column("Core Network", style="cyan")
-        table.add_column("Global Network", style="blue")
-        table.add_column("Segment", style="yellow")
-        table.add_column("Region", style="dim")
-        table.add_column("Destination", style="green")
-        table.add_column("Target", style="magenta")
-        table.add_column("State")
+        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
+
+        table = Table(
+            title=f"Cloud WAN Routes ({len(routes)} total)",
+            show_header=True,
+            header_style="bold cyan",
+            expand=True
+        )
+
+        table.add_column("Core Network", style="cyan", no_wrap=not allow_truncate)
+        table.add_column("Core Network ID", style="dim", no_wrap=not allow_truncate)
+        table.add_column("Global Network", style="blue", no_wrap=not allow_truncate)
+        table.add_column("Segment", style="yellow", no_wrap=True)
+        table.add_column("Region", style="white", no_wrap=True)
+        table.add_column("Destination", style="green", no_wrap=True)
+        table.add_column("Target", style="magenta", no_wrap=not allow_truncate)
+        table.add_column("State", style="bold green", no_wrap=True)
 
         for r in routes[:100]:
             table.add_row(
-                (r.get("core_network_name") or "")[:20],
-                (r.get("global_network_id") or "")[:20],
+                r.get("core_network_name") or "",
+                r.get("core_network_id") or "",
+                r.get("global_network_id") or "",
                 r.get("segment") or "",
                 r.get("region") or "",
                 r.get("destination") or "",
-                (r.get("target") or "")[:25],
+                r.get("target") or "",
                 r.get("state") or ""
             )
 
