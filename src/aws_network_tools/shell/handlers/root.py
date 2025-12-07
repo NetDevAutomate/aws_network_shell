@@ -680,19 +680,27 @@ class RootHandlersMixin:
             tgws = tgw.TGWClient(self.profile).discover()
             routes = []
             for t in tgws:
+                tgw_id = t.get("id", "")
+                tgw_name = t.get("name") or tgw_id
+                tgw_region = t.get("region", "")
+
                 for rt in t.get("route_tables", []):
+                    rt_id = rt.get("id", "")
+
                     for r in rt.get("routes", []):
+                        # TGW module uses lowercase keys: prefix, target, state, type
+                        # NOT AWS API format: DestinationCidrBlock, TransitGatewayAttachmentId
                         routes.append(
                             {
                                 "source": "tgw",
-                                "tgw_id": t["id"],
-                                "tgw_name": t.get("name", t["id"]),
-                                "region": t["region"],
-                                "route_table": rt.get("id"),
-                                "destination": r.get("DestinationCidrBlock", ""),
-                                "target": r.get("TransitGatewayAttachmentId", ""),
-                                "state": r.get("State", ""),
-                                "type": r.get("Type", ""),
+                                "tgw_id": tgw_id,
+                                "tgw_name": tgw_name,
+                                "region": tgw_region,
+                                "route_table": rt_id,
+                                "destination": r.get("prefix", ""),  # Lowercase
+                                "target": r.get("target", ""),       # Already lowercase
+                                "state": r.get("state", ""),         # Already lowercase
+                                "type": r.get("type", ""),           # Already lowercase
                             }
                         )
             return routes
