@@ -463,6 +463,90 @@ aws-net> find_null_routes
 - `reachability`, `populate_cache`, `clear_cache`
 - `create-routing-cache`, `export_graph`
 
+### Cache Commands Explained
+
+#### `populate_cache` - General Topology Cache
+
+**Purpose**: Pre-fetch ALL topology data across all modules for comprehensive analysis
+
+**What it caches**:
+- VPCs, subnets, route tables, security groups, NACLs
+- Transit Gateways, attachments, peerings, route tables
+- Cloud WAN (global networks, core networks, segments, attachments)
+- EC2 instances, ENIs
+- ELBs, listeners, target groups
+- VPNs, Direct Connect connections, Firewalls
+- All discoverable resources across all regions
+
+**Use Case**: Warm cache before comprehensive analysis or demos
+**Duration**: 30-60 seconds depending on account size
+
+```bash
+aws-net> populate_cache
+Populating topology cache...
+  → Discovering VPCs...
+  → Discovering Transit Gateways...
+  → Discovering Cloud WAN...
+  → Discovering EC2 instances...
+Cache populated
+```
+
+---
+
+#### `create_routing_cache` - Specialized Routing Cache
+
+**Purpose**: Build specialized cache of ONLY routing data for fast route lookups and analysis
+
+**What it caches**:
+- VPC route table entries (all route tables across all VPCs)
+- Transit Gateway route table entries (all TGW route tables)
+- Cloud WAN route table entries (by core network, segment, and region)
+
+**Enables Commands**:
+- `find_prefix <cidr>` - Find which route tables contain a prefix
+- `find_null_routes` - Find blackhole/null routes across all routing domains
+- `show routing-cache <filter>` - View cached routes with filtering
+
+**Use Case**: Fast routing troubleshooting and analysis without fetching data
+**Duration**: 10-20 seconds
+
+```bash
+aws-net> create_routing_cache
+Building routing cache...
+  VPC routes: 373
+  Transit Gateway routes: 50
+  Cloud WAN routes: 300
+```
+
+**View Cached Routes**:
+```bash
+# Summary
+aws-net> show routing-cache
+
+# Detailed views
+aws-net> show routing-cache vpc              # All VPC route table entries
+aws-net> show routing-cache transit-gateway  # All Transit Gateway routes
+aws-net> show routing-cache cloud-wan        # All Cloud WAN routes (by segment/region)
+aws-net> show routing-cache all              # Everything (comprehensive view)
+```
+
+---
+
+#### Comparison
+
+| Feature | populate_cache | create_routing_cache |
+|---------|----------------|----------------------|
+| **Scope** | Everything | Routes only |
+| **Purpose** | General topology | Routing analysis |
+| **Speed** | Slower (30-60s) | Faster (10-20s) |
+| **Data** | All resources | Route tables only |
+| **Enables** | All show commands | find_prefix, routing-cache commands |
+| **When to use** | Before exploration/demos | Before routing troubleshooting |
+
+**Recommendation**:
+- Use `populate_cache` for general exploration and comprehensive analysis
+- Use `create_routing_cache` specifically for routing troubleshooting and prefix searches
+
 ## 🔧 Configuration
 
 Default configuration in `pyproject.toml`:
