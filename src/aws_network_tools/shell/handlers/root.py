@@ -721,7 +721,7 @@ class RootHandlersMixin:
         try:
             tgw_routes = run_with_spinner(fetch_tgw_routes, "Fetching TGW routes")
             cache["tgw"] = {"routes": tgw_routes}
-            console.print(f"  TGW routes: {len(tgw_routes)}")
+            console.print(f"  Transit Gateway routes: {len(tgw_routes)}")
         except Exception as e:
             console.print(f"  [red]TGW routes failed: {e}[/]")
 
@@ -730,7 +730,7 @@ class RootHandlersMixin:
                 fetch_cloudwan_routes, "Fetching CloudWAN routes"
             )
             cache["cloudwan"] = {"routes": cloudwan_routes}
-            console.print(f"  CloudWAN routes: {len(cloudwan_routes)}")
+            console.print(f"  Cloud WAN routes: {len(cloudwan_routes)}")
         except Exception as e:
             console.print(f"  [red]CloudWAN routes failed: {e}[/]")
 
