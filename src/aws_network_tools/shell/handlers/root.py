@@ -557,7 +557,7 @@ class RootHandlersMixin:
 
     def _show_vpc_routes_table(self, routes):
         """Display VPC routes in detailed table."""
-        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
+        allow_truncate = self.config.get("display.allow_truncate", True)
 
         table = Table(
             title=f"VPC Routes ({len(routes)} total)",
@@ -592,7 +592,7 @@ class RootHandlersMixin:
     def _show_transit_gateway_routes_table(self, routes):
         """Display Transit Gateway routes in detailed table."""
         # Check terminal width and config
-        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
+        allow_truncate = self.config.get("display.allow_truncate", True)
 
         table = Table(
             title=f"Transit Gateway Routes ({len(routes)} total)",
@@ -629,7 +629,7 @@ class RootHandlersMixin:
 
     def _show_cloud_wan_routes_table(self, routes):
         """Display Cloud WAN routes in detailed table."""
-        allow_truncate = self.config.get_display_config().get("allow_truncate", True)
+        allow_truncate = self.config.get("display.allow_truncate", True)
 
         table = Table(
             title=f"Cloud WAN Routes ({len(routes)} total)",
@@ -790,7 +790,7 @@ class RootHandlersMixin:
         self._cache["routing-cache"] = cache
 
         # Auto-save to local DB if configured
-        if self.config.get_cache_config().get("use_local_cache", False):
+        if self.config.get("cache.use_local_cache", False):
             try:
                 from ...core.cache_db import CacheDB
                 db = CacheDB()
