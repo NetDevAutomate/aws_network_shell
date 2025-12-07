@@ -516,11 +516,24 @@ class RootHandlersMixin:
 
     def _show_routing_cache_detail(self, cache, filter_source):
         """Show detailed routing cache entries."""
+        # Map user input to cache keys
+        source_map = {
+            "vpc": "vpc",
+            "transit-gateway": "tgw",
+            "transitgateway": "tgw",
+            "tgw": "tgw",
+            "cloud-wan": "cloudwan",
+            "cloudwan": "cloudwan",
+        }
+
         all_routes = []
 
         for source, data in cache.items():
-            if filter_source != "all" and source != filter_source.replace("-", ""):
-                continue
+            # Check if this source matches the filter
+            if filter_source != "all":
+                target_key = source_map.get(filter_source)
+                if source != target_key:
+                    continue
             routes = data.get("routes", [])
             all_routes.extend(routes)
 
