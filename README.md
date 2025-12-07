@@ -509,11 +509,21 @@ MIT License - see LICENSE file for details
 
 ## 📝 Changelog
 
+### 2024-12-05
+- ✅ ELB commands implementation (listeners, targets, health)
+- ✅ VPN context commands (detail, tunnels)
+- ✅ Firewall policy command
+- ✅ Core-network commands registration fix
+- ✅ Direct resource selection without show command
+- ✅ Automated issue resolution workflow
+- ✅ Consolidated CLI to aws-net-shell only
+- ✅ Multi-level context prompt fix
+- ✅ Comprehensive testing framework with pexpect integration
+- ✅ Graph-based command testing
+
 ### 2024-12-02
 - ✅ Comprehensive command graph with context navigation
 - ✅ Dynamic command discovery (78+ commands)
-- ✅ Valid resource number testing
-- ✅ Spawn message removal
 - ✅ Command graph Mermaid diagrams
 - ✅ Test coverage: 77+ commands
 

@@ -473,8 +473,16 @@ class RootHandlersMixin:
         print()  # Add blank line before next prompt
 
     # Routing cache commands
-    def _show_routing_cache(self, _):
-        """Show routing cache status."""
+    def _show_routing_cache(self, arg):
+        """Show routing cache status or detailed routes.
+
+        Usage:
+            show routing-cache              # Summary
+            show routing-cache vpc          # All VPC routes
+            show routing-cache transit-gateway  # All Transit Gateway routes
+            show routing-cache cloud-wan    # All Cloud WAN routes
+            show routing-cache all          # All routes (detailed)
+        """
         cache = self._cache.get("routing-cache", {})
         if not cache:
             console.print(
@@ -482,7 +490,15 @@ class RootHandlersMixin:
             )
             return
 
-        table = Table(title="Routing Cache")
+        arg = arg.strip().lower() if arg else ""
+
+        # Show detailed routes if argument provided
+        if arg in ["vpc", "transit-gateway", "cloud-wan", "all"]:
+            self._show_routing_cache_detail(cache, arg)
+            return
+
+        # Default: Show summary
+        table = Table(title="Routing Cache Summary")
         table.add_column("Source")
         table.add_column("Routes")
         table.add_column("Regions")
@@ -490,11 +506,117 @@ class RootHandlersMixin:
         for source, data in cache.items():
             routes = data.get("routes", [])
             regions = set(r.get("region", "?") for r in routes)
-            table.add_row(source, str(len(routes)), ", ".join(sorted(regions)))
+            source_display = source.replace("tgw", "Transit Gateway").replace("cloudwan", "Cloud WAN").upper()
+            table.add_row(source_display, str(len(routes)), ", ".join(sorted(regions)))
 
         console.print(table)
         total = sum(len(d.get("routes", [])) for d in cache.values())
         console.print(f"\n[bold]Total routes cached:[/] {total}")
+        console.print("\n[dim]Use 'show routing-cache vpc|transit-gateway|cloud-wan|all' for details[/]")
+
+    def _show_routing_cache_detail(self, cache, filter_source):
+        """Show detailed routing cache entries."""
+        all_routes = []
+
+        for source, data in cache.items():
+            if filter_source != "all" and source != filter_source.replace("-", ""):
+                continue
+            routes = data.get("routes", [])
+            all_routes.extend(routes)
+
+        if not all_routes:
+            console.print(f"[yellow]No routes found for {filter_source}[/]")
+            return
+
+        # Group by source type for organized display
+        vpc_routes = [r for r in all_routes if r.get("source") == "vpc"]
+        tgw_routes = [r for r in all_routes if r.get("source") == "tgw"]
+        cloudwan_routes = [r for r in all_routes if r.get("source") == "cloudwan"]
+
+        if vpc_routes and (filter_source in ["vpc", "all"]):
+            self._show_vpc_routes_table(vpc_routes)
+
+        if tgw_routes and (filter_source in ["transit-gateway", "transitgateway", "all"]):
+            self._show_transit_gateway_routes_table(tgw_routes)
+
+        if cloudwan_routes and (filter_source in ["cloud-wan", "cloudwan", "all"]):
+            self._show_cloud_wan_routes_table(cloudwan_routes)
+
+    def _show_vpc_routes_table(self, routes):
+        """Display VPC routes in detailed table."""
+        table = Table(title=f"VPC Routes ({len(routes)} total)")
+        table.add_column("VPC", style="cyan")
+        table.add_column("Region", style="dim")
+        table.add_column("Route Table", style="yellow")
+        table.add_column("Destination", style="green")
+        table.add_column("Target")
+        table.add_column("State")
+
+        for r in routes[:100]:  # Limit to 100 for display
+            table.add_row(
+                r.get("vpc_name", "")[:20],
+                r.get("region", ""),
+                r.get("route_table", "")[:20],
+                r.get("destination", ""),
+                r.get("target", "")[:30],
+                r.get("state", "")
+            )
+
+        console.print(table)
+        if len(routes) > 100:
+            console.print(f"[dim]Showing first 100 of {len(routes)} routes[/]")
+
+    def _show_transit_gateway_routes_table(self, routes):
+        """Display Transit Gateway routes in detailed table."""
+        table = Table(title=f"Transit Gateway Routes ({len(routes)} total)")
+        table.add_column("Transit Gateway", style="cyan")
+        table.add_column("Region", style="dim")
+        table.add_column("Route Table", style="yellow")
+        table.add_column("Destination", style="green")
+        table.add_column("Attachment", style="magenta")
+        table.add_column("State")
+        table.add_column("Type")
+
+        for r in routes[:100]:
+            table.add_row(
+                r.get("tgw_name", "")[:20],
+                r.get("region", ""),
+                r.get("route_table", "")[:20],
+                r.get("destination", ""),
+                r.get("target", "")[:25],
+                r.get("state", ""),
+                r.get("type", "")
+            )
+
+        console.print(table)
+        if len(routes) > 100:
+            console.print(f"[dim]Showing first 100 of {len(routes)} routes[/]")
+
+    def _show_cloud_wan_routes_table(self, routes):
+        """Display Cloud WAN routes in detailed table."""
+        table = Table(title=f"Cloud WAN Routes ({len(routes)} total)")
+        table.add_column("Core Network", style="cyan")
+        table.add_column("Global Network", style="blue")
+        table.add_column("Segment", style="yellow")
+        table.add_column("Region", style="dim")
+        table.add_column("Destination", style="green")
+        table.add_column("Target", style="magenta")
+        table.add_column("State")
+
+        for r in routes[:100]:
+            table.add_row(
+                r.get("core_network_name", "")[:20],
+                r.get("global_network_id", "")[:20],
+                r.get("segment", ""),
+                r.get("region", ""),
+                r.get("destination", ""),
+                r.get("target", "")[:25],
+                r.get("state", "")
+            )
+
+        console.print(table)
+        if len(routes) > 100:
+            console.print(f"[dim]Showing first 100 of {len(routes)} routes[/]")
 
     def do_create_routing_cache(self, _):
         """Cache all routing data for fast global lookups."""
