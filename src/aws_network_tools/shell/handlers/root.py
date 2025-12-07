@@ -567,12 +567,12 @@ class RootHandlersMixin:
 
         for r in routes[:100]:  # Limit to 100 for display
             table.add_row(
-                r.get("vpc_name", "")[:20],
-                r.get("region", ""),
-                r.get("route_table", "")[:20],
-                r.get("destination", ""),
-                r.get("target", "")[:30],
-                r.get("state", "")
+                (r.get("vpc_name") or "")[:20],
+                r.get("region") or "",
+                (r.get("route_table") or "")[:20],
+                r.get("destination") or "",
+                (r.get("target") or "")[:30],
+                r.get("state") or ""
             )
 
         console.print(table)
@@ -592,13 +592,13 @@ class RootHandlersMixin:
 
         for r in routes[:100]:
             table.add_row(
-                r.get("tgw_name", "")[:20],
-                r.get("region", ""),
-                r.get("route_table", "")[:20],
-                r.get("destination", ""),
-                r.get("target", "")[:25],
-                r.get("state", ""),
-                r.get("type", "")
+                (r.get("tgw_name") or "")[:20],
+                r.get("region") or "",
+                (r.get("route_table") or "")[:20],
+                r.get("destination") or "",
+                (r.get("target") or "")[:25],
+                r.get("state") or "",
+                r.get("type") or ""
             )
 
         console.print(table)
@@ -618,13 +618,13 @@ class RootHandlersMixin:
 
         for r in routes[:100]:
             table.add_row(
-                r.get("core_network_name", "")[:20],
-                r.get("global_network_id", "")[:20],
-                r.get("segment", ""),
-                r.get("region", ""),
-                r.get("destination", ""),
-                r.get("target", "")[:25],
-                r.get("state", "")
+                (r.get("core_network_name") or "")[:20],
+                (r.get("global_network_id") or "")[:20],
+                r.get("segment") or "",
+                r.get("region") or "",
+                r.get("destination") or "",
+                (r.get("target") or "")[:25],
+                r.get("state") or ""
             )
 
         console.print(table)
