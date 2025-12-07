@@ -788,8 +788,59 @@ class RootHandlersMixin:
             console.print(f"  [red]CloudWAN routes failed: {e}[/]")
 
         self._cache["routing-cache"] = cache
+
+        # Auto-save to local DB if configured
+        if self.config.get_cache_config().get("use_local_cache", False):
+            try:
+                from ...core.cache_db import CacheDB
+                db = CacheDB()
+                saved_count = db.save_routing_cache(cache, self.profile or "default")
+                console.print(f"[dim]  → Saved {saved_count} routes to local database[/]")
+            except Exception as e:
+                console.print(f"[yellow]  → Local DB save failed: {e}[/]")
         total = sum(len(d.get("routes", [])) for d in cache.values())
         console.print(f"\n[green]Routing cache created: {total} routes[/]")
+
+    def do_save_routing_cache(self, _):
+        """Save routing cache to local SQLite database."""
+        cache = self._cache.get("routing-cache", {})
+        if not cache:
+            console.print("[yellow]No routing cache to save. Run 'create_routing_cache' first.[/]")
+            return
+
+        try:
+            from ...core.cache_db import CacheDB
+            db = CacheDB()
+            saved_count = db.save_routing_cache(cache, self.profile or "default")
+            console.print(f"[green]✓ Saved {saved_count} routes to local database[/]")
+            console.print(f"[dim]Location: {db.db_path}[/]")
+        except Exception as e:
+            console.print(f"[red]Failed to save: {e}[/]")
+
+    def do_load_routing_cache(self, _):
+        """Load routing cache from local SQLite database."""
+        try:
+            from ...core.cache_db import CacheDB
+            db = CacheDB()
+            cache = db.load_routing_cache(self.profile or "default")
+
+            total = sum(len(d.get("routes", [])) for d in cache.values())
+            if total == 0:
+                console.print("[yellow]No cached routes found in local database.[/]")
+                return
+
+            self._cache["routing-cache"] = cache
+            console.print(f"[green]✓ Loaded {total} routes from local database[/]")
+
+            # Show breakdown
+            for source, data in cache.items():
+                route_count = len(data.get("routes", []))
+                if route_count > 0:
+                    source_display = source.replace("tgw", "Transit Gateway").replace("cloudwan", "Cloud WAN").upper()
+                    console.print(f"  {source_display}: {route_count} routes")
+
+        except Exception as e:
+            console.print(f"[red]Failed to load: {e}[/]")
 
     def do_find_prefix(self, args):
         """Find prefix in routing cache globally."""

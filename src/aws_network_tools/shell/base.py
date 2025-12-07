@@ -82,6 +82,8 @@ HIERARCHY = {
             "populate_cache",
             "clear_cache",
             "create_routing_cache",
+            "save_routing_cache",
+            "load_routing_cache",
             "validate_graph",
             "export_graph",
             "clear",
