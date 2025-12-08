@@ -277,7 +277,27 @@ echo -e "show global-networks\nset global-network 3" | uv run python scripts/she
 
 # With AWS profile
 uv run python scripts/shell_runner.py --profile my-profile "show transit_gateways"
+
+# Debug mode - comprehensive logging to /tmp/
+uv run python scripts/shell_runner.py --debug "show vpns" "set vpn 1" "show tunnels"
+# Output: [DEBUG] Logging to: /tmp/aws_net_runner_debug_20241208_155656.log
 ```
+
+**Debug Logging** (`--debug` or `-d`):
+- **Purpose**: Capture comprehensive execution data for troubleshooting GitHub issues
+- **Log Location**: `/tmp/aws_net_runner_debug_<timestamp>.log`
+- **Includes**:
+  - Shell startup details (command, PID, profile)
+  - Command execution with precise timestamps
+  - Raw pexpect output with ANSI codes preserved
+  - Prompt detection iterations with buffer states
+  - Timing for each operation
+  - Exception details with full stack traces
+- **Use Cases**:
+  - Debugging shell interaction issues
+  - Investigating command failures
+  - Analyzing performance problems
+  - Attaching debug logs to GitHub issues
 
 ### `fetch_issues.py`
 

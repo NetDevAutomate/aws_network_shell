@@ -20,6 +20,10 @@ aws-net-shell -p production
 
 # Run automated workflows
 aws-net-runner "show vpcs" "set vpc 1" "show subnets"
+
+# Debug mode for troubleshooting
+aws-net-runner --debug "show vpns" "set vpn 1" "show tunnels"
+# Logs to: /tmp/aws_net_runner_debug_<timestamp>.log
 ```
 
 ## 📊 Command Hierarchy
@@ -440,6 +444,7 @@ MIT License - see LICENSE file for details
 ### 2024-12-08
 - ✅ VPN tunnel inspection: show tunnels displays VgwTelemetry data with UP/DOWN status
 - ✅ VPN detail view: show detail includes tunnel summary with outside IPs and BGP routes
+- ✅ Debug logging: aws-net-runner --debug flag with comprehensive logging to /tmp/
 - ✅ Network Firewall enhancements: rule-group context with detailed rule inspection
 - ✅ Enhanced firewall commands: show firewall, show rule-groups with indexes
 - ✅ STATELESS rules: Complete display with ports, protocols, actions
