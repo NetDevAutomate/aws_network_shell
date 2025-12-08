@@ -1,0 +1,27 @@
+#!/bin/bash
+# AWS Network Shell Runner - Execute shell commands programmatically
+#
+# Usage:
+#   aws-net-runner "show vpcs" "set vpc 1" "show subnets"
+#   aws-net-runner --profile my-profile "create_routing_cache"
+#
+# This is a wrapper for scripts/shell_runner.py that can be installed
+# globally or called directly.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUNNER_SCRIPT="$SCRIPT_DIR/shell_runner.py"
+
+# Check if runner script exists
+if [ ! -f "$RUNNER_SCRIPT" ]; then
+    echo "Error: shell_runner.py not found at $RUNNER_SCRIPT"
+    exit 1
+fi
+
+# Use uv if available, otherwise python3
+if command -v uv &> /dev/null; then
+    exec uv run python "$RUNNER_SCRIPT" "$@"
+else
+    exec python3 "$RUNNER_SCRIPT" "$@"
+fi
