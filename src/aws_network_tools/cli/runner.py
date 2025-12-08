@@ -41,9 +41,9 @@ class ShellRunner:
         # Get actual terminal size or use wide default
         try:
             import shutil
-            cols, rows = shutil.get_terminal_size(fallback=(200, 50))
+            cols, rows = shutil.get_terminal_size(fallback=(250, 50))
         except:
-            cols, rows = 200, 50  # Wide default for full data display
+            cols, rows = 250, 50  # Extra wide for full data display
 
         self.child = pexpect.spawn(
             cmd,

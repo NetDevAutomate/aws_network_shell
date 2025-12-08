@@ -570,14 +570,14 @@ class RootHandlersMixin:
             expand=True
         )
 
-        # No wrapping if allow_truncate is False
-        table.add_column("VPC Name", style="cyan", no_wrap=not allow_truncate)
-        table.add_column("VPC ID", style="dim", no_wrap=not allow_truncate)
-        table.add_column("Region", style="blue", no_wrap=True)
-        table.add_column("Route Table", style="yellow", no_wrap=not allow_truncate)
-        table.add_column("Destination", style="green", no_wrap=True)
-        table.add_column("Target", style="magenta", no_wrap=not allow_truncate)
-        table.add_column("State", style="bold green", no_wrap=True)
+        # Balanced column widths (no_wrap + ratio control)
+        table.add_column("VPC Name", style="cyan", no_wrap=not allow_truncate, ratio=2)
+        table.add_column("VPC ID", style="dim", no_wrap=not allow_truncate, ratio=2)
+        table.add_column("Region", style="blue", no_wrap=True, ratio=2)
+        table.add_column("Route Table", style="yellow", no_wrap=not allow_truncate, ratio=2)
+        table.add_column("Destination", style="green", no_wrap=True, ratio=2)
+        table.add_column("Target", style="magenta", no_wrap=not allow_truncate, ratio=3)
+        table.add_column("State", style="bold green", no_wrap=True, ratio=1)
 
         for r in routes[:display_limit]:
             table.add_row(
