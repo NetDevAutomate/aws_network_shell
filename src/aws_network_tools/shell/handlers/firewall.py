@@ -28,14 +28,15 @@ class FirewallHandlersMixin:
         self._enter("firewall", fw.get("arn", ""), fw.get("name", ""), fw, selection_idx)
         print()  # Add blank line before next prompt
 
-    def _show_rule_groups(self, _):
+    def _show_firewall_rule_groups(self, _):
+        """Show firewall rule groups."""
         if self.ctx_type != "firewall":
             return
         rgs = self.ctx.data.get("rule_groups", [])
         if not rgs:
             console.print("[yellow]No rule groups[/]")
             return
-        table = Table(title="Rule Groups")
+        table = Table(title="Firewall Rule Groups")
         table.add_column("Name")
         table.add_column("Type")
         table.add_column("Priority")
@@ -44,6 +45,11 @@ class FirewallHandlersMixin:
                 rg.get("name", ""), rg.get("type", ""), str(rg.get("priority", ""))
             )
         console.print(table)
+
+    # Alias for backward compatibility
+    def _show_rule_groups(self, arg):
+        """Alias for firewall-rule-groups."""
+        self._show_firewall_rule_groups(arg)
 
     def _show_policy(self, _):
         """Show firewall policy details."""
