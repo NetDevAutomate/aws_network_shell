@@ -80,11 +80,11 @@ aws-net>fi:1>
 
 # Show firewall overview with rule groups
 aws-net>fi:1> show firewall
-🔥 Network Firewall: anfw-sydney
-├── ID: d40578d0-57d6-42bc-9a44-16a29799eb6f
-├── Region: ap-southeast-2
-├── VPC: vpc-08d981c143483c657
-└── Subnets: subnet-xxx, subnet-yyy
+🔥 Network Firewall: prod-firewall-1
+├── ID: 12345678-1234-1234-1234-123456789abc
+├── Region: us-east-1
+├── VPC: vpc-0123456789abcdef0
+└── Subnets: subnet-0a1b2c3d4e5f67890, subnet-0f9e8d7c6b5a43210
 
 Rule Groups
 ┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┓
@@ -125,6 +125,57 @@ aws-net>fi:1>ru:2> show rule-group
 - **Commands**: show firewall, show rule-groups, show policy, set rule-group, show rule-group
 - **Display**: Complete rule details including ports, protocols, actions, and Suricata rules
 - **Navigation**: Index-based selection for easy context switching
+
+## 🔌 VPN Commands
+
+Complete Site-to-Site VPN tunnel inspection and management:
+
+```bash
+# List all VPN connections
+aws-net> show vpns
+                                 Site-to-Site VPN Connections
+┏━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━┓
+┃ # ┃ Name           ┃ ID              ┃ State     ┃ Type    ┃ Region    ┃
+┡━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━┩
+│ 1 │ corporate-vpn  │ vpn-0abcdef123… │ available │ ipsec.1 │ us-east-1 │
+└───┴────────────────┴─────────────────┴───────────┴─────────┴───────────┘
+
+# Enter VPN context
+aws-net> set vpn 1
+aws-net>vp:1>
+
+# Show VPN overview with tunnel summary
+aws-net>vp:1> show detail
+       VPN: corporate-vpn
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Field ┃ Value                 ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ id    │ vpn-0abcdef123456789a │
+│ state │ available             │
+│ type  │ ipsec.1               │
+└───────┴───────────────────────┘
+
+Tunnels (2):
+  UP 203.0.113.10
+  UP 203.0.113.20
+
+# Show detailed tunnel status
+aws-net>vp:1> show tunnels
+            VPN Tunnels: corporate-vpn
+┏━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ Outside IP   ┃ Status ┃ Status Message ┃ Routes ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ 203.0.113.10 │ UP     │ 3 BGP ROUTES   │      3 │
+│ 203.0.113.20 │ UP     │ 3 BGP ROUTES   │      3 │
+└──────────────┴────────┴────────────────┴────────┘
+```
+
+### VPN Commands Summary
+- **Context**: vpn (1-level hierarchy)
+- **Commands**: show detail, show tunnels
+- **Display**: IPSec tunnel status with outside IPs, BGP route counts, status messages
+- **Status Colors**: Green (UP), Red (DOWN) for immediate visual identification
+- **Data Source**: AWS VgwTelemetry with tunnel health and BGP session information
 
 ## 📁 Repository Structure
 
@@ -387,6 +438,8 @@ MIT License - see LICENSE file for details
 ## 📝 Changelog
 
 ### 2024-12-08
+- ✅ VPN tunnel inspection: show tunnels displays VgwTelemetry data with UP/DOWN status
+- ✅ VPN detail view: show detail includes tunnel summary with outside IPs and BGP routes
 - ✅ Network Firewall enhancements: rule-group context with detailed rule inspection
 - ✅ Enhanced firewall commands: show firewall, show rule-groups with indexes
 - ✅ STATELESS rules: Complete display with ports, protocols, actions

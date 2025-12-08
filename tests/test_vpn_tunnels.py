@@ -30,7 +30,7 @@ def test_vpn_tunnel_data_extraction():
 
     # Load VPNs and enter context
     shell.onecmd("show vpns")
-    shell.onecmd("set vpn 1")  # CWAN-Osaka-S2S with UP tunnels
+    shell.onecmd("set vpn 1")  # First VPN with UP tunnels
 
     # Verify tunnel data exists in context
     assert shell.ctx_type == "vpn", "Context type must be 'vpn'"
