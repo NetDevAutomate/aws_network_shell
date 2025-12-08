@@ -25,8 +25,13 @@ dev = [
 
 [project.scripts]
 aws-net-shell = "aws_network_tools.shell:main"
-aws-net-runner = "scripts.shell_runner:main"
 aws-trace = "aws_network_tools.traceroute.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0"]
+
+# Note: aws-net-runner uses: uv run python scripts/shell_runner.py
+# Cannot create entry point as scripts/ is not a Python package
 
 [build-system]
 requires = ["hatchling"]
