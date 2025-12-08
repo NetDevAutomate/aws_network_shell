@@ -32,11 +32,25 @@ class ShellRunner:
 
     def start(self):
         """Start the interactive shell."""
+        import os
+
         cmd = 'aws-net-shell'
         if self.profile:
             cmd += f' --profile {self.profile}'
 
-        self.child = pexpect.spawn(cmd, timeout=self.timeout, encoding='utf-8')
+        # Get actual terminal size or use wide default
+        try:
+            import shutil
+            cols, rows = shutil.get_terminal_size(fallback=(200, 50))
+        except:
+            cols, rows = 200, 50  # Wide default for full data display
+
+        self.child = pexpect.spawn(
+            cmd,
+            timeout=self.timeout,
+            encoding='utf-8',
+            dimensions=(rows, cols)  # Set terminal size for Rich tables
+        )
         # Wait for initial prompt
         self._wait_for_prompt()
         print(f"✓ Shell started\n{'='*60}")
