@@ -36,7 +36,8 @@ class ANFWModule(ModuleInterface):
     def show_commands(self) -> Dict[str, List[str]]:
         return {
             None: ["firewalls"],
-            "aws-network-firewall": ["detail", "firewall-rule-groups", "firewall-policy", "firewall-networking"]
+            "aws-network-firewall": ["firewall", "detail", "firewall-rule-groups", "rule-groups", "firewall-policy", "policy", "firewall-networking"],
+            "rule-group": ["rule-group"]
         }
 
     def execute(self, shell, command: str, args: str):
@@ -174,7 +175,7 @@ class ANFWClient(BaseClient):
             rules = []
 
             if rg_type == "STATELESS":
-                # Stateless rules
+                # Stateless rules with full port information
                 for sr in rules_source.get("StatelessRulesAndCustomActions", {}).get(
                     "StatelessRules", []
                 ):
@@ -190,6 +191,9 @@ class ANFWClient(BaseClient):
                         for d in match_attrs.get("Destinations", [])
                     ]
                     protocols = match_attrs.get("Protocols", [])
+                    source_ports = match_attrs.get("SourcePorts", [])
+                    dest_ports = match_attrs.get("DestinationPorts", [])
+                    
                     rules.append(
                         {
                             "priority": sr.get("Priority", 0),
@@ -197,6 +201,8 @@ class ANFWClient(BaseClient):
                             "sources": sources,
                             "destinations": dests,
                             "protocols": protocols,
+                            "source_ports": source_ports,
+                            "dest_ports": dest_ports,
                         }
                     )
             else:
