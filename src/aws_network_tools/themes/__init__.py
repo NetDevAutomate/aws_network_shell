@@ -107,7 +107,7 @@ def load_theme(name: Optional[str] = None) -> Theme:
         if name.lower() == "dracula":
             return DRACULA_THEME
         if name.lower() in {"catppuccin", "catpuccin"}:  # Common misspelling
-            return CATPPUCCIN_THEME
+            return CATPPUCCIN_MOCHA_THEME  # Default to Mocha variant
         
         # Check custom themes directory
         theme_dir = get_theme_dir()
