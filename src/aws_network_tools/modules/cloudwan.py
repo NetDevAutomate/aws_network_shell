@@ -229,14 +229,17 @@ class CloudWANClient(BaseClient):
             pass
 
         # Sort by created_at, handling mixed datetime/None values
-        from datetime import datetime
+        from datetime import datetime, timezone
         def sort_key(x):
             val = x.get("created_at")
             if val is None:
-                return datetime.min
+                return datetime.min.replace(tzinfo=timezone.utc)  # Make timezone-aware
             if isinstance(val, datetime):
+                # Ensure timezone-aware
+                if val.tzinfo is None:
+                    return val.replace(tzinfo=timezone.utc)
                 return val
-            return datetime.min
+            return datetime.min.replace(tzinfo=timezone.utc)
         return sorted(events, key=sort_key, reverse=True)
 
     def get_policy_document(

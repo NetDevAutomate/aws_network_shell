@@ -473,6 +473,10 @@ class RootHandlersMixin:
         print()  # Add blank line before next prompt
 
     # Routing cache commands
+    def complete_routing_cache(self, text, line, begidx, endidx):
+        """Tab completion for routing-cache arguments."""
+        return ['vpc', 'transit-gateway', 'cloud-wan', 'all']
+
     def _show_routing_cache(self, arg):
         """Show routing cache status or detailed routes.
 
