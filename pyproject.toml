@@ -25,10 +25,8 @@ dev = [
 
 [project.scripts]
 aws-net-shell = "aws_network_tools.shell:main"
+aws-net-runner = "aws_network_tools.cli.runner:main"
 aws-trace = "aws_network_tools.traceroute.cli:main"
-
-# Note: aws-net-runner is a shell script in scripts/
-# Usage: scripts/aws-net-runner "command1" "command2"
 
 [build-system]
 requires = ["hatchling"]
