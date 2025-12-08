@@ -25,7 +25,12 @@ class VPNHandlersMixin:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        self._enter("vpn", v["id"], v.get("name", v["id"]), v, selection_idx)
+        
+        # Fetch full VPN details including tunnels
+        from ...modules import vpn
+        vpn_detail = vpn.VPNClient(self.profile).get_vpn_detail(v["id"], v["region"])
+        
+        self._enter("vpn", v["id"], v.get("name", v["id"]), vpn_detail, selection_idx)
         print()  # Add blank line before next prompt
 
     def _show_vpns(self, _):
