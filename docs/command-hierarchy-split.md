@@ -131,12 +131,27 @@ graph LR
     root_set_firewall{"set firewall → firewall"}:::context
     firewall_context["firewall context"]:::context
     root_set_firewall --> firewall_context
-    firewall_show_detail["show detail"]:::show
+    firewall_show_firewall["show firewall"]:::show
+    firewall_context --> firewall_show_firewall
+    firewall_show_detail["show detail (alias)"]:::show
     firewall_context --> firewall_show_detail
-    firewall_show_rule_groups["show rule-groups"]:::show
+    firewall_show_rule_groups["show firewall-rule-groups"]:::show
     firewall_context --> firewall_show_rule_groups
-    firewall_show_policy["show policy"]:::show
+    firewall_show_rg_alias["show rule-groups (alias)"]:::show
+    firewall_context --> firewall_show_rg_alias
+    firewall_show_policy["show firewall-policy"]:::show
     firewall_context --> firewall_show_policy
+    firewall_show_policy_alias["show policy (alias)"]:::show
+    firewall_context --> firewall_show_policy_alias
+    firewall_show_networking["show firewall-networking"]:::show
+    firewall_context --> firewall_show_networking
+    firewall_set_rule_group{"set rule-group → rule-group"}:::set
+    firewall_context --> firewall_set_rule_group
+    
+    rule_group_context["rule-group context"]:::context
+    firewall_set_rule_group --> rule_group_context
+    rule_group_show_rule_group["show rule-group"]:::show
+    rule_group_context --> rule_group_show_rule_group
 ```
 
 ## 6. Global-Network Context

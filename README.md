@@ -6,332 +6,125 @@
 
 AWS Network Shell provides a comprehensive CLI for managing AWS networking resources with a familiar Cisco IOS-style interface. Navigate through contexts (VPC, Transit Gateway, Firewall, etc.) and execute commands with hierarchical command structures.
 
+## 🚀 Quick Start
+
+```bash
+# Install
+pip install -e .
+
+# Launch shell
+aws-net-shell
+
+# Or with AWS profile
+aws-net-shell -p production
+
+# Run automated workflows
+aws-net-runner "show vpcs" "set vpc 1" "show subnets"
+```
+
 ## 📊 Command Hierarchy
 
-The CLI uses a hierarchical command structure with 9 contexts and 78+ commands:
+The CLI uses a hierarchical command structure with **10 contexts** and **100+ commands**.
 
-### Command Structure (Mermaid Diagram)
+### Graph Commands
 
-```mermaid
-graph TD
-    classDef root fill:#2d5a27,stroke:#1a3518,color:#fff
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
+Explore and validate the command hierarchy:
 
-    %% Root Context
-    root["aws-net"]:::root
+```bash
+# Show command tree
+aws-net> show graph
 
-    %% Context Entry Commands
-    root --> root_set_vpc{"set vpc → vpc"}:::context
-    root --> root_set_tgw{"set transit-gateway → transit-gateway"}:::context
-    root --> root_set_gn{"set global-network → global-network"}:::context
-    root --> root_set_cn{"set core-network → core-network"}:::context
-    root --> root_set_fw{"set firewall → firewall"}:::context
-    root --> root_set_ec2{"set ec2-instance → ec2-instance"}:::context
-    root --> root_set_elb{"set elb → elb"}:::context
-    root --> root_set_vpn{"set vpn → vpn"}:::context
+# Show statistics
+aws-net> show graph stats
+  Total nodes: 103
+  Total edges: 145
+  Contexts: 10
+  Command paths: 78
+  Implemented: 100%
 
-    %% VPC Context Subgraph
-    subgraph vpc_context["vpc context"]
-        vpc_show_detail["show detail"]:::show
-        vpc_show_subnets["show subnets"]:::show
-        vpc_show_route_tables["show route-tables"]:::show
-        vpc_show_security_groups["show security-groups"]:::show
-        vpc_find_prefix["find_prefix"]:::action
-        vpc_find_null_routes["find_null_routes"]:::action
-    end
+# Validate all handlers exist
+aws-net> show graph validate
+✓ Graph is valid - all handlers implemented
 
-    root_set_vpc --> vpc_context
+# Export Mermaid diagram
+aws-net> show graph mermaid
 
-    %% Core Network Context Subgraph
-    subgraph core_network_context["core-network context"]
-        cn_show_segments["show segments"]:::show
-        cn_show_policy["show policy"]:::show
-        cn_show_routes["show routes"]:::show
-        cn_show_blackhole_routes["show blackhole-routes"]:::show
-        cn_find_prefix["find_prefix"]:::action
-        cn_find_null_routes["find_null_routes"]:::action
-    end
-
-    root_set_cn --> core_network_context
-
-    %% Global Network Commands
-    root_set_gn --> gn_show_detail["show detail"]:::show
-    root_set_gn --> gn_show_core_networks["show core-networks"]:::show
-
-    %% Root-level Commands
-    root --> root_show_vpcs["show vpcs"]:::show
-    root --> root_show_tgws["show transit_gateways"]:::show
-    root --> root_show_instances["show ec2-instances"]:::show
-    root --> root_show_vpn["show vpns"]:::show
-    root --> root_write["write"]:::action
-    root --> root_trace["trace"]:::action
+# Find path to specific command
+aws-net> show graph parent find-prefix
+Paths to 'find-prefix':
+✓ find-prefix
+  Context: route-table
+  Path: show route-tables → set route-table 1 → find-prefix
 ```
 
-### Command Structure (Mermaid Diagrams)
+### Available Graph Operations
+- `show graph` - Display command tree structure
+- `show graph stats` - Show command statistics
+- `show graph validate` - Verify all handlers implemented
+- `show graph mermaid` - Generate Mermaid diagram
+- `show graph parent <command>` - Show navigation path to command
+- `validate-graph` - Run full validation check
+- `export-graph [filename]` - Export to markdown file
 
-- **Total Contexts**: 9
-- **Total Commands**: 103
+## 🔥 Network Firewall Commands
 
-#### 1. Overview: Context Navigation
+Complete AWS Network Firewall inspection and management:
 
-```mermaid
-graph TD
-    classDef root fill:#2d5a27,stroke:#1a3518,color:#fff
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
+```bash
+# List all firewalls
+aws-net> show firewalls
 
-    root["aws-net"]:::root
-    root_set_ec2_instance{"set ec2-instance → ec2-instance"}:::context
-    root --> root_set_ec2_instance
-    root_set_elb{"set elb → elb"}:::context
-    root --> root_set_elb
-    root_set_firewall{"set firewall → firewall"}:::context
-    root --> root_set_firewall
-    root_set_global_network{"set global-network → global-network"}:::context
-    root --> root_set_global_network
-    root_set_transit_gateway{"set transit-gateway → transit-gateway"}:::context
-    root --> root_set_transit_gateway
-    root_set_vpc{"set vpc → vpc"}:::context
-    root --> root_set_vpc
-    root_set_vpn{"set vpn → vpn"}:::context
-    root --> root_set_vpn
+# Enter firewall context
+aws-net> set firewall 1
+aws-net>fi:1>
+
+# Show firewall overview with rule groups
+aws-net>fi:1> show firewall
+🔥 Network Firewall: anfw-sydney
+├── ID: d40578d0-57d6-42bc-9a44-16a29799eb6f
+├── Region: ap-southeast-2
+├── VPC: vpc-08d981c143483c657
+└── Subnets: subnet-xxx, subnet-yyy
+
+Rule Groups
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Type      ┃ Rules ┃ Capacity ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━┩
+│ 1 │ drop-remote-outbound │ STATELESS │     2 │      2/2 │
+│ 2 │ allow-domains        │ STATEFUL  │     2 │    2/100 │
+└───┴──────────────────────┴───────────┴───────┴──────────┘
+
+# Show policy with rule groups
+aws-net>fi:1> show policy
+
+# Show rule groups (with selection index)
+aws-net>fi:1> show rule-groups
+
+# Enter rule group context
+aws-net>fi:1> set rule-group 1
+aws-net>fi:1>ru:1>
+
+# Show detailed rules (STATELESS)
+aws-net>fi:1>ru:1> show rule-group
+┏━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ # ┃ Priority ┃ Actions  ┃ Sources   ┃ Destinations ┃ Protocols ┃ Source Ports ┃ Dest Ports ┃
+┡━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ 1 │        1 │ aws:drop │ 0.0.0.0/0 │ 0.0.0.0/0    │ 6         │ 22           │ 22         │
+│ 2 │        2 │ aws:drop │ 0.0.0.0/0 │ 0.0.0.0/0    │ 27        │ Any          │ Any        │
+└───┴──────────┴──────────┴───────────┴──────────────┴───────────┴──────────────┴────────────┘
+
+# Show detailed rules (STATEFUL with Suricata format)
+aws-net>fi:1> set rule-group 2
+aws-net>fi:1>ru:2> show rule-group
+  1. pass tcp any any <> $EXTERNAL_NET 443 (msg:"Allowing TCP in port 443"; flow:not_established; sid:892123; rev:1;)
+  2. pass tls any any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".amazon.com"; endswith; msg:"Allowing .amazon.com HTTPS requests"; sid:892125; rev:1;)
 ```
 
-#### 2. Core-Network Context
-
-**Entry**: `set core-network`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    global_network_set_core_network{"set core-network → core-network"}:::context
-    core_network_context["core-network context"]:::context
-    global_network_set_core_network --> core_network_context
-    core_network_show_detail["show detail"]:::show
-    core_network_context --> core_network_show_detail
-    core_network_show_segments["show segments"]:::show
-    core_network_context --> core_network_show_segments
-    core_network_show_policy["show policy"]:::show
-    core_network_context --> core_network_show_policy
-    core_network_show_routes["show routes"]:::show
-    core_network_context --> core_network_show_routes
-    core_network_show_route_tables["show route-tables"]:::show
-    core_network_context --> core_network_show_route_tables
-    core_network_show_blackhole_routes["show blackhole-routes"]:::show
-    core_network_context --> core_network_show_blackhole_routes
-    core_network_show_policy_change_events["show policy-change-events"]:::show
-    core_network_context --> core_network_show_policy_change_events
-    core_network_show_connect_attachments["show connect-attachments"]:::show
-    core_network_context --> core_network_show_connect_attachments
-    core_network_show_connect_peers["show connect-peers"]:::show
-    core_network_context --> core_network_show_connect_peers
-    core_network_show_rib["show rib"]:::show
-    core_network_context --> core_network_show_rib
-    core_network_do_find_prefix(("find_prefix")):::action
-    core_network_context --> core_network_do_find_prefix
-    core_network_do_find_null_routes(("find_null_routes")):::action
-    core_network_context --> core_network_do_find_null_routes
-```
-
-#### 3. Ec2-Instance Context
-
-**Entry**: `set ec2-instance`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_ec2_instance{"set ec2-instance → ec2-instance"}:::context
-    ec2_instance_context["ec2-instance context"]:::context
-    root_set_ec2_instance --> ec2_instance_context
-    ec2_instance_show_detail["show detail"]:::show
-    ec2_instance_context --> ec2_instance_show_detail
-    ec2_instance_show_security_groups["show security-groups"]:::show
-    ec2_instance_context --> ec2_instance_show_security_groups
-    ec2_instance_show_enis["show enis"]:::show
-    ec2_instance_context --> ec2_instance_show_enis
-    ec2_instance_show_routes["show routes"]:::show
-    ec2_instance_context --> ec2_instance_show_routes
-```
-
-#### 4. Elb Context
-
-**Entry**: `set elb`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_elb{"set elb → elb"}:::context
-    elb_context["elb context"]:::context
-    root_set_elb --> elb_context
-    elb_show_detail["show detail"]:::show
-    elb_context --> elb_show_detail
-    elb_show_listeners["show listeners"]:::show
-    elb_context --> elb_show_listeners
-    elb_show_targets["show targets"]:::show
-    elb_context --> elb_show_targets
-    elb_show_health["show health"]:::show
-    elb_context --> elb_show_health
-```
-
-#### 5. Firewall Context
-
-**Entry**: `set firewall`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_firewall{"set firewall → firewall"}:::context
-    firewall_context["firewall context"]:::context
-    root_set_firewall --> firewall_context
-    firewall_show_detail["show detail"]:::show
-    firewall_context --> firewall_show_detail
-    firewall_show_rule_groups["show rule-groups"]:::show
-    firewall_context --> firewall_show_rule_groups
-    firewall_show_policy["show policy"]:::show
-    firewall_context --> firewall_show_policy
-```
-
-#### 6. Global-Network Context
-
-**Entry**: `set global-network`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_global_network{"set global-network → global-network"}:::context
-    global_network_context["global-network context"]:::context
-    root_set_global_network --> global_network_context
-    global_network_show_detail["show detail"]:::show
-    global_network_context --> global_network_show_detail
-    global_network_show_core_networks["show core-networks"]:::show
-    global_network_context --> global_network_show_core_networks
-```
-
-#### 7. Route-Table Context
-
-**Entry**: `set route-table`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    core_network_set_route_table{"set route-table → route-table"}:::context
-    route_table_context["route-table context"]:::context
-    core_network_set_route_table --> route_table_context
-    route_table_show_routes["show routes"]:::show
-    route_table_context --> route_table_show_routes
-    route_table_do_find_prefix(("find_prefix")):::action
-    route_table_context --> route_table_do_find_prefix
-    route_table_do_find_null_routes(("find_null_routes")):::action
-    route_table_context --> route_table_do_find_null_routes
-```
-
-#### 8. Transit-Gateway Context
-
-**Entry**: `set transit-gateway`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_transit_gateway{"set transit-gateway → transit-gateway"}:::context
-    transit_gateway_context["transit-gateway context"]:::context
-    root_set_transit_gateway --> transit_gateway_context
-    transit_gateway_show_detail["show detail"]:::show
-    transit_gateway_context --> transit_gateway_show_detail
-    transit_gateway_show_route_tables["show route-tables"]:::show
-    transit_gateway_context --> transit_gateway_show_route_tables
-    transit_gateway_show_attachments["show attachments"]:::show
-    transit_gateway_context --> transit_gateway_show_attachments
-    transit_gateway_do_find_prefix(("find_prefix")):::action
-    transit_gateway_context --> transit_gateway_do_find_prefix
-    transit_gateway_do_find_null_routes(("find_null_routes")):::action
-    transit_gateway_context --> transit_gateway_do_find_null_routes
-```
-
-#### 9. Vpc Context
-
-**Entry**: `set vpc`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_vpc{"set vpc → vpc"}:::context
-    vpc_context["vpc context"]:::context
-    root_set_vpc --> vpc_context
-    vpc_show_detail["show detail"]:::show
-    vpc_context --> vpc_show_detail
-    vpc_show_route_tables["show route-tables"]:::show
-    vpc_context --> vpc_show_route_tables
-    vpc_show_subnets["show subnets"]:::show
-    vpc_context --> vpc_show_subnets
-    vpc_show_security_groups["show security-groups"]:::show
-    vpc_context --> vpc_show_security_groups
-    vpc_show_nacls["show nacls"]:::show
-    vpc_context --> vpc_show_nacls
-    vpc_show_internet_gateways["show internet-gateways"]:::show
-    vpc_context --> vpc_show_internet_gateways
-    vpc_show_nat_gateways["show nat-gateways"]:::show
-    vpc_context --> vpc_show_nat_gateways
-    vpc_show_endpoints["show endpoints"]:::show
-    vpc_context --> vpc_show_endpoints
-    vpc_do_find_prefix(("find_prefix")):::action
-    vpc_context --> vpc_do_find_prefix
-    vpc_do_find_null_routes(("find_null_routes")):::action
-    vpc_context --> vpc_do_find_null_routes
-```
-
-#### 10. Vpn Context
-
-**Entry**: `set vpn`
-
-```mermaid
-graph LR
-    classDef context fill:#1a4a6e,stroke:#0d2840,color:#fff
-    classDef show fill:#4a4a8a,stroke:#2d2d5a,color:#fff
-    classDef action fill:#8b4513,stroke:#5a2d0a,color:#fff
-    classDef set fill:#6b4c9a,stroke:#3d2a5a,color:#fff
-
-    root_set_vpn{"set vpn → vpn"}:::context
-    vpn_context["vpn context"]:::context
-    root_set_vpn --> vpn_context
-    vpn_show_detail["show detail"]:::show
-    vpn_context --> vpn_show_detail
-    vpn_show_tunnels["show tunnels"]:::show
-    vpn_context --> vpn_show_tunnels
-```
+### Firewall Commands Summary
+- **Contexts**: firewall → rule-group (2-level hierarchy)
+- **Commands**: show firewall, show rule-groups, show policy, set rule-group, show rule-group
+- **Display**: Complete rule details including ports, protocols, actions, and Suricata rules
+- **Navigation**: Index-based selection for easy context switching
 
 ## 📁 Repository Structure
 
@@ -593,6 +386,17 @@ MIT License - see LICENSE file for details
 
 ## 📝 Changelog
 
+### 2024-12-08
+- ✅ Network Firewall enhancements: rule-group context with detailed rule inspection
+- ✅ Enhanced firewall commands: show firewall, show rule-groups with indexes
+- ✅ STATELESS rules: Complete display with ports, protocols, actions
+- ✅ STATEFUL rules: Suricata rule format display
+- ✅ Graph commands: stats, validate, mermaid, parent path lookup
+- ✅ Persistent routing cache with SQLite (save/load commands)
+- ✅ Enhanced routing cache display: vpc, transit-gateway, cloud-wan filters
+- ✅ Terminal width detection for proper Rich table rendering
+- ✅ aws-net-runner tool for programmatic shell execution
+
 ### 2024-12-05
 - ✅ ELB commands implementation (listeners, targets, health)
 - ✅ VPN context commands (detail, tunnels)
@@ -610,7 +414,3 @@ MIT License - see LICENSE file for details
 - ✅ Dynamic command discovery (78+ commands)
 - ✅ Command graph Mermaid diagrams
 - ✅ Test coverage: 77+ commands
-
----
-
-**Note:** This README is comprehensive and includes the command hierarchy in Mermaid diagram format based on `docs/command-hierarchy-split.md` structure.
