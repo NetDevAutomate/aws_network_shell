@@ -14,7 +14,7 @@ class Config:
     
     def _get_default_config_path(self) -> Path:
         """Get default config file path."""
-        return Path.home() / ".aws_network_shell" / "config.json"
+        return Path.home() / ".config" / "aws_network_shell" / "config.json"
     
     def _load(self) -> Dict[str, Any]:
         """Load config from file."""
@@ -39,6 +39,7 @@ class Config:
                 "output_format": "table",  # "table", "json", "yaml"
                 "colors": True,
                 "pager": False,
+                "allow_truncate": False,  # If False, shows full values or advises required width
             },
             "cache": {
                 "enabled": True,

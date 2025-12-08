@@ -14,7 +14,7 @@ from typing import List, Dict, Any, Optional
 class CacheDB:
     """SQLite-based persistent cache storage."""
 
-    DEFAULT_DB_PATH = Path.home() / ".aws_network_shell" / "cache.db"
+    DEFAULT_DB_PATH = Path.home() / ".config" / "aws_network_shell" / "cache.db"
 
     def __init__(self, db_path: Optional[Path] = None):
         """Initialize cache database.

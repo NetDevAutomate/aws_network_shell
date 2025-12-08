@@ -557,7 +557,11 @@ class RootHandlersMixin:
 
     def _show_vpc_routes_table(self, routes):
         """Display VPC routes in detailed table."""
-        allow_truncate = self.config.get("display.allow_truncate", True)
+        allow_truncate = self.config.get("display.allow_truncate", False)
+        use_pager = self.config.get("display.pager", False)
+
+        # Determine how many routes to show
+        display_limit = len(routes) if not use_pager else 100
 
         table = Table(
             title=f"VPC Routes ({len(routes)} total)",
@@ -566,6 +570,7 @@ class RootHandlersMixin:
             expand=True
         )
 
+        # No wrapping if allow_truncate is False
         table.add_column("VPC Name", style="cyan", no_wrap=not allow_truncate)
         table.add_column("VPC ID", style="dim", no_wrap=not allow_truncate)
         table.add_column("Region", style="blue", no_wrap=True)
@@ -574,7 +579,7 @@ class RootHandlersMixin:
         table.add_column("Target", style="magenta", no_wrap=not allow_truncate)
         table.add_column("State", style="bold green", no_wrap=True)
 
-        for r in routes[:100]:
+        for r in routes[:display_limit]:
             table.add_row(
                 r.get("vpc_name") or "",
                 r.get("vpc_id") or "",
@@ -586,8 +591,9 @@ class RootHandlersMixin:
             )
 
         console.print(table)
-        if len(routes) > 100:
-            console.print(f"[dim]Showing first 100 of {len(routes)} routes[/]")
+        if len(routes) > display_limit:
+            console.print(f"[dim]Showing first {display_limit} of {len(routes)} routes[/]")
+            console.print(f"[dim]Set 'pager: true' in config to enable pagination[/]")
 
     def _show_transit_gateway_routes_table(self, routes):
         """Display Transit Gateway routes in detailed table."""
