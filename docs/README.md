@@ -1,5 +1,20 @@
 # Documentation
 
+## Architecture & Codemap
+
+**ARCHITECTURE.md** - Comprehensive technical documentation (15KB)
+- System architecture with Mermaid diagrams
+- Module breakdown and interactions
+- Data flow and core workflows
+- Extension guide for adding new services
+- Interface contracts and patterns
+- Performance optimizations and metrics
+
+```bash
+# Essential reading for contributors and advanced users
+typora docs/ARCHITECTURE.md
+```
+
 ## Command Hierarchy
 
 ### Interactive Graph Commands (Recommended)
@@ -25,15 +40,22 @@ aws-net> export-graph [filename]
 
 ### Static Documentation
 
-**command-hierarchy-split.md** - Multi-diagram Mermaid format (10KB)
+**command-hierarchy-split.md** - Multi-diagram Mermaid format (11KB)
 - Multiple small, focused diagrams
 - One diagram per context (VPC, Transit Gateway, Firewall, etc.)
 - Left-to-right layout for readability
 - **Most readable option for static viewing**
 
+**command-hierarchy-graph.md** - Single unified graph (12KB)
+- Complete command hierarchy in one diagram
+- Shows all context relationships
+- Top-down tree layout
+- Best for understanding overall structure
+
 ```bash
 # View with Typora or any markdown viewer
 typora docs/command-hierarchy-split.md
+typora docs/command-hierarchy-graph.md
 ```
 
 ## Testing Documentation
