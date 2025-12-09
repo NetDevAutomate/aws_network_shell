@@ -5,6 +5,26 @@ This document shows the command hierarchy using multiple smaller, readable diagr
 - **Total Contexts**: 9
 - **Total Commands**: 103
 
+## Commands Overview
+
+### Cache Management
+- `clear_cache` - Clear all cached data (permanent)
+- `refresh [target|all]` - Refresh specific or all cached data
+  - `refresh` - Refresh current context data
+  - `refresh elb` - Clear ELB cache and re-fetch on next show
+  - `refresh all` - Clear all caches
+  - Available in all contexts for immediate cache invalidation
+
+### Navigation
+- `exit` - Go back one context level
+- `end` - Return to root level
+- `clear` - Clear the screen
+
+### Resource Discovery
+- `find_ip <ip-address>` - Locate IP address across AWS resources
+- `find_prefix <cidr>` - Find routes matching CIDR prefix
+- `find_null_routes` - Show blackhole routes
+
 ## 1. Overview: Context Navigation
 
 ```mermaid

@@ -81,6 +81,7 @@ HIERARCHY = {
             "find_null_routes",
             "populate_cache",
             "clear_cache",
+            "refresh",
             "create_routing_cache",
             "save_routing_cache",
             "load_routing_cache",
@@ -93,7 +94,7 @@ HIERARCHY = {
     "global-network": {
         "show": ["detail", "core-networks"],
         "set": ["core-network"],
-        "commands": ["show", "set", "exit", "end"],
+        "commands": ["show", "set", "refresh", "exit", "end"],
     },
     "core-network": {
         "show": [
@@ -110,12 +111,12 @@ HIERARCHY = {
             "rib",
         ],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
     },
     "route-table": {
         "show": ["routes"],
         "set": [],
-        "commands": ["show", "find_prefix", "find_null_routes", "exit", "end"],
+        "commands": ["show", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
     },
     "vpc": {
         "show": [
@@ -129,37 +130,37 @@ HIERARCHY = {
             "endpoints",
         ],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
     },
     "transit-gateway": {
         "show": ["detail", "route-tables", "attachments"],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "exit", "end"],
+        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
     },
     "firewall": {
         "show": ["firewall", "detail", "firewall-rule-groups", "rule-groups", "policy", "firewall-policy", "firewall-networking"],
         "set": ["rule-group"],
-        "commands": ["show", "set", "exit", "end"],
+        "commands": ["show", "set", "refresh", "exit", "end"],
     },
     "rule-group": {
         "show": ["rule-group"],
         "set": [],
-        "commands": ["show", "exit", "end"],
+        "commands": ["show", "refresh", "exit", "end"],
     },
     "ec2-instance": {
         "show": ["detail", "security-groups", "enis", "routes"],
         "set": [],
-        "commands": ["show", "exit", "end"],
+        "commands": ["show", "refresh", "exit", "end"],
     },
     "elb": {
         "show": ["detail", "listeners", "targets", "health"],
         "set": [],
-        "commands": ["show", "exit", "end"],
+        "commands": ["show", "refresh", "exit", "end"],
     },
     "vpn": {
         "show": ["detail", "tunnels"],
         "set": [],
-        "commands": ["show", "exit", "end"],
+        "commands": ["show", "refresh", "exit", "end"],
     },
 }
 
@@ -403,6 +404,85 @@ class AWSNetShellBase(cmd2.Cmd):
         """Clear all cached data."""
         self._cache.clear()
         console.print("[green]Cache cleared[/]")
+
+    def do_refresh(self, args):
+        """Refresh cached data. Usage: refresh [target|all]
+        
+        Examples:
+            refresh          - Refresh current context data
+            refresh elb      - Clear ELB cache
+            refresh all      - Clear all caches
+        """
+        target = str(args).strip().lower() if args else ""
+        
+        if not target or target == "current":
+            # Refresh current context by clearing relevant cache keys
+            if self.ctx_type == "elb":
+                cache_key = "elb"
+            elif self.ctx_type == "vpc":
+                cache_key = "vpcs"
+            elif self.ctx_type == "transit-gateway":
+                cache_key = "transit_gateways"
+            elif self.ctx_type == "firewall":
+                cache_key = "firewalls"
+            elif self.ctx_type == "ec2-instance":
+                cache_key = "ec2_instances"
+            elif self.ctx_type == "vpn":
+                cache_key = "vpns"
+            elif self.ctx_type == "global-network":
+                cache_key = "global_networks"
+            elif self.ctx_type == "core-network":
+                cache_key = "core_networks"
+            else:
+                console.print("[yellow]No cache to refresh in current context[/]")
+                return
+                
+            if cache_key in self._cache:
+                del self._cache[cache_key]
+                console.print(f"[green]Refreshed {cache_key} cache[/]")
+            else:
+                console.print(f"[yellow]No cached data for {cache_key}[/]")
+                
+        elif target == "all":
+            # Clear entire cache
+            count = len(self._cache)
+            self._cache.clear()
+            console.print(f"[green]Cleared {count} cache entries[/]")
+            
+        else:
+            # Clear specific cache key
+            # Map common names to cache keys
+            cache_mappings = {
+                "elb": "elb",
+                "elbs": "elb",
+                "vpc": "vpcs",
+                "vpcs": "vpcs",
+                "tgw": "transit_gateways",
+                "tgws": "transit_gateways",
+                "transit-gateway": "transit_gateways",
+                "transit-gateways": "transit_gateways",
+                "firewall": "firewalls",
+                "firewalls": "firewalls",
+                "ec2": "ec2_instances",
+                "ec2-instance": "ec2_instances",
+                "ec2-instances": "ec2_instances",
+                "vpn": "vpns",
+                "vpns": "vpns",
+                "global-network": "global_networks",
+                "global-networks": "global_networks",
+                "core-network": "core_networks",
+                "core-networks": "core_networks",
+                "eni": "enis",
+                "enis": "enis",
+            }
+            
+            cache_key = cache_mappings.get(target, target)
+            
+            if cache_key in self._cache:
+                del self._cache[cache_key]
+                console.print(f"[green]Refreshed {cache_key} cache[/]")
+            else:
+                console.print(f"[yellow]No cached data for {cache_key}[/]")
 
     def do_help(self, _):
         """Show available commands."""

@@ -289,7 +289,43 @@ aws-net> find_ip 10.1.32.100
 aws-net> find_null_routes
 ```
 
+### Cache Management
+```bash
+# Scenario: ELBs haven't finished provisioning yet
+aws-net> show elbs
+No load balancers found
+
+# Wait for provisioning, then refresh cache
+aws-net> refresh elb
+Refreshed elb cache
+
+# Now re-fetch will get latest data
+aws-net> show elbs
+┏━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┓
+┃ # ┃ Name      ┃ Type        ┃ State   ┃
+┡━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━┩
+│ 1 │ prod-alb  │ application │ active  │
+└───┴───────────┴─────────────┴─────────┘
+
+# Refresh current context data (when inside a context)
+aws-net> set elb 1
+elb:1> refresh
+Refreshed elb cache
+
+# Clear all caches
+aws-net> refresh all
+Cleared 5 cache entries
+```
+
 ## 📊 Commands by Category
+
+### Cache Management (2)
+- `clear_cache` - Clear all cached data permanently
+- `refresh [target|all]` - Refresh cached data selectively
+  - `refresh` - Refresh current context (e.g., in ELB context, clears ELB cache)
+  - `refresh elb` - Clear and re-fetch ELB data on next `show elbs`
+  - `refresh vpcs` - Clear and re-fetch VPC data
+  - `refresh all` - Clear all caches globally
 
 ### Show Commands (34)
 - Network Resources: `vpcs`, `transit_gateways`, `firewalls`, `elbs`, `vpns`
