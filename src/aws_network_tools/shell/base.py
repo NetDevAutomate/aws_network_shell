@@ -50,6 +50,7 @@ HIERARCHY = {
             "vpc-endpoints",
             "config",
             "running-config",
+            "regions",  # Show current region scope
             "cache",
             "routing-cache",
             "graph",

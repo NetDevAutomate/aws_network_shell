@@ -38,6 +38,50 @@ class RootHandlersMixin:
     # Alias for Cisco IOS compatibility
     _show_running_config = _show_config
 
+    def _show_regions(self, _):
+        """Show current region scope and available AWS regions."""
+        from ...core.validators import VALID_AWS_REGIONS
+        
+        # Show current scope
+        if self.regions:
+            console.print(f"[bold]Current Scope:[/] {', '.join(self.regions)}")
+            console.print(f"[dim]Discovery limited to {len(self.regions)} region(s)[/]\n")
+        else:
+            console.print("[bold]Current Scope:[/] all regions")
+            console.print("[dim]Discovery will scan all available regions[/]\n")
+        
+        # Show available AWS regions grouped by area
+        region_groups = {
+            "US": [],
+            "Europe": [],
+            "Asia Pacific": [],
+            "Other": [],
+        }
+        
+        for region in sorted(VALID_AWS_REGIONS):
+            if region.startswith("us-"):
+                region_groups["US"].append(region)
+            elif region.startswith("eu-"):
+                region_groups["Europe"].append(region)
+            elif region.startswith("ap-"):
+                region_groups["Asia Pacific"].append(region)
+            elif region.startswith("cn-"):
+                continue  # Skip China regions
+            else:
+                region_groups["Other"].append(region)
+        
+        console.print("[bold]Available AWS Regions:[/]")
+        for group_name, regions in region_groups.items():
+            if regions:
+                console.print(f"\n[cyan]{group_name}:[/]")
+                # Display in rows of 4
+                for i in range(0, len(regions), 4):
+                    chunk = regions[i:i+4]
+                    line = "  " + "  ".join(f"{r:20}" for r in chunk)
+                    console.print(line.rstrip())
+        
+        console.print("\n[dim]Usage: set regions <region1,region2,...> or set regions all[/]")
+
     def _show_cache(self, _):
         from datetime import datetime, timezone
 
