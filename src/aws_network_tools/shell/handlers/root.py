@@ -352,8 +352,15 @@ class RootHandlersMixin:
 
     # Root set handlers
     def _set_profile(self, val):
+        from ...core.validators import validate_profile
+        
+        is_valid, profile, error = validate_profile(val)
+        if not is_valid:
+            console.print(f"[red]{error}[/]")
+            return
+        
         old_profile = self.profile
-        self.profile = val if val else None
+        self.profile = profile
         console.print(f"[green]Profile: {self.profile or '(default)'}[/]")
         self._sync_runtime_config()
         
@@ -365,8 +372,15 @@ class RootHandlersMixin:
                 console.print(f"[dim]Cleared {count} cache entries (profile changed)[/]")
 
     def _set_regions(self, val):
+        from ...core.validators import validate_regions
+        
+        is_valid, regions, error = validate_regions(val)
+        if not is_valid:
+            console.print(f"[red]{error}[/]")
+            return
+        
         old_regions = self.regions.copy()
-        self.regions = [r.strip() for r in val.split(",")] if val else []
+        self.regions = regions if regions else []
         console.print(
             f"[green]Regions: {', '.join(self.regions) if self.regions else 'all'}[/]"
         )
@@ -385,10 +399,13 @@ class RootHandlersMixin:
         self._sync_runtime_config()
 
     def _set_output_format(self, val):
-        fmt = (val or "table").lower()
-        if fmt not in ("table", "json", "yaml"):
-            console.print("[red]Usage: set output-format <table|json|yaml>[/]")
+        from ...core.validators import validate_output_format
+        
+        is_valid, fmt, error = validate_output_format(val)
+        if not is_valid:
+            console.print(f"[red]{error}[/]")
             return
+        
         self.output_format = fmt
         console.print(f"[green]Output-format: {fmt}[/]")
         self._sync_runtime_config()
