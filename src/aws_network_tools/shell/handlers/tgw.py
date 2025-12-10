@@ -13,7 +13,7 @@ class TGWHandlersMixin:
         if not val:
             console.print("[red]Usage: set transit-gateway <#>[/]")
             return
-        tgws = self._cache.get("tgw", [])
+        tgws = self._cache.get("transit_gateways", [])
         if not tgws:
             console.print("[yellow]Run 'show transit_gateways' first[/]")
             return

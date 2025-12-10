@@ -13,7 +13,7 @@ class VPNHandlersMixin:
         if not val:
             console.print("[red]Usage: set vpn <#>[/]")
             return
-        vpns = self._cache.get("vpn", [])
+        vpns = self._cache.get("vpns", [])
         if not vpns:
             console.print("[yellow]Run 'show vpns' first[/]")
             return
@@ -38,7 +38,7 @@ class VPNHandlersMixin:
         from ...modules import vpn
 
         vpns = self._cached(
-            "vpn", lambda: vpn.VPNClient(self.profile).discover(), "Fetching VPNs"
+            "vpns", lambda: vpn.VPNClient(self.profile).discover(self.regions), "Fetching VPNs"
         )
         if not vpns:
             console.print("[yellow]No VPN connections found[/]")

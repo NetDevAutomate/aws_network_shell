@@ -65,30 +65,8 @@ class RootHandlersMixin:
 
     def _show_global_networks(self, _):
         from ...modules import cloudwan
-
-        def fetch():
-            client = cloudwan.CloudWANClient(self.profile)
-            gns = []
-            try:
-                for gn in client.nm.describe_global_networks().get(
-                    "GlobalNetworks", []
-                ):
-                    if gn.get("State") != "AVAILABLE":
-                        continue
-                    gn_id = gn["GlobalNetworkId"]
-                    name = next(
-                        (t["Value"] for t in gn.get("Tags", []) if t["Key"] == "Name"),
-                        gn_id,
-                    )
-                    gns.append(
-                        {"id": gn_id, "name": name, "state": gn.get("State", "")}
-                    )
-            except Exception as e:
-                logger.exception("Failed to fetch global networks")
-                console.print(f"[red]Error: {e}[/]")
-            return gns
-
-        gns = self._cached("global-network", fetch, "Fetching global networks")
+        fetch = lambda: cloudwan.CloudWANClient(self.profile).list_global_networks()
+        gns = self._cached("global_networks", fetch, "Fetching global networks")
         if not gns:
             console.print("[yellow]No global networks found[/]")
             return
@@ -108,7 +86,7 @@ class RootHandlersMixin:
         from ...modules import vpc
 
         vpcs = self._cached(
-            "vpc", lambda: vpc.VPCClient(self.profile).discover(), "Fetching VPCs"
+            "vpcs", lambda: vpc.VPCClient(self.profile).discover(self.regions), "Fetching VPCs"
         )
         if not vpcs:
             console.print("[yellow]No VPCs found[/]")
@@ -136,8 +114,8 @@ class RootHandlersMixin:
         from ...modules import tgw
 
         tgws = self._cached(
-            "tgw",
-            lambda: tgw.TGWClient(self.profile).discover(),
+            "transit_gateways",
+            lambda: tgw.TGWClient(self.profile).discover(self.regions),
             "Fetching Transit Gateways",
         )
         if not tgws:
@@ -160,8 +138,8 @@ class RootHandlersMixin:
         from ...modules import anfw
 
         fws = self._cached(
-            "firewall",
-            lambda: anfw.ANFWClient(self.profile).discover(),
+            "firewalls",
+            lambda: anfw.ANFWClient(self.profile).discover(self.regions),
             "Fetching firewalls",
         )
         if not fws:
@@ -183,8 +161,8 @@ class RootHandlersMixin:
         from ...modules import direct_connect
 
         connections = self._cached(
-            "dx",
-            lambda: direct_connect.DXClient(self.profile).discover(),
+            "dx_connections",
+            lambda: direct_connect.DXClient(self.profile).discover(self.regions),
             "Fetching Direct Connect",
         )
         direct_connect.DXDisplay(console).show_connections_list(connections)
@@ -200,7 +178,7 @@ class RootHandlersMixin:
         from ...modules import eni
 
         enis_list = self._cached(
-            "eni", lambda: eni.ENIClient(self.profile).discover(), "Fetching ENIs"
+            "enis", lambda: eni.ENIClient(self.profile).discover(self.regions), "Fetching ENIs"
         )
         eni.ENIDisplay(console).show_list(enis_list)
 
@@ -208,7 +186,7 @@ class RootHandlersMixin:
         from ...modules import vpn
 
         neighbors = self._cached(
-            "bgp-neighbors",
+            "bgp_neighbors",
             lambda: vpn.VPNClient(self.profile).get_bgp_neighbors(),
             "Fetching BGP neighbors",
         )
@@ -226,7 +204,7 @@ class RootHandlersMixin:
         from ...modules import security
 
         data = self._cached(
-            "security",
+            "security_groups",
             lambda: security.SecurityClient(self.profile).perform_full_analysis(),
             "Performing security analysis",
         )
@@ -242,7 +220,7 @@ class RootHandlersMixin:
         from ...modules import security
 
         data = self._cached(
-            "security",
+            "security_groups",
             lambda: security.SecurityClient(self.profile).perform_full_analysis(),
             "Analyzing security groups",
         )
@@ -254,8 +232,8 @@ class RootHandlersMixin:
         from ...modules import route53_resolver
 
         data = self._cached(
-            "r53-resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(),
+            "route53_resolver",
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_endpoints(data)
@@ -264,8 +242,8 @@ class RootHandlersMixin:
         from ...modules import route53_resolver
 
         data = self._cached(
-            "r53-resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(),
+            "route53_resolver",
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_rules(data)
@@ -274,8 +252,8 @@ class RootHandlersMixin:
         from ...modules import route53_resolver
 
         data = self._cached(
-            "r53-resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(),
+            "route53_resolver",
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_query_logs(data)
@@ -284,8 +262,8 @@ class RootHandlersMixin:
         from ...modules import peering
 
         data = self._cached(
-            "peering",
-            lambda: peering.PeeringClient(self.profile).discover(),
+            "peering_connections",
+            lambda: peering.PeeringClient(self.profile).discover(self.regions),
             "Fetching VPC peering",
         )
         peering.PeeringDisplay(console).show_list(data)
@@ -294,8 +272,8 @@ class RootHandlersMixin:
         from ...modules import prefix_lists
 
         data = self._cached(
-            "prefix-lists",
-            lambda: prefix_lists.PrefixListClient(self.profile).discover(),
+            "prefix_lists",
+            lambda: prefix_lists.PrefixListClient(self.profile).discover(self.regions),
             "Fetching prefix lists",
         )
         prefix_lists.PrefixListDisplay(console).show_list(data)
@@ -304,8 +282,8 @@ class RootHandlersMixin:
         from ...modules import network_alarms
 
         data = self._cached(
-            "network-alarms",
-            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(),
+            "network_alarms",
+            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(self.regions),
             "Fetching network alarms",
         )
         network_alarms.NetworkAlarmsDisplay(console).show_alarms(data)
@@ -314,8 +292,8 @@ class RootHandlersMixin:
         from ...modules import network_alarms
 
         data = self._cached(
-            "network-alarms",
-            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(),
+            "network_alarms",
+            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(self.regions),
             "Fetching network alarms",
         )
         network_alarms.NetworkAlarmsDisplay(console).show_alarms(
@@ -326,8 +304,8 @@ class RootHandlersMixin:
         from ...modules import client_vpn
 
         data = self._cached(
-            "client-vpn",
-            lambda: client_vpn.ClientVPNClient(self.profile).discover(),
+            "client_vpn_endpoints",
+            lambda: client_vpn.ClientVPNClient(self.profile).discover(self.regions),
             "Fetching Client VPN",
         )
         client_vpn.ClientVPNDisplay(console).show_endpoints(data)
@@ -336,8 +314,8 @@ class RootHandlersMixin:
         from ...modules import global_accelerator
 
         data = self._cached(
-            "global-accelerator",
-            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(),
+            "global_accelerators",
+            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(self.regions),
             "Fetching Global Accelerators",
         )
         global_accelerator.GlobalAcceleratorDisplay(console).show_accelerators(data)
@@ -346,8 +324,8 @@ class RootHandlersMixin:
         from ...modules import global_accelerator
 
         data = self._cached(
-            "global-accelerator",
-            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(),
+            "global_accelerators",
+            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(self.regions),
             "Fetching Global Accelerators",
         )
         global_accelerator.GlobalAcceleratorDisplay(console).show_endpoint_health(data)
@@ -356,8 +334,8 @@ class RootHandlersMixin:
         from ...modules import privatelink
 
         data = self._cached(
-            "privatelink",
-            lambda: privatelink.PrivateLinkClient(self.profile).discover(),
+            "vpc_endpoints",
+            lambda: privatelink.PrivateLinkClient(self.profile).discover(self.regions),
             "Fetching PrivateLink",
         )
         privatelink.PrivateLinkDisplay(console).show_endpoint_services(data)
@@ -366,26 +344,45 @@ class RootHandlersMixin:
         from ...modules import privatelink
 
         data = self._cached(
-            "privatelink",
-            lambda: privatelink.PrivateLinkClient(self.profile).discover(),
+            "vpc_endpoints",
+            lambda: privatelink.PrivateLinkClient(self.profile).discover(self.regions),
             "Fetching PrivateLink",
         )
         privatelink.PrivateLinkDisplay(console).show_vpc_endpoints(data)
 
     # Root set handlers
     def _set_profile(self, val):
+        old_profile = self.profile
         self.profile = val if val else None
         console.print(f"[green]Profile: {self.profile or '(default)'}[/]")
+        self._sync_runtime_config()
+        
+        # Auto-clear cache when profile changes
+        if old_profile != self.profile:
+            count = len(self._cache)
+            if count > 0:
+                self._cache.clear()
+                console.print(f"[dim]Cleared {count} cache entries (profile changed)[/]")
 
     def _set_regions(self, val):
+        old_regions = self.regions.copy()
         self.regions = [r.strip() for r in val.split(",")] if val else []
         console.print(
             f"[green]Regions: {', '.join(self.regions) if self.regions else 'all'}[/]"
         )
+        self._sync_runtime_config()
+        
+        # Auto-clear cache when regions change
+        if old_regions != self.regions:
+            count = len(self._cache)
+            if count > 0:
+                self._cache.clear()
+                console.print(f"[dim]Cleared {count} cache entries (regions changed)[/]")
 
     def _set_no_cache(self, val):
         self.no_cache = val and val.lower() in ("on", "true", "1", "yes")
         console.print(f"[green]No-cache: {'on' if self.no_cache else 'off'}[/]")
+        self._sync_runtime_config()
 
     def _set_output_format(self, val):
         fmt = (val or "table").lower()
@@ -394,6 +391,7 @@ class RootHandlersMixin:
             return
         self.output_format = fmt
         console.print(f"[green]Output-format: {fmt}[/]")
+        self._sync_runtime_config()
 
     def _set_output_file(self, val):
         self.output_file = val if val else None
@@ -457,7 +455,7 @@ class RootHandlersMixin:
         if not val:
             console.print("[red]Usage: set global-network <#>[/]")
             return
-        gns = self._cache.get("global-network", [])
+        gns = self._cache.get("global_networks", [])
         if not gns:
             console.print("[yellow]Run 'show global-networks' first[/]")
             return

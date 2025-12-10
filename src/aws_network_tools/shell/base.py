@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.text import Text
 from dataclasses import dataclass, field
 from ..themes import load_theme, get_theme_dir
-from ..config import get_config
+from ..config import get_config, RuntimeConfig
 
 console = Console()
 
@@ -195,6 +195,12 @@ class AWSNetShellBase(cmd2.Cmd):
         self.config = get_config()
         theme_name = self.config.get_theme_name()
         self.theme = load_theme(theme_name)
+        
+        # Initialize RuntimeConfig with shell defaults
+        RuntimeConfig.set_profile(self.profile)
+        RuntimeConfig.set_regions(self.regions)
+        RuntimeConfig.set_no_cache(self.no_cache)
+        RuntimeConfig.set_output_format(self.output_format)
 
         self.hidden_commands.extend(
             [
@@ -217,6 +223,13 @@ class AWSNetShellBase(cmd2.Cmd):
             ]
         )
         self._update_prompt()
+    
+    def _sync_runtime_config(self):
+        """Synchronize shell state with RuntimeConfig singleton."""
+        RuntimeConfig.set_profile(self.profile)
+        RuntimeConfig.set_regions(self.regions)
+        RuntimeConfig.set_no_cache(self.no_cache)
+        RuntimeConfig.set_output_format(self.output_format)
 
     @property
     def ctx(self) -> Optional[Context]:
@@ -409,31 +422,28 @@ class AWSNetShellBase(cmd2.Cmd):
         """Refresh cached data. Usage: refresh [target|all]
         
         Examples:
-            refresh          - Refresh current context data
-            refresh elb      - Clear ELB cache
-            refresh all      - Clear all caches
+            refresh                    - Refresh current context data
+            refresh transit_gateways   - Clear transit gateways cache
+            refresh all                - Clear all caches
         """
-        target = str(args).strip().lower() if args else ""
+        target = str(args).strip().lower().replace("-", "_") if args else ""
         
         if not target or target == "current":
             # Refresh current context by clearing relevant cache keys
-            if self.ctx_type == "elb":
-                cache_key = "elb"
-            elif self.ctx_type == "vpc":
-                cache_key = "vpcs"
-            elif self.ctx_type == "transit-gateway":
-                cache_key = "transit_gateways"
-            elif self.ctx_type == "firewall":
-                cache_key = "firewalls"
-            elif self.ctx_type == "ec2-instance":
-                cache_key = "ec2_instances"
-            elif self.ctx_type == "vpn":
-                cache_key = "vpns"
-            elif self.ctx_type == "global-network":
-                cache_key = "global_networks"
-            elif self.ctx_type == "core-network":
-                cache_key = "core_networks"
-            else:
+            context_to_cache = {
+                "elb": "elbs",
+                "vpc": "vpcs",
+                "transit-gateway": "transit_gateways",
+                "firewall": "firewalls",
+                "ec2-instance": "ec2_instances",
+                "vpn": "vpns",
+                "global-network": "global_networks",
+                "core-network": "core_networks",
+                "route-table": "core_networks",  # Route tables belong to core networks
+            }
+            
+            cache_key = context_to_cache.get(self.ctx_type)
+            if not cache_key:
                 console.print("[yellow]No cache to refresh in current context[/]")
                 return
                 
@@ -450,33 +460,59 @@ class AWSNetShellBase(cmd2.Cmd):
             console.print(f"[green]Cleared {count} cache entries[/]")
             
         else:
-            # Clear specific cache key
-            # Map common names to cache keys
-            cache_mappings = {
-                "elb": "elb",
-                "elbs": "elb",
-                "vpc": "vpcs",
+            # Clear specific cache key with alias support
+            cache_aliases = {
+                # Standard plural names (canonical)
                 "vpcs": "vpcs",
+                "transit_gateways": "transit_gateways",
+                "firewalls": "firewalls",
+                "elbs": "elbs",
+                "vpns": "vpns",
+                "enis": "enis",
+                "global_networks": "global_networks",
+                "core_networks": "core_networks",
+                "security_groups": "security_groups",
+                "dx_connections": "dx_connections",
+                "bgp_neighbors": "bgp_neighbors",
+                "route53_resolver": "route53_resolver",
+                "peering_connections": "peering_connections",
+                "prefix_lists": "prefix_lists",
+                "network_alarms": "network_alarms",
+                "client_vpn_endpoints": "client_vpn_endpoints",
+                "global_accelerators": "global_accelerators",
+                "vpc_endpoints": "vpc_endpoints",
+                
+                # Singular aliases
+                "vpc": "vpcs",
+                "transit_gateway": "transit_gateways",
+                "firewall": "firewalls",
+                "elb": "elbs",
+                "vpn": "vpns",
+                "eni": "enis",
+                "global_network": "global_networks",
+                "core_network": "core_networks",
+                "security_group": "security_groups",
+                "dx_connection": "dx_connections",
+                "bgp_neighbor": "bgp_neighbors",
+                "peering_connection": "peering_connections",
+                "prefix_list": "prefix_lists",
+                "network_alarm": "network_alarms",
+                "client_vpn_endpoint": "client_vpn_endpoints",
+                "global_accelerator": "global_accelerators",
+                "vpc_endpoint": "vpc_endpoints",
+                
+                # Common abbreviations
                 "tgw": "transit_gateways",
                 "tgws": "transit_gateways",
-                "transit-gateway": "transit_gateways",
-                "transit-gateways": "transit_gateways",
-                "firewall": "firewalls",
-                "firewalls": "firewalls",
+                "sg": "security_groups",
+                "sgs": "security_groups",
+                "dx": "dx_connections",
+                "r53": "route53_resolver",
+                "ga": "global_accelerators",
                 "ec2": "ec2_instances",
-                "ec2-instance": "ec2_instances",
-                "ec2-instances": "ec2_instances",
-                "vpn": "vpns",
-                "vpns": "vpns",
-                "global-network": "global_networks",
-                "global-networks": "global_networks",
-                "core-network": "core_networks",
-                "core-networks": "core_networks",
-                "eni": "enis",
-                "enis": "enis",
             }
             
-            cache_key = cache_mappings.get(target, target)
+            cache_key = cache_aliases.get(target, target)
             
             if cache_key in self._cache:
                 del self._cache[cache_key]

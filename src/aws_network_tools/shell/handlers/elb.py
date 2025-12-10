@@ -13,7 +13,7 @@ class ELBHandlersMixin:
         if not val:
             console.print("[red]Usage: set elb <#>[/]")
             return
-        elbs = self._cache.get("elb", [])
+        elbs = self._cache.get("elbs", [])
         if not elbs:
             console.print("[yellow]Run 'show elbs' first[/]")
             return
@@ -44,8 +44,8 @@ class ELBHandlersMixin:
         from ...modules import elb
 
         elbs = self._cached(
-            "elb",
-            lambda: elb.ELBClient(self.profile).discover(),
+            "elbs",
+            lambda: elb.ELBClient(self.profile).discover(self.regions),
             "Fetching Load Balancers",
         )
         if not elbs:
