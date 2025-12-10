@@ -13,7 +13,7 @@ class VPCHandlersMixin:
         if not val:
             console.print("[red]Usage: set vpc <#>[/]")
             return
-        vpcs = self._cache.get("vpc", [])
+        vpcs = self._cache.get("vpcs", [])
         if not vpcs:
             console.print("[yellow]Run 'show vpcs' first[/]")
             return

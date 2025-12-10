@@ -21,7 +21,7 @@ class TestRefreshCommand:
         """Test 'refresh all' clears all cached data."""
         # Populate cache with test data
         shell._cache = {
-            "elb": [{"id": "elb-1"}],
+            "elbs": [{"id": "elb-1"}],
             "vpcs": [{"id": "vpc-1"}],
             "transit_gateways": [{"id": "tgw-1"}],
         }
@@ -40,29 +40,12 @@ class TestRefreshCommand:
         assert "Cleared 3 cache entries" in output
 
     def test_refresh_specific_cache_key(self, shell):
-        """Test refreshing specific cache key like 'elb'."""
+        """Test refreshing specific cache key like 'elbs'."""
         # Populate cache
         shell._cache = {
-            "elb": [{"id": "elb-1"}],
+            "elbs": [{"id": "elb-1"}],
             "vpcs": [{"id": "vpc-1"}],
         }
-
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
-
-        shell.onecmd("refresh elb")
-        output = sys.stdout.getvalue()
-
-        sys.stdout = old_stdout
-
-        # Verify only elb cache is cleared
-        assert "elb" not in shell._cache
-        assert "vpcs" in shell._cache
-        assert "Refreshed elb cache" in output
-
-    def test_refresh_with_alias(self, shell):
-        """Test refresh works with aliases like 'elbs' -> 'elb'."""
-        shell._cache = {"elb": [{"id": "elb-1"}]}
 
         old_stdout = sys.stdout
         sys.stdout = StringIO()
@@ -72,12 +55,14 @@ class TestRefreshCommand:
 
         sys.stdout = old_stdout
 
-        assert "elb" not in shell._cache
-        assert "Refreshed elb cache" in output
+        # Verify only elbs cache is cleared
+        assert "elbs" not in shell._cache
+        assert "vpcs" in shell._cache
+        assert "Refreshed elbs cache" in output
 
-    def test_refresh_nonexistent_key(self, shell):
-        """Test refresh with non-existent cache key shows message."""
-        shell._cache = {"vpcs": [{"id": "vpc-1"}]}
+    def test_refresh_with_alias(self, shell):
+        """Test refresh works with aliases like 'elb' -> 'elbs'."""
+        shell._cache = {"elbs": [{"id": "elb-1"}]}
 
         old_stdout = sys.stdout
         sys.stdout = StringIO()
@@ -87,13 +72,28 @@ class TestRefreshCommand:
 
         sys.stdout = old_stdout
 
+        assert "elbs" not in shell._cache
+        assert "Refreshed elbs cache" in output
+
+    def test_refresh_nonexistent_key(self, shell):
+        """Test refresh with non-existent cache key shows message."""
+        shell._cache = {"vpcs": [{"id": "vpc-1"}]}
+
+        old_stdout = sys.stdout
+        sys.stdout = StringIO()
+
+        shell.onecmd("refresh elbs")
+        output = sys.stdout.getvalue()
+
+        sys.stdout = old_stdout
+
         assert "vpcs" in shell._cache  # Unchanged
-        assert "No cached data for elb" in output
+        assert "No cached data for elbs" in output
 
     def test_refresh_current_context_elb(self, shell):
         """Test 'refresh' without args in ELB context clears ELB cache."""
         # Set up ELB context
-        shell._cache = {"elb": [{"id": "elb-1"}]}
+        shell._cache = {"elbs": [{"id": "elb-1"}]}
         from aws_network_tools.shell.base import Context
         shell.context_stack = [Context("elb", "arn:aws:...", "my-elb", {}, 1)]
 
@@ -105,8 +105,8 @@ class TestRefreshCommand:
 
         sys.stdout = old_stdout
 
-        assert "elb" not in shell._cache
-        assert "Refreshed elb cache" in output
+        assert "elbs" not in shell._cache
+        assert "Refreshed elbs cache" in output
 
     def test_refresh_current_context_vpc(self, shell):
         """Test refresh in VPC context clears VPC cache."""
@@ -143,7 +143,7 @@ class TestRefreshCommand:
     def test_refresh_multiple_cache_keys(self, shell):
         """Test refreshing multiple cache keys in sequence."""
         shell._cache = {
-            "elb": [{"id": "elb-1"}],
+            "elbs": [{"id": "elb-1"}],
             "vpcs": [{"id": "vpc-1"}],
             "transit_gateways": [{"id": "tgw-1"}],
         }
@@ -151,13 +151,13 @@ class TestRefreshCommand:
         old_stdout = sys.stdout
         sys.stdout = StringIO()
 
-        shell.onecmd("refresh elb")
+        shell.onecmd("refresh elbs")
         shell.onecmd("refresh vpcs")
         output = sys.stdout.getvalue()
 
         sys.stdout = old_stdout
 
-        assert "elb" not in shell._cache
+        assert "elbs" not in shell._cache
         assert "vpcs" not in shell._cache
         assert "transit_gateways" in shell._cache  # Unchanged
 

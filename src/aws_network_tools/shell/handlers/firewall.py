@@ -13,7 +13,7 @@ class FirewallHandlersMixin:
         if not val:
             console.print("[red]Usage: set firewall <#>[/]")
             return
-        fws = self._cache.get("firewall", [])
+        fws = self._cache.get("firewalls", [])
         if not fws:
             console.print("[yellow]Run 'show firewalls' first[/]")
             return

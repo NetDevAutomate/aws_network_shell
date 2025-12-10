@@ -46,15 +46,15 @@ class EC2HandlersMixin:
 
     def _set_ec2_instance(self, val):
         if not val:
-            console.print("[red]Usage: set ec2-instance <#|instance-id>[/]")
+            console.print("[red]Usage: set ec2-instance <#>[/]")
             return
 
-        # CRITICAL FIX (Issue #9): Allow direct instance ID without show first
-        key = f"ec2-instance:{','.join(self.regions) if self.regions else 'all'}"
-        items = self._cache.get(key, [])
+        # Build cache key based on available filters
+        key = "ec2_instances"
+        instances = self._cache.get(key, [])
 
         # If cache empty AND val looks like instance ID, fetch directly
-        if not items and val.startswith('i-'):
+        if not instances and val.startswith('i-'):
             from ...modules.ec2 import EC2Client
             from ...core import run_with_spinner
 
@@ -97,11 +97,11 @@ class EC2HandlersMixin:
             return
 
         # Original behavior: Use cache from show command
-        if not items:
+        if not instances:
             console.print("[yellow]Run 'show ec2-instances' first[/]")
             return
 
-        target = self._resolve(items, val)
+        target = self._resolve(instances, val)
         if not target:
             console.print(f"[red]Not found: {val}[/]")
             return

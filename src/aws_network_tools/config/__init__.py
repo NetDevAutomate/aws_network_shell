@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
+from threading import Lock
 
 
 class Config:
@@ -99,3 +100,104 @@ class Config:
 def get_config() -> Config:
     """Get global config instance."""
     return Config()
+
+
+class RuntimeConfig:
+    """Thread-safe singleton for runtime configuration.
+    
+    Used by modules to access shell runtime settings (profile, regions, no_cache)
+    without explicit parameter passing.
+    
+    Usage:
+        # In shell:
+        RuntimeConfig.set_profile("production")
+        RuntimeConfig.set_regions(["us-east-1", "eu-west-1"])
+        
+        # In modules:
+        client = MyClient(RuntimeConfig.get_profile())
+        regions = RuntimeConfig.get_regions()
+    """
+    
+    _instance = None
+    _lock = Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        if self._initialized:
+            return
+        self._profile: Optional[str] = None
+        self._regions: list[str] = []
+        self._no_cache: bool = False
+        self._output_format: str = "table"
+        self._initialized = True
+    
+    @classmethod
+    def set_profile(cls, profile: Optional[str]) -> None:
+        """Set AWS profile for all modules."""
+        instance = cls()
+        instance._profile = profile
+    
+    @classmethod
+    def get_profile(cls) -> Optional[str]:
+        """Get current AWS profile."""
+        instance = cls()
+        return instance._profile
+    
+    @classmethod
+    def set_regions(cls, regions: list[str]) -> None:
+        """Set target regions for discovery operations."""
+        instance = cls()
+        instance._regions = regions if regions else []
+    
+    @classmethod
+    def get_regions(cls) -> list[str]:
+        """Get target regions. Empty list means all regions."""
+        instance = cls()
+        return instance._regions
+    
+    @classmethod
+    def set_no_cache(cls, no_cache: bool) -> None:
+        """Set cache disable flag."""
+        instance = cls()
+        instance._no_cache = no_cache
+    
+    @classmethod
+    def is_cache_disabled(cls) -> bool:
+        """Check if caching is disabled."""
+        instance = cls()
+        return instance._no_cache
+    
+    @classmethod
+    def set_output_format(cls, format: str) -> None:
+        """Set output format (table, json, yaml)."""
+        instance = cls()
+        if format not in ("table", "json", "yaml"):
+            raise ValueError(f"Invalid format: {format}")
+        instance._output_format = format
+    
+    @classmethod
+    def get_output_format(cls) -> str:
+        """Get current output format."""
+        instance = cls()
+        return instance._output_format
+    
+    @classmethod
+    def reset(cls) -> None:
+        """Reset to defaults (mainly for testing)."""
+        instance = cls()
+        instance._profile = None
+        instance._regions = []
+        instance._no_cache = False
+        instance._output_format = "table"
+
+
+def get_runtime_config() -> RuntimeConfig:
+    """Get global runtime config instance."""
+    return RuntimeConfig()
