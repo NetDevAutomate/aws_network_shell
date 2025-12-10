@@ -410,3 +410,45 @@ graph TB
 3. **Agent prompts** are designed to be copy-pasted directly to AI assistants
 4. **Add new tests** to `issue_tests.yaml` after fixing issues to prevent regressions
 5. **Use `--list`** to quickly see all open issues without starting investigation
+
+## Output Cleaning Utility
+
+### clean-output.py
+
+Cleans terminal output for git commit messages or documentation.
+
+**Features**:
+- Removes ANSI color codes
+- Converts box-drawing characters to ASCII
+- Normalizes whitespace
+- Optional compact mode (removes blank lines)
+
+**Usage**:
+```bash
+# From clipboard (macOS)
+pbpaste | python scripts/clean-output.py
+
+# Compact mode
+pbpaste | python scripts/clean-output.py --compact
+
+# Copy result back to clipboard
+pbpaste | python scripts/clean-output.py | pbcopy
+
+# From file
+python scripts/clean-output.py < output.txt > cleaned.txt
+```
+
+**Example**:
+```bash
+# Before (with ANSI codes and box drawing)
+┏━━━┳━━━━━━┳━━━━━━━━━━━┓
+┃ # ┃ Name ┃ Region    ┃
+┡━━━╇━━━━━━╇━━━━━━━━━━━┩
+│ 1 │ prod │ eu-west-1 │
+
+# After (clean ASCII)
++---+------+-----------+
+| # | Name | Region    |
++---+------+-----------+
+| 1 | prod | eu-west-1 |
+```
