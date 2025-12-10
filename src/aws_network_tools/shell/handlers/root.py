@@ -41,6 +41,7 @@ class RootHandlersMixin:
     def _show_regions(self, _):
         """Show current region scope and available AWS regions."""
         from ...core.validators import VALID_AWS_REGIONS
+        from ...core import run_with_spinner
         
         # Show current scope
         if self.regions:
@@ -48,7 +49,32 @@ class RootHandlersMixin:
             console.print(f"[dim]Discovery limited to {len(self.regions)} region(s)[/]\n")
         else:
             console.print("[bold]Current Scope:[/] all regions")
-            console.print("[dim]Discovery will scan all available regions[/]\n")
+            console.print("[dim]Discovery will scan all enabled regions[/]\n")
+        
+        # Try to fetch actual enabled regions from AWS account
+        enabled_regions = None
+        try:
+            def fetch_regions():
+                import boto3
+                if self.profile:
+                    session = boto3.Session(profile_name=self.profile)
+                else:
+                    session = boto3.Session()
+                ec2 = session.client('ec2', region_name='us-east-1')
+                response = ec2.describe_regions(AllRegions=False)  # Only opted-in regions
+                return [r['RegionName'] for r in response['Regions']]
+            
+            enabled_regions = run_with_spinner(
+                fetch_regions,
+                "Fetching enabled regions from AWS account",
+                console=console
+            )
+        except Exception as e:
+            console.print(f"[yellow]Could not fetch enabled regions: {e}[/]")
+            console.print("[dim]Showing all known AWS regions instead[/]\n")
+        
+        # Use enabled regions if available, otherwise fall back to static list
+        regions_to_show = set(enabled_regions) if enabled_regions else VALID_AWS_REGIONS
         
         # Show available AWS regions grouped by area
         region_groups = {
@@ -58,7 +84,7 @@ class RootHandlersMixin:
             "Other": [],
         }
         
-        for region in sorted(VALID_AWS_REGIONS):
+        for region in sorted(regions_to_show):
             if region.startswith("us-"):
                 region_groups["US"].append(region)
             elif region.startswith("eu-"):
@@ -70,17 +96,23 @@ class RootHandlersMixin:
             else:
                 region_groups["Other"].append(region)
         
-        console.print("[bold]Available AWS Regions:[/]")
+        console.print("[bold]Available Regions:[/]")
+        if enabled_regions:
+            console.print("[dim]Showing only regions enabled in your AWS account[/]\n")
+        else:
+            console.print("[dim]Showing all known AWS regions[/]\n")
+        
         for group_name, regions in region_groups.items():
             if regions:
-                console.print(f"\n[cyan]{group_name}:[/]")
+                console.print(f"[cyan]{group_name}:[/]")
                 # Display in rows of 4
                 for i in range(0, len(regions), 4):
                     chunk = regions[i:i+4]
                     line = "  " + "  ".join(f"{r:20}" for r in chunk)
                     console.print(line.rstrip())
+                console.print()  # Blank line between groups
         
-        console.print("\n[dim]Usage: set regions <region1,region2,...> or set regions all[/]")
+        console.print("[dim]Usage: set regions <region1,region2,...> or set regions all[/]")
 
     def _show_cache(self, _):
         from datetime import datetime, timezone
