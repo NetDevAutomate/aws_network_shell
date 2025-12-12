@@ -141,7 +141,29 @@ class RootHandlersMixin:
 
     def _show_global_networks(self, _):
         from ...modules import cloudwan
-        fetch = lambda: cloudwan.CloudWANClient(self.profile).list_global_networks()
+
+        def fetch():
+            client = cloudwan.CloudWANClient(self.profile)
+            gns = []
+            try:
+                for gn in client.nm.describe_global_networks().get(
+                    "GlobalNetworks", []
+                ):
+                    if gn.get("State") != "AVAILABLE":
+                        continue
+                    gn_id = gn["GlobalNetworkId"]
+                    name = next(
+                        (t["Value"] for t in gn.get("Tags", []) if t["Key"] == "Name"),
+                        gn_id,
+                    )
+                    gns.append(
+                        {"id": gn_id, "name": name, "state": gn.get("State", "")}
+                    )
+            except Exception as e:
+                logger.exception("Failed to fetch global networks")
+                console.print(f"[red]Error: {e}[/]")
+            return gns
+
         gns = self._cached("global_networks", fetch, "Fetching global networks")
         if not gns:
             console.print("[yellow]No global networks found[/]")
