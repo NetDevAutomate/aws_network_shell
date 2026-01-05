@@ -1,0 +1,68 @@
+---
+# Dependabot configuration
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+updates:
+  # Python dependencies (pip/uv)
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - dependencies
+      - python
+    reviewers:
+      - dpadmanabhan
+    groups:
+      # Group minor and patch updates together
+      python-minor:
+        update-types:
+          - minor
+          - patch
+        patterns:
+          - "*"
+        exclude-patterns:
+          - boto3
+          - botocore
+      # Keep AWS SDK updates separate
+      aws-sdk:
+        patterns:
+          - boto3
+          - botocore
+          - aiobotocore
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      # Group all GHA updates together
+      actions:
+        patterns:
+          - "*"
+
+# Private registries can be configured here if needed:
+# registries:
+#   python-private:
+#     type: python-index
+#     url: https://pypi.example.com/simple
+#     username: ${{ secrets.PYPI_USERNAME }}
+#     password: ${{ secrets.PYPI_PASSWORD }}

@@ -125,6 +125,7 @@ The tool displays a formatted summary with status indicators:
 #### Agent Prompt (`--agent-prompt`)
 
 Generates structured prompts for AI agents. **XML is the default** and recommended for agents due to:
+
 - Clear, unambiguous delimiters
 - Lower token overhead
 - Easier programmatic parsing
@@ -284,6 +285,7 @@ uv run python scripts/shell_runner.py --debug "show vpns" "set vpn 1" "show tunn
 ```
 
 **Debug Logging** (`--debug` or `-d`):
+
 - **Purpose**: Capture comprehensive execution data for troubleshooting GitHub issues
 - **Log Location**: `/tmp/aws_net_runner_debug_<timestamp>.log`
 - **Includes**:
@@ -418,12 +420,14 @@ graph TB
 Cleans terminal output for git commit messages or documentation.
 
 **Features**:
+
 - Removes ANSI color codes
 - Converts box-drawing characters to ASCII
 - Normalizes whitespace
 - Optional compact mode (removes blank lines)
 
 **Usage**:
+
 ```bash
 # From clipboard (macOS)
 pbpaste | python scripts/clean-output.py
@@ -439,6 +443,7 @@ python scripts/clean-output.py < output.txt > cleaned.txt
 ```
 
 **Example**:
+
 ```bash
 # Before (with ANSI codes and box drawing)
 ┏━━━┳━━━━━━┳━━━━━━━━━━━┓

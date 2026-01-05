@@ -1,62 +1,151 @@
+---
+# Pre-commit hooks configuration
+# Run: pre-commit run --all-files
+# Update: pre-commit autoupdate
+
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v6.0.0
-  hooks:
-  - id: check-added-large-files
-  - id: check-case-conflict
-  - id: check-executables-have-shebangs
-  - id: check-illegal-windows-names
-  - id: check-json
-  - id: check-merge-conflict
-  - id: check-shebang-scripts-are-executable
-  - id: check-symlinks
-  - id: check-toml
-  - id: check-xml
-  - id: check-yaml
-  - id: end-of-file-fixer
-  - id: debug-statements
-  - id: destroyed-symlinks
-  - id: detect-private-key
-  - id: detect-aws-credentials
-    args:
-    - --allow-missing-credentials
-  - id: forbid-submodules
-  - id: pretty-format-json
-    exclude: ^docusaurus\/package-lock.json$
-    args:
-    - --autofix
-  - id: trailing-whitespace
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.14.7
-  hooks:
-  - id: ruff
-    args:
-    - --fix
-  - id: ruff-format
-- repo: https://github.com/Yelp/detect-secrets
-  rev: v1.5.0
-  hooks:
-  - id: detect-secrets
-    args:
-    - --baseline
-    - .secrets.baseline
-- repo: local
-  hooks:
-  - id: pyright
-    name: pyright
-    pass_filenames: true
-    language: system
-    entry: bash -c 'for x in "$@"; do (cd `dirname $x`; pwd; uv run --frozen --all-extras
-      --dev pyright --stats;); done;' --
-    stages:
-    - pre-push
-    files: (src|samples)\/.*\/pyproject.toml
-  - id: pytest
-    name: pytest
-    pass_filenames: true
-    language: system
-    entry: bash -c 'for x in "$@"; do (cd `dirname $x`; pwd; uv run --frozen pytest
-      --cov --cov-branch --cov-report=term-missing;); done;' --
-    stages:
-    - pre-push
-    files: src\/.*\/pyproject.toml
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+        name: Check for case conflicts
+      - id: check-executables-have-shebangs
+        name: Check executables have shebangs
+      - id: check-illegal-windows-names
+        name: Check for illegal Windows filenames
+      - id: check-json
+        name: Check JSON syntax
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: check-shebang-scripts-are-executable
+        name: Check shebang scripts are executable
+      - id: check-symlinks
+        name: Check for broken symlinks
+      - id: check-toml
+        name: Check TOML syntax
+      - id: check-xml
+        name: Check XML syntax
+      - id: check-yaml
+        name: Check YAML syntax
+      - id: end-of-file-fixer
+        name: Fix end of file
+      - id: debug-statements
+        name: Check for debug statements
+      - id: destroyed-symlinks
+        name: Check for destroyed symlinks
+      - id: detect-private-key
+        name: Detect private keys
+      - id: detect-aws-credentials
+        name: Detect AWS credentials
+        args:
+          - --allow-missing-credentials
+      - id: forbid-submodules
+        name: Forbid submodules
+      - id: pretty-format-json
+        name: Pretty format JSON
+        exclude: ^docusaurus\/package-lock.json$
+        args:
+          - --autofix
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff
+        name: Ruff linter
+        args:
+          - --fix
+      - id: ruff-format
+        name: Ruff formatter
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: Detect secrets
+        args:
+          - --baseline
+          - .secrets.baseline
+
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        language: system
+        entry: shellcheck
+        args:
+          - --severity=warning
+          - --shell=bash
+        types: [shell]
+        files: \.(sh|bash)$
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.43.0
+    hooks:
+      - id: markdownlint
+        name: Markdown lint
+        args:
+          - --config
+          - .markdownlint.yaml
+          - --fix
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.21.0
+    hooks:
+      - id: commitlint
+        name: Commit message lint
+        stages: [commit-msg]
+        additional_dependencies: ['@commitlint/config-conventional']
+
+  - repo: local
+    hooks:
+      - id: pyright
+        name: Pyright type checker
+        pass_filenames: true
+        language: system
+        entry: >-
+          bash -c 'for x in "$@"; do
+          (cd `dirname $x`; pwd;
+          uv run --frozen --all-extras --dev pyright --stats;);
+          done;' --
+        stages:
+          - pre-push
+        files: (src|samples)\/.*\/pyproject.toml
+
+      - id: pytest
+        name: Pytest unit tests
+        pass_filenames: true
+        language: system
+        entry: >-
+          bash -c 'for x in "$@"; do
+          (cd `dirname $x`; pwd;
+          uv run --frozen pytest --cov --cov-branch
+          --cov-report=term-missing;);
+          done;' --
+        stages:
+          - pre-push
+        files: src\/.*\/pyproject.toml
+
+      - id: pre-commit-autoupdate-reminder
+        name: Pre-commit autoupdate reminder
+        language: system
+        entry: >-
+          bash -c 'echo "Run: pre-commit autoupdate"'
+        always_run: false
+        pass_filenames: false
+        stages:
+          - manual
+
+# To run autoupdate manually:
+#   pre-commit autoupdate
+#
+# To run all hooks:
+#   pre-commit run --all-files
+#
+# To install hooks:
+#   pre-commit install
+#   pre-commit install --hook-type commit-msg

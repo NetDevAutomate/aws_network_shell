@@ -164,6 +164,7 @@ src/aws_network_tools/
 #### `base.py` - Foundation Classes
 
 **Classes**:
+
 - `BaseClient` - Boto3 session management with custom config
   - Handles AWS credentials (profile or default)
   - Standardized retry/timeout configuration
@@ -201,6 +202,7 @@ graph LR
 ```
 
 **Classes**:
+
 - `Cache(namespace)` - Namespace-isolated cache
   - `get(ignore_expiry, current_account)` - Retrieve with validation
   - `set(data, ttl_seconds, account_id)` - Store with metadata
@@ -208,6 +210,7 @@ graph LR
   - `get_info()` - Cache metadata (age, TTL, expiry status)
 
 **Features**:
+
 - TTL-based expiration (default 15min, configurable)
 - Account safety (auto-clear on account switch)
 - Namespace isolation (separate cache per service)
@@ -218,6 +221,7 @@ graph LR
 #### `decorators.py` - Command Decorators
 
 **Functions**:
+
 - `@requires_context(ctx_type)` - Ensure command runs in correct context
 - `@cached(key, ttl)` - Auto-cache function results
 - `@spinner(message)` - Show progress spinner during execution
@@ -225,6 +229,7 @@ graph LR
 #### `display.py` & `renderer.py` - UI Components
 
 **Classes**:
+
 - `BaseDisplay` - Abstract display interface
   - Defines `show_detail()`, `render_table()` methods
   - Used by service-specific display classes
@@ -237,12 +242,14 @@ graph LR
 #### `spinner.py` - Progress Feedback
 
 **Functions**:
+
 - `run_with_spinner(fn, message)` - Execute with progress indicator
 - Handles exceptions and displays errors gracefully
 
 #### `ip_resolver.py` - Network Utilities
 
 **Functions**:
+
 - IP address parsing and validation
 - CIDR manipulation and comparison
 - Subnet calculations
@@ -293,6 +300,7 @@ classDiagram
 ```
 
 **Purpose**:
+
 - Type-safe data structures
 - Automatic validation on construction
 - Backward compatibility via `to_dict()`
@@ -414,6 +422,7 @@ sequenceDiagram
 #### `base.py` - AWSNetShellBase
 
 **Core Responsibilities**:
+
 1. **Context Stack Management**
    - `context_stack: list[Context]` - Navigation history
    - `_enter(ctx_type, ref, name, data, index)` - Push context
@@ -441,6 +450,7 @@ sequenceDiagram
 #### `main.py` - AWSNetShell
 
 **Mixin Composition**:
+
 ```python
 class AWSNetShell(
     RootHandlersMixin,      # Root-level: show, set, trace, find_ip
@@ -457,6 +467,7 @@ class AWSNetShell(
 ```
 
 **Key Methods**:
+
 - `_cached(key, fetch_fn, msg)` - Cache wrapper with spinner
 - `_emit_json_or_table(data, render_fn)` - Format-aware output
 - `do_show(args)` - Route show commands to handlers
@@ -469,6 +480,7 @@ class AWSNetShell(
 Each handler mixin provides commands for a specific AWS service or context.
 
 **Pattern**:
+
 ```python
 class ServiceHandlersMixin:
     def _show_[resource](self, args):
@@ -634,10 +646,12 @@ graph TB
 ```
 
 **Two-Level Caching**:
+
 1. **Memory Cache** (`self._cache`) - Session-scoped, cleared by refresh
 2. **File Cache** (`Cache` class) - Persistent, TTL + account-aware
 
 **Cache Keys**:
+
 - `vpcs`, `transit_gateways`, `firewalls`, `elb`, `vpns`, `ec2_instances`
 - `global_networks`, `core_networks`, `enis`
 - Namespaced by service type
@@ -757,6 +771,7 @@ sequenceDiagram
 #### Step 1: Create Module File
 
 `modules/my_service.py`:
+
 ```python
 from ..core.base import BaseClient, ModuleInterface, BaseDisplay
 from ..models.base import AWSResource
@@ -827,6 +842,7 @@ class MyServiceModule(ModuleInterface):
 #### Step 2: Add Handler Mixin
 
 `shell/handlers/my_service.py`:
+
 ```python
 from rich.console import Console
 
@@ -899,6 +915,7 @@ class MyServiceHandlersMixin:
 #### Step 3: Update Hierarchy
 
 `shell/base.py` - Add to `HIERARCHY`:
+
 ```python
 HIERARCHY = {
     None: {
@@ -917,6 +934,7 @@ HIERARCHY = {
 #### Step 4: Register in Main Shell
 
 `shell/main.py`:
+
 ```python
 from .handlers import (
     ...,
@@ -933,6 +951,7 @@ class AWSNetShell(
 #### Step 5: Add Tests
 
 `tests/test_my_service.py`:
+
 ```python
 def test_show_my_resources(shell):
     """Test showing resources"""
@@ -1073,6 +1092,7 @@ graph TB
 **Example**: Add `show performance` to ELB context
 
 1. **Update Hierarchy** (`shell/base.py`):
+
 ```python
 "elb": {
     "show": ["detail", "listeners", "targets", "health", "performance"],
@@ -1081,6 +1101,7 @@ graph TB
 ```
 
 2. **Add Handler** (`shell/handlers/elb.py`):
+
 ```python
 def _show_performance(self, _):
     """Show ELB performance metrics"""
@@ -1094,6 +1115,7 @@ def _show_performance(self, _):
 ```
 
 3. **Add Test** (`tests/test_elb_handler.py`):
+
 ```python
 def test_show_performance(shell):
     # Setup ELB context
@@ -1106,11 +1128,13 @@ def test_show_performance(shell):
 **Example**: Add CSV export
 
 1. **Add to Base** (`shell/base.py`):
+
 ```python
 "set": [..., "output-format"],
 ```
 
 2. **Update Handler** (`shell/main.py`):
+
 ```python
 def _emit_json_or_table(self, data, render_table_fn):
     if self.output_format == "json":
@@ -1132,6 +1156,7 @@ def _emit_json_or_table(self, data, render_table_fn):
 ### ModuleInterface (Abstract Base Class)
 
 **Contract**:
+
 ```python
 class ModuleInterface(ABC):
     @property
@@ -1166,6 +1191,7 @@ class ModuleInterface(ABC):
 ### BaseClient Interface
 
 **Contract**:
+
 ```python
 class BaseClient:
     def __init__(self, profile: Optional[str] = None, session: Optional[boto3.Session] = None):
@@ -1176,6 +1202,7 @@ class BaseClient:
 ```
 
 **Guarantees**:
+
 - Automatic retry on throttling (10 attempts, exponential backoff)
 - 5s connect timeout, 20s read timeout
 - User agent tracking for API metrics
@@ -1184,6 +1211,7 @@ class BaseClient:
 ### BaseDisplay Interface
 
 **Contract**:
+
 ```python
 class BaseDisplay:
     def __init__(self, console: Console):
@@ -1242,6 +1270,7 @@ graph TB
 ```
 
 **Test Coverage** (12/09/2025):
+
 - **Total Tests**: 200+ across 40+ test files
 - **Shell Tests**: Context navigation, command validation
 - **Handler Tests**: Each service handler validated
@@ -1269,12 +1298,14 @@ graph TB
 ### Theme System
 
 **Available Themes**:
+
 - `catppuccin-mocha` (default) - Dark theme with pastel colors
 - `catppuccin-latte` - Light theme
 - `catppuccin-macchiato` - Mid-tone theme
 - `dracula` - Purple-focused dark theme
 
 **Theme Structure**:
+
 ```json
 {
   "prompt_text": "white",
@@ -1290,6 +1321,7 @@ graph TB
 ```
 
 **Customization** (`shell/base.py:236-335`):
+
 - Prompt styles: "short" (compact) vs "long" (multi-line)
 - Index display: show/hide selection numbers
 - Max length: truncate long names
@@ -1302,6 +1334,7 @@ graph TB
 ### Concurrent API Calls
 
 **Pattern** (`modules/*.py`):
+
 ```python
 def discover_multi_region(self, regions: List[str]) -> List[dict]:
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -1322,17 +1355,20 @@ def discover_multi_region(self, regions: List[str]) -> List[dict]:
 ### Smart Caching Strategy
 
 **Level 1 - Memory Cache** (`shell.main._cache`):
+
 - Stores list views (show vpcs, show elbs)
 - Cleared by `refresh` command
 - Session-scoped only
 
 **Level 2 - File Cache** (`core/cache.py`):
+
 - Stores expensive API results
 - TTL-based expiration (15 min default)
 - Account-aware (auto-clear on profile switch)
 - Survives shell restarts
 
 **Level 3 - Routing Cache** (`shell/utilities.py`):
+
 - Pre-computed route tables across all services
 - Used by `find_prefix` at root level
 - Database-backed for complex queries
@@ -1340,6 +1376,7 @@ def discover_multi_region(self, regions: List[str]) -> List[dict]:
 ### Lazy Loading
 
 **Pattern**:
+
 ```python
 def _show_detail(self, _):
     # Fetch full details only when user enters context
@@ -1356,11 +1393,13 @@ def _show_detail(self, _):
 ### AWS Credentials
 
 **Priority Order**:
+
 1. `--profile` flag → Use specific AWS profile
 2. `AWS_PROFILE` env var
-3. Default credentials chain (IAM role, env vars, ~/.aws/credentials)
+3. Default credentials chain (IAM role, env vars, ~/.AWS/credentials)
 
 **Account Safety**:
+
 - Cache stores `account_id` with each entry
 - Automatic cache invalidation on account switch
 - Prevents cross-account data leakage
@@ -1368,10 +1407,12 @@ def _show_detail(self, _):
 ### Sensitive Data Handling
 
 **Not Logged**:
+
 - AWS credentials or temporary tokens
 - Resource content (S3 objects, secrets)
 
 **Logged** (debug mode):
+
 - API call parameters (resource IDs, filters)
 - Response metadata (status codes, timing)
 - Command execution trace
@@ -1379,6 +1420,7 @@ def _show_detail(self, _):
 ### Input Validation
 
 **Models Layer** (`models/*.py`):
+
 - Pydantic validation on all AWS responses
 - CIDR format validation
 - Resource ID format checking
@@ -1391,12 +1433,14 @@ def _show_detail(self, _):
 ### Debug Mode
 
 **Enable** via runner:
+
 ```bash
 aws-net-runner --debug "show vpcs" "set vpc 1"
 # Logs to: /tmp/aws_net_runner_debug_<timestamp>.log
 ```
 
 **Log Contents**:
+
 - Command execution timeline
 - AWS API calls with parameters
 - Cache hits/misses
@@ -1406,6 +1450,7 @@ aws-net-runner --debug "show vpcs" "set vpc 1"
 ### Graph Validation
 
 **Check command hierarchy integrity**:
+
 ```bash
 aws-net> show graph validate
 ✓ Graph is valid - all handlers implemented
@@ -1417,14 +1462,17 @@ aws-net> show graph validate
 ### Common Issues
 
 **Issue**: Commands not appearing in context
+
 - **Cause**: Missing in `HIERARCHY` dict
 - **Fix**: Add to context's "commands" list
 
 **Issue**: Cache not clearing
+
 - **Cause**: Using wrong cache key name
 - **Fix**: Use `refresh all` or check `cache_mappings` in `do_refresh()`
 
 **Issue**: AWS API throttling
+
 - **Cause**: Too many concurrent requests
 - **Fix**: Reduce `AWS_NET_MAX_WORKERS` env var (default 10)
 
@@ -1458,6 +1506,7 @@ aws-net> show graph validate
 ### Complete Module List
 
 **AWS Service Modules** (23 total):
+
 1. `cloudwan.py` - Cloud WAN & Global Networks
 2. `vpc.py` - VPCs, Subnets, Route Tables
 3. `tgw.py` - Transit Gateways, Attachments
@@ -1554,7 +1603,7 @@ cache_mappings = {
 
 - **Context**: Current CLI scope (vpc, transit-gateway, etc.)
 - **Context Stack**: Navigation history (breadcrumb trail)
-- **Handler**: Shell command implementation (do_show, _set_vpc, etc.)
+- **Handler**: Shell command implementation (do_show,_set_vpc, etc.)
 - **Module**: AWS service integration (CloudWANClient, VPCClient)
 - **Mixin**: Composable class adding commands to shell
 - **Cache Key**: String identifier for cached data ("vpcs", "elb", etc.)
@@ -1564,5 +1613,5 @@ cache_mappings = {
 ---
 
 **Generated**: 2025-12-09
-**Repository**: https://github.com/[your-org]/aws-network-shell
+**Repository**: <https://github.com/[your-org]/aws-network-shell>
 **Documentation**: See `docs/` for command hierarchy and testing guides

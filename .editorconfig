@@ -1,0 +1,78 @@
+# EditorConfig - https://editorconfig.org
+# Helps maintain consistent coding styles across different editors
+
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python files
+[*.py]
+indent_size = 4
+max_line_length = 120
+
+# Python type stubs
+[*.pyi]
+indent_size = 4
+max_line_length = 120
+
+# YAML files
+[*.{yaml,yml}]
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# TOML files
+[*.toml]
+indent_size = 4
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = 120
+
+# Shell scripts
+[*.{sh,bash,zsh}]
+indent_size = 2
+shell_variant = bash
+
+# Makefile (requires tabs)
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+[makefile]
+indent_style = tab
+indent_size = 4
+
+# Git configuration
+[.git*]
+indent_size = 4
+
+# GitHub Actions
+[.github/workflows/*.{yaml,yml}]
+indent_size = 2
+
+# Pre-commit config
+[.pre-commit-config.yaml]
+indent_size = 2
+
+# Documentation
+[docs/**]
+indent_size = 2
+
+# Test files
+[tests/**/*.py]
+indent_size = 4
+
+# Schema files
+[schemas/*.json]
+indent_size = 2

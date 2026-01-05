@@ -19,17 +19,21 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual environments
 .venv/
 venv/
 ENV/
 env/
+.uv/
 
 # Environment files
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 
 # IDE
 .idea/
@@ -44,15 +48,22 @@ env/
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
 .nox/
+coverage.xml
+*.cover
+*.py,cover
 
 # Type checking / Linting
 .mypy_cache/
 .ruff_cache/
 .dmypy.json
 dmypy.json
+.pyright/
+.pytype/
+pyrightconfig.json
 
 # Logs
 *.log

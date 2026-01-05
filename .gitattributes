@@ -1,0 +1,84 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code - always LF
+*.py text eol=lf diff=python
+*.pyx text eol=lf diff=python
+*.pyi text eol=lf diff=python
+
+# Shell scripts - always LF
+*.sh text eol=lf diff=bash
+*.bash text eol=lf diff=bash
+*.zsh text eol=lf
+
+# Configuration files
+*.json text eol=lf diff=json
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.ini text eol=lf
+*.conf text eol=lf
+
+# Documentation
+*.md text eol=lf diff=markdown
+*.txt text eol=lf
+*.rst text eol=lf
+LICENSE text eol=lf
+CHANGELOG text eol=lf
+AUTHORS text eol=lf
+
+# Web assets
+*.html text eol=lf diff=html
+*.css text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+
+# Data files
+*.csv text eol=lf
+*.xml text eol=lf
+
+# Binary files - do not modify
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.tgz binary
+*.gz binary
+
+# Database files
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Generated files - do not diff
+uv.lock -diff linguist-generated=true
+*.lock -diff linguist-generated=true
+
+# Secrets baseline - always LF
+.secrets.baseline text eol=lf
+
+# Exclude from language statistics
+docs/* linguist-documentation
+tests/* linguist-vendored=false
+schemas/*.json linguist-generated=true
+
+# Export-ignore (not included in archives)
+.github export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+.pre-commit-config.yaml export-ignore
+.editorconfig export-ignore
+.markdownlint.yaml export-ignore
+.commitlintrc.yaml export-ignore
+.secrets.baseline export-ignore
+tests/ export-ignore

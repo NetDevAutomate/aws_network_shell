@@ -19,11 +19,13 @@ GitHub Issue → issue_investigator.py → Agent Prompt (XML)
 ## Components
 
 ### 1. issue_investigator.py (Existing)
+
 - Fetches GitHub issues
 - Reproduces issue with shell_runner.py
 - Generates agent prompt with complete context
 
 ### 2. automated_issue_resolver.py (New)
+
 - Orchestrates the full resolution workflow
 - Manages agent prompt execution
 - Creates validation tests
@@ -31,6 +33,7 @@ GitHub Issue → issue_investigator.py → Agent Prompt (XML)
 - Creates PRs for successful fixes
 
 ### 3. Agent Prompts (Generated)
+
 - XML format for AI agent consumption
 - Contains:
   - Issue description
@@ -43,6 +46,7 @@ GitHub Issue → issue_investigator.py → Agent Prompt (XML)
 ## Usage
 
 ### Step 1: Generate Agent Prompt
+
 ```bash
 # Generate prompt for Issue #9
 uv run python scripts/issue_investigator.py --issue 9 --agent-prompt
@@ -52,6 +56,7 @@ uv run python scripts/issue_investigator.py --issue 9 --agent-prompt > agent_pro
 ```
 
 ### Step 2: Execute with AI Agent
+
 ```bash
 # Manual: Copy XML prompt to Claude Code or AI agent
 # Automated: Use automated_issue_resolver.py
@@ -60,6 +65,7 @@ uv run python scripts/automated_issue_resolver.py --issue 9
 ```
 
 ### Step 3: Validate Fix
+
 ```bash
 # Run issue-specific test
 pytest tests/integration/workflows/issue_9_*.yaml -v
@@ -69,6 +75,7 @@ pytest tests/integration/test_workflows.py -k "issue_9"
 ```
 
 ### Step 4: Create PR (if tests pass)
+
 ```bash
 # Automated in resolver script
 gh pr create --title "Fix Issue #9" --body "$(cat agent_prompts/issue_9_fix_summary.md)"

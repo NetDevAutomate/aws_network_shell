@@ -1,0 +1,53 @@
+# CODEOWNERS file
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Each line is a file pattern followed by one or more owners.
+# Order matters: later patterns override earlier ones.
+# Owners are notified when matching files are changed.
+
+# Default owner for everything in the repository
+* @dpadmanabhan
+
+# Core framework and shell implementation
+/src/aws_network_tools/core/ @dpadmanabhan
+/src/aws_network_tools/shell/ @dpadmanabhan
+
+# AWS service modules
+/src/aws_network_tools/modules/ @dpadmanabhan
+
+# Data models
+/src/aws_network_tools/models/ @dpadmanabhan
+
+# Traceroute functionality
+/src/aws_network_tools/traceroute/ @dpadmanabhan
+
+# CLI interfaces
+/src/aws_network_tools/cli/ @dpadmanabhan
+/src/aws_network_tools/cli.py @dpadmanabhan
+
+# Configuration
+/src/aws_network_tools/config/ @dpadmanabhan
+
+# Tests
+/tests/ @dpadmanabhan
+
+# Documentation
+/docs/ @dpadmanabhan
+*.md @dpadmanabhan
+
+# Build and packaging
+pyproject.toml @dpadmanabhan
+uv.lock @dpadmanabhan
+
+# CI/CD and automation
+/.github/ @dpadmanabhan
+/.pre-commit-config.yaml @dpadmanabhan
+
+# Scripts and utilities
+/scripts/ @dpadmanabhan
+
+# Schemas
+/schemas/ @dpadmanabhan
+
+# Themes
+/themes/ @dpadmanabhan
