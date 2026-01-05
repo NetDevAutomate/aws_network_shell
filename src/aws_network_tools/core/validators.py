@@ -12,28 +12,50 @@ AWS_REGION_PATTERN = re.compile(
 # Known AWS regions (as of 2025)
 VALID_AWS_REGIONS = {
     # US regions
-    "us-east-1", "us-east-2", "us-west-1", "us-west-2",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2",
     # Europe regions
-    "eu-west-1", "eu-west-2", "eu-west-3", "eu-central-1",
-    "eu-central-2", "eu-north-1", "eu-south-1", "eu-south-2",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-west-3",
+    "eu-central-1",
+    "eu-central-2",
+    "eu-north-1",
+    "eu-south-1",
+    "eu-south-2",
     # Asia Pacific
-    "ap-south-1", "ap-south-2", "ap-northeast-1", "ap-northeast-2",
-    "ap-northeast-3", "ap-southeast-1", "ap-southeast-2",
-    "ap-southeast-3", "ap-southeast-4", "ap-east-1",
+    "ap-south-1",
+    "ap-south-2",
+    "ap-northeast-1",
+    "ap-northeast-2",
+    "ap-northeast-3",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "ap-southeast-3",
+    "ap-southeast-4",
+    "ap-east-1",
     # Other regions
-    "ca-central-1", "ca-west-1",
+    "ca-central-1",
+    "ca-west-1",
     "sa-east-1",
-    "me-south-1", "me-central-1",
+    "me-south-1",
+    "me-central-1",
     "af-south-1",
     "il-central-1",
     # GovCloud
-    "us-gov-east-1", "us-gov-west-1",
+    "us-gov-east-1",
+    "us-gov-west-1",
     # China (special)
-    "cn-north-1", "cn-northwest-1",
+    "cn-north-1",
+    "cn-northwest-1",
 }
 
 
-def validate_regions(region_input: str) -> Tuple[bool, Optional[List[str]], Optional[str]]:
+def validate_regions(
+    region_input: str,
+) -> Tuple[bool, Optional[List[str]], Optional[str]]:
     """Validate region input string.
 
     Args:
@@ -50,10 +72,14 @@ def validate_regions(region_input: str) -> Tuple[bool, Optional[List[str]], Opti
 
     # Check for space-separated (common mistake)
     if " " in region_input and "," not in region_input:
-        return False, None, (
-            "Regions must be comma-separated, not space-separated.\n"
-            "  ✗ Wrong: eu-west-1 eu-west-2\n"
-            "  ✓ Right: eu-west-1,eu-west-2"
+        return (
+            False,
+            None,
+            (
+                "Regions must be comma-separated, not space-separated.\n"
+                "  ✗ Wrong: eu-west-1 eu-west-2\n"
+                "  ✓ Right: eu-west-1,eu-west-2"
+            ),
         )
 
     # Parse comma-separated regions
@@ -77,10 +103,10 @@ def validate_regions(region_input: str) -> Tuple[bool, Optional[List[str]], Opti
         suggestions = _suggest_regions(invalid_regions)
         error_msg = f"Invalid region codes: {', '.join(invalid_regions)}\n"
         if suggestions:
-            error_msg += f"\nDid you mean?\n"
+            error_msg += "\nDid you mean?\n"
             for invalid, suggested in suggestions.items():
                 error_msg += f"  {invalid} → {', '.join(suggested)}\n"
-        error_msg += f"\nValid examples: us-east-1, eu-west-1, ap-southeast-1"
+        error_msg += "\nValid examples: us-east-1, eu-west-1, ap-southeast-1"
         return False, None, error_msg
 
     return True, regions, None
@@ -130,15 +156,21 @@ def validate_profile(profile_input: str) -> Tuple[bool, Optional[str], Optional[
 
     # Check for invalid characters (AWS profile names are alphanumeric + _-)
     if not re.match(r"^[a-zA-Z0-9_-]+$", profile):
-        return False, None, (
-            f"Invalid profile name: '{profile}'\n"
-            "Profile names must contain only letters, numbers, hyphens, and underscores"
+        return (
+            False,
+            None,
+            (
+                f"Invalid profile name: '{profile}'\n"
+                "Profile names must contain only letters, numbers, hyphens, and underscores"
+            ),
         )
 
     return True, profile, None
 
 
-def validate_output_format(format_input: str) -> Tuple[bool, Optional[str], Optional[str]]:
+def validate_output_format(
+    format_input: str,
+) -> Tuple[bool, Optional[str], Optional[str]]:
     """Validate output format.
 
     Args:
@@ -154,9 +186,13 @@ def validate_output_format(format_input: str) -> Tuple[bool, Optional[str], Opti
     valid_formats = {"table", "json", "yaml"}
 
     if fmt not in valid_formats:
-        return False, None, (
-            f"Invalid format: '{fmt}'\n"
-            f"Valid formats: {', '.join(sorted(valid_formats))}"
+        return (
+            False,
+            None,
+            (
+                f"Invalid format: '{fmt}'\n"
+                f"Valid formats: {', '.join(sorted(valid_formats))}"
+            ),
         )
 
     return True, fmt, None

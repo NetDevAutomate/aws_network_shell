@@ -7,8 +7,7 @@ incomplete data gracefully (missing global_network_name key).
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
-from io import StringIO
+from unittest.mock import MagicMock
 
 from aws_network_tools.modules.cloudwan import CloudWANDisplay
 
@@ -36,9 +35,9 @@ class TestIssue2ShowDetail:
                     "name": "production",
                     "region": "us-east-1",
                     "type": "segment",
-                    "routes": []
+                    "routes": [],
                 }
-            ]
+            ],
         }
 
         # Should NOT raise KeyError
@@ -59,7 +58,7 @@ class TestIssue2ShowDetail:
             "regions": ["us-west-2"],
             "segments": ["shared"],
             "nfgs": [],
-            "route_tables": []
+            "route_tables": [],
         }
 
         # Should NOT raise KeyError - this is the bug fix verification
@@ -82,7 +81,7 @@ class TestIssue2ShowDetail:
             "regions": [],
             "segments": [],
             "nfgs": [],
-            "route_tables": []
+            "route_tables": [],
         }
 
         # Should NOT raise any errors
@@ -98,7 +97,7 @@ class TestIssue2ShowDetail:
             "regions": ["ap-southeast-1"],
             "segments": ["transit"],
             "nfgs": [],
-            "route_tables": []
+            "route_tables": [],
         }
 
         # Should NOT raise any errors
@@ -161,7 +160,7 @@ class TestIssue2ShowListTableRow:
                 # Missing global_network_name
                 "regions": ["us-east-1"],
                 "segments": ["seg1"],
-                "route_tables": []
+                "route_tables": [],
             }
         ]
 

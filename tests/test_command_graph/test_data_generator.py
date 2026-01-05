@@ -33,26 +33,30 @@ def generate_phase3_test_data() -> List[Dict[str, Any]]:
     ]
 
     for cmd, pattern, min_count, desc in vpc_tests:
-        tests.append({
-            "context": "vpc",
-            "index": 1,
-            "command": cmd,
-            "expected": pattern,
-            "min_count": min_count,
-            "description": desc,
-            "test_id": f"vpc_{cmd.replace('show ', '').replace('-', '_')}"
-        })
+        tests.append(
+            {
+                "context": "vpc",
+                "index": 1,
+                "command": cmd,
+                "expected": pattern,
+                "min_count": min_count,
+                "description": desc,
+                "test_id": f"vpc_{cmd.replace('show ', '').replace('-', '_')}",
+            }
+        )
 
     # Test multiple VPC indices
-    tests.append({
-        "context": "vpc",
-        "index": 2,
-        "command": "show subnets",
-        "expected": "subnet-",
-        "min_count": 2,
-        "description": "Second VPC shows subnets",
-        "test_id": "vpc_subnets_index2"
-    })
+    tests.append(
+        {
+            "context": "vpc",
+            "index": 2,
+            "command": "show subnets",
+            "expected": "subnet-",
+            "min_count": 2,
+            "description": "Second VPC shows subnets",
+            "test_id": "vpc_subnets_index2",
+        }
+    )
 
     # =========================================================================
     # TGW Context Tests (10 tests)
@@ -63,15 +67,17 @@ def generate_phase3_test_data() -> List[Dict[str, Any]]:
     ]
 
     for cmd, pattern, min_count, desc in tgw_tests:
-        tests.append({
-            "context": "transit-gateway",
-            "index": 1,
-            "command": cmd,
-            "expected": pattern,
-            "min_count": min_count,
-            "description": desc,
-            "test_id": f"tgw_{cmd.replace('show ', '').replace('-', '_')}"
-        })
+        tests.append(
+            {
+                "context": "transit-gateway",
+                "index": 1,
+                "command": cmd,
+                "expected": pattern,
+                "min_count": min_count,
+                "description": desc,
+                "test_id": f"tgw_{cmd.replace('show ', '').replace('-', '_')}",
+            }
+        )
 
     # =========================================================================
     # EC2 Context Tests (6 tests)
@@ -82,15 +88,17 @@ def generate_phase3_test_data() -> List[Dict[str, Any]]:
     ]
 
     for cmd, pattern, min_count, desc in ec2_tests:
-        tests.append({
-            "context": "ec2-instance",
-            "index": 1,
-            "command": cmd,
-            "expected": pattern,
-            "min_count": min_count,
-            "description": desc,
-            "test_id": f"ec2_{cmd.replace('show ', '').replace('-', '_')}"
-        })
+        tests.append(
+            {
+                "context": "ec2-instance",
+                "index": 1,
+                "command": cmd,
+                "expected": pattern,
+                "min_count": min_count,
+                "description": desc,
+                "test_id": f"ec2_{cmd.replace('show ', '').replace('-', '_')}",
+            }
+        )
 
     # =========================================================================
     # ELB Context Tests (6 tests)
@@ -102,28 +110,32 @@ def generate_phase3_test_data() -> List[Dict[str, Any]]:
     ]
 
     for cmd, pattern, min_count, desc in elb_tests:
-        tests.append({
-            "context": "elb",
-            "index": 1,
-            "command": cmd,
-            "expected": pattern,
-            "min_count": min_count,
-            "description": desc,
-            "test_id": f"elb_{cmd.replace('show ', '').replace('-', '_')}"
-        })
+        tests.append(
+            {
+                "context": "elb",
+                "index": 1,
+                "command": cmd,
+                "expected": pattern,
+                "min_count": min_count,
+                "description": desc,
+                "test_id": f"elb_{cmd.replace('show ', '').replace('-', '_')}",
+            }
+        )
 
     # =========================================================================
     # Global Network Context Tests (4 tests)
     # =========================================================================
-    tests.append({
-        "context": "global-network",
-        "index": 1,
-        "command": "show core-networks",
-        "expected": "core-network-",
-        "min_count": 0,  # May have 0 or more
-        "description": "Global Network shows core networks",
-        "test_id": "global_network_core_networks"
-    })
+    tests.append(
+        {
+            "context": "global-network",
+            "index": 1,
+            "command": "show core-networks",
+            "expected": "core-network-",
+            "min_count": 0,  # May have 0 or more
+            "description": "Global Network shows core networks",
+            "test_id": "global_network_core_networks",
+        }
+    )
 
     # =========================================================================
     # Core Network Context Tests (4 tests)

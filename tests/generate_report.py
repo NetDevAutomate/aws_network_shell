@@ -29,9 +29,9 @@ def generate_summary_section(report: dict) -> str:
 |--------|-------|
 | **Timestamp** | {timestamp} |
 | **Profile** | {profile} |
-| **Total Tests** | {summary.get('total', 0)} |
-| **Passed** | ✅ {summary.get('passed', 0)} |
-| **Failed** | ❌ {summary.get('failed', 0)} |
+| **Total Tests** | {summary.get("total", 0)} |
+| **Passed** | ✅ {summary.get("passed", 0)} |
+| **Failed** | ❌ {summary.get("failed", 0)} |
 | **Pass Rate** | {_calc_pass_rate(summary)}% |
 """
 
@@ -72,7 +72,9 @@ def generate_results_by_phase(results: list[dict]) -> str:
             status = "✅ PASS" if r["passed"] else "❌ FAIL"
             details = "; ".join(r.get("details", [])[:2])  # First 2 details
             details = details[:50] + "..." if len(details) > 50 else details
-            command = r["command"][:30] + "..." if len(r["command"]) > 30 else r["command"]
+            command = (
+                r["command"][:30] + "..." if len(r["command"]) > 30 else r["command"]
+            )
             output.append(f"| {r['test_id']} | `{command}` | {status} | {details} |")
 
         output.append("")
@@ -149,28 +151,36 @@ def generate_recommendations(results: list[dict]) -> str:
         recommendations.append("The following tests showed count discrepancies:")
         for tid in error_types["count_mismatch"]:
             recommendations.append(f"- {tid}")
-        recommendations.append("\n**Fix**: Check if shell is filtering resources differently than AWS CLI.\n")
+        recommendations.append(
+            "\n**Fix**: Check if shell is filtering resources differently than AWS CLI.\n"
+        )
 
     if error_types["missing_ids"]:
         recommendations.append("### Missing Resource IDs")
         recommendations.append("The following tests had missing resource IDs:")
         for tid in error_types["missing_ids"]:
             recommendations.append(f"- {tid}")
-        recommendations.append("\n**Fix**: Verify shell is querying all regions/resources.\n")
+        recommendations.append(
+            "\n**Fix**: Verify shell is querying all regions/resources.\n"
+        )
 
     if error_types["execution_error"]:
         recommendations.append("### Execution Errors")
         recommendations.append("The following tests had execution errors:")
         for tid in error_types["execution_error"]:
             recommendations.append(f"- {tid}")
-        recommendations.append("\n**Fix**: Check command syntax and handler implementation.\n")
+        recommendations.append(
+            "\n**Fix**: Check command syntax and handler implementation.\n"
+        )
 
     if error_types["output_error"]:
         recommendations.append("### Output Errors")
         recommendations.append("The following tests had errors in output:")
         for tid in error_types["output_error"]:
             recommendations.append(f"- {tid}")
-        recommendations.append("\n**Fix**: Review handler error handling and edge cases.\n")
+        recommendations.append(
+            "\n**Fix**: Review handler error handling and edge cases.\n"
+        )
 
     return "\n".join(recommendations)
 
@@ -219,7 +229,9 @@ def generate_markdown_report(report: dict) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate test report from JSON results")
+    parser = argparse.ArgumentParser(
+        description="Generate test report from JSON results"
+    )
     parser.add_argument(
         "--input",
         default="/tmp/test_results.json",

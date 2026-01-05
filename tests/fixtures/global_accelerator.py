@@ -350,9 +350,7 @@ def get_enabled_accelerators() -> list[dict[str, Any]]:
         List of enabled accelerators
     """
     return [
-        acc
-        for acc in GLOBAL_ACCELERATOR_FIXTURES.values()
-        if acc.get("Enabled", False)
+        acc for acc in GLOBAL_ACCELERATOR_FIXTURES.values() if acc.get("Enabled", False)
     ]
 
 
@@ -366,7 +364,9 @@ def get_accelerators_by_status(status: str) -> list[dict[str, Any]]:
         List of accelerators with matching status
     """
     return [
-        acc for acc in GLOBAL_ACCELERATOR_FIXTURES.values() if acc.get("Status") == status
+        acc
+        for acc in GLOBAL_ACCELERATOR_FIXTURES.values()
+        if acc.get("Status") == status
     ]
 
 
@@ -485,9 +485,7 @@ def get_accelerators_with_flow_logs() -> list[dict[str, Any]]:
         if attrs.get("FlowLogsEnabled", False)
     ]
     return [
-        acc
-        for arn, acc in GLOBAL_ACCELERATOR_FIXTURES.items()
-        if arn in enabled_arns
+        acc for arn, acc in GLOBAL_ACCELERATOR_FIXTURES.items() if arn in enabled_arns
     ]
 
 

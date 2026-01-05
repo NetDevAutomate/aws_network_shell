@@ -167,7 +167,7 @@ graph LR
     firewall_context --> firewall_show_networking
     firewall_set_rule_group{"set rule-group → rule-group"}:::set
     firewall_context --> firewall_set_rule_group
-    
+
     rule_group_context["rule-group context"]:::context
     firewall_set_rule_group --> rule_group_context
     rule_group_show_rule_group["show rule-group"]:::show

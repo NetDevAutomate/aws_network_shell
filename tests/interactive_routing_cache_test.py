@@ -27,7 +27,7 @@ def main():
     # Test 1: Create routing cache
     print("\n1️⃣  Creating routing cache...")
     print("-" * 70)
-    shell.onecmd('create_routing_cache')
+    shell.onecmd("create_routing_cache")
 
     # Validate cache created
     cache = shell._cache.get("routing-cache", {})
@@ -36,7 +36,7 @@ def main():
     cloudwan_count = len(cache.get("cloudwan", {}).get("routes", []))
     total = vpc_count + tgw_count + cloudwan_count
 
-    print(f"\n✓ Cache created:")
+    print("\n✓ Cache created:")
     print(f"  VPC: {vpc_count} routes")
     print(f"  Transit Gateway: {tgw_count} routes")
     print(f"  Cloud WAN: {cloudwan_count} routes")
@@ -50,22 +50,22 @@ def main():
     # Test 2: Show summary
     print("\n2️⃣  Showing cache summary...")
     print("-" * 70)
-    shell.onecmd('show routing-cache')
+    shell.onecmd("show routing-cache")
 
     # Test 3: Show Transit Gateway routes
     print("\n3️⃣  Showing Transit Gateway routes...")
     print("-" * 70)
-    shell.onecmd('show routing-cache transit-gateway')
+    shell.onecmd("show routing-cache transit-gateway")
 
     # Test 4: Show Cloud WAN routes
     print("\n4️⃣  Showing Cloud WAN routes...")
     print("-" * 70)
-    shell.onecmd('show routing-cache cloud-wan')
+    shell.onecmd("show routing-cache cloud-wan")
 
     # Test 5: Save to SQLite
     print("\n5️⃣  Saving to SQLite database...")
     print("-" * 70)
-    shell.onecmd('save_routing_cache')
+    shell.onecmd("save_routing_cache")
 
     # Validate DB file exists
     db = CacheDB()
@@ -76,7 +76,7 @@ def main():
     print("\n6️⃣  Loading from SQLite database...")
     print("-" * 70)
     shell._cache.clear()  # Clear memory cache
-    shell.onecmd('load_routing_cache')
+    shell.onecmd("load_routing_cache")
 
     # Validate loaded correctly
     loaded_cache = shell._cache.get("routing-cache", {})
@@ -89,7 +89,7 @@ def main():
     # Test 7: Show all routes
     print("\n7️⃣  Showing all routes...")
     print("-" * 70)
-    shell.onecmd('show routing-cache all')
+    shell.onecmd("show routing-cache all")
 
     # Final summary
     print("\n" + "=" * 70)
@@ -116,5 +116,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

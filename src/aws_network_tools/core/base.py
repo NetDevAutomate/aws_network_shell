@@ -41,7 +41,7 @@ class BaseClient:
         # If no profile provided, use RuntimeConfig
         if profile is None and session is None:
             profile = RuntimeConfig.get_profile()
-        
+
         if session:
             self.session = session
             self.profile = profile
@@ -70,17 +70,17 @@ class BaseClient:
             )
             # Fallback without custom config
             return self.session.client(service, region_name=region_name)
-    
+
     def get_regions(self) -> list[str]:
         """Get target regions from RuntimeConfig or default to session region.
-        
+
         Returns:
             list[str]: Target regions. Empty list if RuntimeConfig has empty regions.
         """
         config_regions = RuntimeConfig.get_regions()
         if config_regions:
             return config_regions
-        
+
         # Fallback to session's default region as single-item list
         default_region = self.session.region_name
         return [default_region] if default_region else []

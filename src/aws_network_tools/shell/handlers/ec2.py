@@ -54,13 +54,17 @@ class EC2HandlersMixin:
         instances = self._cache.get(key, [])
 
         # If cache empty AND val looks like instance ID, fetch directly
-        if not instances and val.startswith('i-'):
+        if not instances and val.startswith("i-"):
             from ...modules.ec2 import EC2Client
             from ...core import run_with_spinner
 
             # Try to fetch this specific instance from all regions
             target_instance = None
-            regions_to_try = self.regions if self.regions else ['us-east-1', 'eu-west-1', 'ap-southeast-2']
+            regions_to_try = (
+                self.regions
+                if self.regions
+                else ["us-east-1", "eu-west-1", "ap-southeast-2"]
+            )
 
             for region in regions_to_try:
                 try:
@@ -69,10 +73,10 @@ class EC2HandlersMixin:
                         target_instance = {
                             "id": val,
                             "name": detail.get("name", val),
-                            "region": region
+                            "region": region,
                         }
                         break
-                except:
+                except Exception:
                     continue
 
             if not target_instance:
@@ -89,9 +93,11 @@ class EC2HandlersMixin:
             )
 
             self._enter(
-                "ec2-instance", target_instance["id"],
+                "ec2-instance",
+                target_instance["id"],
                 target_instance.get("name") or target_instance["id"],
-                detail, 1
+                detail,
+                1,
             )
             print()
             return
@@ -120,7 +126,11 @@ class EC2HandlersMixin:
         except ValueError:
             selection_idx = 1
         self._enter(
-            "ec2-instance", target["id"], target.get("name") or target["id"], detail, selection_idx
+            "ec2-instance",
+            target["id"],
+            target.get("name") or target["id"],
+            detail,
+            selection_idx,
         )
         print()  # Add blank line before next prompt
 

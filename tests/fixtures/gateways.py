@@ -633,10 +633,20 @@ def get_gateway_summary() -> dict[str, int]:
         "nat_gateways": len(NAT_GATEWAY_FIXTURES),
         "elastic_ips": len(EIP_FIXTURES),
         "egress_only_igws": len(EGRESS_ONLY_IGW_FIXTURES),
-        "nat_available": len([n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "available"]),
-        "nat_pending": len([n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "pending"]),
-        "nat_deleting": len([n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "deleting"]),
-        "nat_failed": len([n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "failed"]),
-        "eip_allocated": len([e for e in EIP_FIXTURES.values() if e.get("NetworkInterfaceId")]),
+        "nat_available": len(
+            [n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "available"]
+        ),
+        "nat_pending": len(
+            [n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "pending"]
+        ),
+        "nat_deleting": len(
+            [n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "deleting"]
+        ),
+        "nat_failed": len(
+            [n for n in NAT_GATEWAY_FIXTURES.values() if n["State"] == "failed"]
+        ),
+        "eip_allocated": len(
+            [e for e in EIP_FIXTURES.values() if e.get("NetworkInterfaceId")]
+        ),
         "eip_unallocated": len(get_unallocated_eips()),
     }

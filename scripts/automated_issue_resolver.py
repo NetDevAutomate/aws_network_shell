@@ -26,12 +26,13 @@ import subprocess
 import sys
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List
+from dataclasses import asdict
 
 try:
     from rich.console import Console
-    from rich.progress import Progress, SpinnerColumn, TextColumn
     from rich.panel import Panel
+    from rich.table import Table
 except ImportError:
     print("Rich required. Install: pip install rich")
     sys.exit(1)
@@ -42,6 +43,7 @@ console = Console()
 @dataclass
 class IssueResolutionResult:
     """Result of attempting to resolve an issue."""
+
     issue_number: int
     issue_title: str
     agent_prompt_generated: bool
@@ -80,7 +82,7 @@ class AutomatedIssueResolver:
             fix_attempted=False,
             tests_created=False,
             tests_passed=False,
-            pr_created=False
+            pr_created=False,
         )
 
         try:
@@ -90,12 +92,16 @@ class AutomatedIssueResolver:
             result.agent_prompt_generated = True
 
             if self.dry_run:
-                console.print(f"[dim]Dry run: Would execute agent prompt[/]")
-                console.print(Panel(agent_prompt[:500] + "...", title="Agent Prompt Preview"))
+                console.print("[dim]Dry run: Would execute agent prompt[/]")
+                console.print(
+                    Panel(agent_prompt[:500] + "...", title="Agent Prompt Preview")
+                )
                 return result
 
             # Step 2: Execute agent prompt to implement fix
-            console.print("[yellow]Step 2: Executing agent prompt to implement fix...[/]")
+            console.print(
+                "[yellow]Step 2: Executing agent prompt to implement fix...[/]"
+            )
             fix_applied = self._execute_agent_prompt(agent_prompt, issue_number)
             result.fix_attempted = True
 
@@ -130,11 +136,15 @@ class AutomatedIssueResolver:
     def _generate_agent_prompt(self, issue_number: int) -> str:
         """Generate agent prompt using issue_investigator.py."""
         cmd = [
-            "uv", "run", "python",
+            "uv",
+            "run",
+            "python",
             str(self.scripts_dir / "issue_investigator.py"),
-            "--issue", str(issue_number),
+            "--issue",
+            str(issue_number),
             "--agent-prompt",
-            "--format", "xml"
+            "--format",
+            "xml",
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.repo_root)
@@ -156,7 +166,9 @@ class AutomatedIssueResolver:
         prompt_file.write_text(agent_prompt)
 
         console.print(f"[green]✓[/] Agent prompt saved to: {prompt_file}")
-        console.print("[dim]Execute this prompt with your AI agent to implement the fix[/]")
+        console.print(
+            "[dim]Execute this prompt with your AI agent to implement the fix[/]"
+        )
 
         # TODO: Integrate with Claude Code API or other agent system
         # For now, this is a manual step
@@ -166,27 +178,40 @@ class AutomatedIssueResolver:
         """Create a test that validates the issue is fixed."""
         # Extract workflow from agent prompt
         # Create YAML workflow file
-        workflow_file = self.repo_root / f"tests/integration/workflows/issue_{issue_number}_automated.yaml"
+        _workflow_file = (
+            self.repo_root
+            / f"tests/integration/workflows/issue_{issue_number}_automated.yaml"
+        )
 
         # TODO: Parse agent prompt to extract command sequence
         # For now, use issue_tests.yaml if exists
+        _ = _workflow_file  # Placeholder for future implementation
 
         return False
 
-    def _run_tests_iteratively(self, issue_number: int, max_iterations: int = 3) -> bool:
+    def _run_tests_iteratively(
+        self, issue_number: int, max_iterations: int = 3
+    ) -> bool:
         """Run tests iteratively, applying fixes on failures."""
         for iteration in range(max_iterations):
             console.print(f"[cyan]Test iteration {iteration + 1}/{max_iterations}[/]")
 
             # Run test for this specific issue
             cmd = [
-                ".venv/bin/python", "-m", "pytest",
-                f"tests/integration/test_workflows.py",
-                "-k", f"issue_{issue_number}",
-                "-v", "--tb=short", "--override-ini=addopts="
+                ".venv/bin/python",
+                "-m",
+                "pytest",
+                "tests/integration/test_workflows.py",
+                "-k",
+                f"issue_{issue_number}",
+                "-v",
+                "--tb=short",
+                "--override-ini=addopts=",
             ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.repo_root)
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, cwd=self.repo_root
+            )
 
             if result.returncode == 0:
                 console.print(f"[green]✓ Tests passed on iteration {iteration + 1}[/]")
@@ -201,10 +226,11 @@ class AutomatedIssueResolver:
 
     def _create_pull_request(self, issue_number: int) -> bool:
         """Create a pull request with the fix."""
-        branch_name = f"fix/issue-{issue_number}-automated"
+        _branch_name = f"fix/issue-{issue_number}-automated"
 
         # TODO: Use gh CLI to create PR
         # gh pr create --title "Fix Issue #{issue_number}" --body "Automated fix"
+        _ = _branch_name  # Placeholder for future implementation
 
         console.print("[dim]PR creation would happen here[/]")
         return False
@@ -212,8 +238,17 @@ class AutomatedIssueResolver:
     def resolve_all_open_issues(self) -> List[IssueResolutionResult]:
         """Attempt to resolve all open issues."""
         # Fetch open issues
-        cmd = ["gh", "issue", "list", "--repo", "NetDevAutomate/aws_network_shell",
-               "--state", "open", "--json", "number,title"]
+        cmd = [
+            "gh",
+            "issue",
+            "list",
+            "--repo",
+            "NetDevAutomate/aws_network_shell",
+            "--state",
+            "open",
+            "--json",
+            "number,title",
+        ]
 
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
@@ -234,11 +269,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="Automated issue resolution using agent prompts",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
     parser.add_argument("--issue", type=int, help="Specific issue number to resolve")
     parser.add_argument("--all", action="store_true", help="Resolve all open issues")
-    parser.add_argument("--dry-run", action="store_true", help="Preview actions without executing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview actions without executing"
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--output", "-o", help="Save results to JSON file")
 
@@ -271,7 +308,7 @@ def main():
             "✓" if r.agent_prompt_generated else "✗",
             "✓" if r.fix_attempted else "✗",
             "✓" if r.tests_passed else "✗",
-            "✓" if r.pr_created else "✗"
+            "✓" if r.pr_created else "✗",
         )
 
     console.print(table)

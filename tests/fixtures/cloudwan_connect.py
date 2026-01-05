@@ -551,9 +551,7 @@ def get_connect_peers_by_edge_location(edge_location: str) -> list[dict[str, Any
 
 def get_connect_peers_by_state(state: str) -> list[dict[str, Any]]:
     """Get all Connect Peers with a specific state (AVAILABLE, CREATING, DELETING)."""
-    return [
-        peer for peer in CONNECT_PEER_FIXTURES.values() if peer["State"] == state
-    ]
+    return [peer for peer in CONNECT_PEER_FIXTURES.values() if peer["State"] == state]
 
 
 def get_connect_peers_by_asn(peer_asn: int) -> list[dict[str, Any]]:

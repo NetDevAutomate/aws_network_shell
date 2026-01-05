@@ -48,45 +48,52 @@ def extract_commands(body: str) -> list[str]:
     """Extract shell commands from issue body."""
     commands = []
     lines = body.split("\n")
-    
+
     for line in lines:
         line = line.strip()
         # Match lines that look like shell commands
         # e.g., "aws-net> show vpcs" or "aws-net/tr:xxx> show routes"
         if "aws-net" in line and ">" in line:
             # Extract command after the prompt
-            match = re.search(r'[>$]\s*(.+)$', line)
+            match = re.search(r"[>$]\s*(.+)$", line)
             if match:
                 cmd = match.group(1).strip()
-                if cmd and not cmd.startswith(("EXCEPTION", "Error", "┏", "┃", "┡", "│", "└")):
+                if cmd and not cmd.startswith(
+                    ("EXCEPTION", "Error", "┏", "┃", "┡", "│", "└")
+                ):
                     commands.append(cmd)
-    
+
     return commands
 
 
 def format_yaml(issues: list[dict]) -> str:
     """Format issues as YAML test definitions."""
-    lines = ["# Auto-generated from GitHub issues", "# Review and adjust commands as needed", "", "issues:"]
-    
+    lines = [
+        "# Auto-generated from GitHub issues",
+        "# Review and adjust commands as needed",
+        "",
+        "issues:",
+    ]
+
     for issue in issues:
         num = issue["number"]
         title = issue["title"]
         body = issue.get("body", "") or ""
         commands = extract_commands(body)
-        
+
         lines.append(f"  {num}:")
         lines.append(f'    title: "{title}"')
         lines.append("    commands:")
-        
+
         if commands:
             for cmd in commands:
                 lines.append(f"      - {cmd}")
         else:
             lines.append("      # No commands extracted - add manually")
             lines.append("      - show global-networks")
-        
+
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
@@ -98,7 +105,7 @@ def format_commands(issues: list[dict]) -> str:
         title = issue["title"]
         body = issue.get("body", "") or ""
         commands = extract_commands(body)
-        
+
         lines.append(f"# Issue #{num}: {title}")
         if commands:
             cmd_args = " ".join(f'"{c}"' for c in commands)
@@ -106,15 +113,20 @@ def format_commands(issues: list[dict]) -> str:
         else:
             lines.append("# No commands extracted")
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch GitHub issues")
     parser.add_argument("--issue", "-i", type=int, help="Fetch specific issue")
-    parser.add_argument("--format", "-f", choices=["yaml", "commands", "json"], 
-                        default="yaml", help="Output format")
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["yaml", "commands", "json"],
+        default="yaml",
+        help="Output format",
+    )
     args = parser.parse_args()
 
     try:

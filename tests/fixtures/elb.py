@@ -490,11 +490,15 @@ def get_elb_detail(elb_arn: str) -> dict[str, Any] | None:
         return None
 
     # Gather associated listeners
-    listeners = [l for l in LISTENER_FIXTURES.values() if l["LoadBalancerArn"] == elb_arn]
+    listeners = [
+        lis for lis in LISTENER_FIXTURES.values() if lis["LoadBalancerArn"] == elb_arn
+    ]
 
     # Gather associated target groups
     target_groups = [
-        tg for tg in TARGET_GROUP_FIXTURES.values() if elb_arn in tg.get("LoadBalancerArns", [])
+        tg
+        for tg in TARGET_GROUP_FIXTURES.values()
+        if elb_arn in tg.get("LoadBalancerArns", [])
     ]
 
     # Gather target health for each target group
@@ -523,7 +527,9 @@ def get_target_health(tg_arn: str) -> list[dict[str, Any]]:
 
 def get_listeners_by_elb(elb_arn: str) -> list[dict[str, Any]]:
     """Get all listeners for a load balancer."""
-    return [l for l in LISTENER_FIXTURES.values() if l["LoadBalancerArn"] == elb_arn]
+    return [
+        lis for lis in LISTENER_FIXTURES.values() if lis["LoadBalancerArn"] == elb_arn
+    ]
 
 
 def get_target_groups_by_vpc(vpc_id: str) -> list[dict[str, Any]]:

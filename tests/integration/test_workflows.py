@@ -31,7 +31,7 @@ def load_workflows():
     for yaml_file in workflow_dir.glob("*.yaml"):
         with open(yaml_file) as f:
             workflow = yaml.safe_load(f)
-            workflow['_source_file'] = yaml_file.name
+            workflow["_source_file"] = yaml_file.name
             workflows.append(workflow)
 
     return workflows
@@ -59,18 +59,18 @@ class TestWorkflowExecution:
             runner.start()
 
             # Execute each step in workflow
-            for step in workflow.get('workflow', []):
-                command = step['command']
+            for step in workflow.get("workflow", []):
+                command = step["command"]
                 output = runner.run(command)
 
                 # Check expect_contains if specified
-                if 'expect_contains' in step:
-                    assert step['expect_contains'] in output, (
+                if "expect_contains" in step:
+                    assert step["expect_contains"] in output, (
                         f"Step '{command}' expected '{step['expect_contains']}' in output"
                     )
 
                 # Run assertions if specified
-                for assertion in step.get('assertions', []):
+                for assertion in step.get("assertions", []):
                     self._evaluate_assertion(assertion, output, command)
 
         finally:
@@ -85,42 +85,42 @@ class TestWorkflowExecution:
         - contains_any: At least one value must be in output
         - eni_count: Count ENIs with operator
         """
-        assertion_type = assertion['type']
+        assertion_type = assertion["type"]
 
-        if assertion_type == 'contains':
-            assert assertion['value'] in output, (
+        if assertion_type == "contains":
+            assert assertion["value"] in output, (
                 f"Command '{command}': Expected '{assertion['value']}' in output.\n"
                 f"Message: {assertion.get('message', '')}"
             )
 
-        elif assertion_type == 'not_contains':
-            assert assertion['value'] not in output, (
+        elif assertion_type == "not_contains":
+            assert assertion["value"] not in output, (
                 f"Command '{command}': Did NOT expect '{assertion['value']}' in output.\n"
                 f"Message: {assertion.get('message', '')}\n"
                 f"This assertion has severity: {assertion.get('severity', 'normal')}"
             )
 
-        elif assertion_type == 'contains_any':
-            values = assertion['values']
+        elif assertion_type == "contains_any":
+            values = assertion["values"]
             found = any(v in output for v in values)
             assert found, (
                 f"Command '{command}': Expected at least one of {values} in output.\n"
                 f"Message: {assertion.get('message', '')}"
             )
 
-        elif assertion_type == 'eni_count':
-            eni_count = output.count('eni-')
-            operator = assertion['operator']
-            expected = assertion['value']
+        elif assertion_type == "eni_count":
+            eni_count = output.count("eni-")
+            operator = assertion["operator"]
+            expected = assertion["value"]
 
-            if operator == '<=':
+            if operator == "<=":
                 assert eni_count <= expected, (
                     f"Command '{command}': ENI count {eni_count} not <= {expected}.\n"
                     f"Message: {assertion.get('message', '')}"
                 )
-            elif operator == '==':
+            elif operator == "==":
                 assert eni_count == expected, f"ENI count {eni_count} != {expected}"
-            elif operator == '>=':
+            elif operator == ">=":
                 assert eni_count >= expected, f"ENI count {eni_count} not >= {expected}"
 
         else:

@@ -25,7 +25,9 @@ class TGWHandlersMixin:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        self._enter("transit-gateway", t["id"], t.get("name", t["id"]), t, selection_idx)
+        self._enter(
+            "transit-gateway", t["id"], t.get("name", t["id"]), t, selection_idx
+        )
         print()  # Add blank line before next prompt
 
     def _show_transit_gateway_route_tables(self):

@@ -665,14 +665,19 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "FromPort": 80,
                 "ToPort": 80,
                 "IpRanges": [
-                    {"CidrIp": "0.0.0.0/0", "Description": "HTTP redirect from internet"}
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "HTTP redirect from internet",
+                    }
                 ],
             },
         ],
         "IpPermissionsEgress": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}
+                ],
             },
         ],
         "Tags": [
@@ -704,14 +709,19 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "FromPort": 22,
                 "ToPort": 22,
                 "IpRanges": [
-                    {"CidrIp": "10.100.0.0/16", "Description": "SSH from shared services"}
+                    {
+                        "CidrIp": "10.100.0.0/16",
+                        "Description": "SSH from shared services",
+                    }
                 ],
             },
         ],
         "IpPermissionsEgress": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}
+                ],
             },
         ],
         "Tags": [
@@ -743,14 +753,19 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "FromPort": 5432,
                 "ToPort": 5432,
                 "IpRanges": [
-                    {"CidrIp": "10.100.10.0/24", "Description": "PostgreSQL from bastion"}
+                    {
+                        "CidrIp": "10.100.10.0/24",
+                        "Description": "PostgreSQL from bastion",
+                    }
                 ],
             },
         ],
         "IpPermissionsEgress": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}
+                ],
             },
         ],
         "Tags": [
@@ -771,7 +786,10 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "FromPort": 22,
                 "ToPort": 22,
                 "IpRanges": [
-                    {"CidrIp": "203.0.113.0/24", "Description": "SSH from corporate IP range"}
+                    {
+                        "CidrIp": "203.0.113.0/24",
+                        "Description": "SSH from corporate IP range",
+                    }
                 ],
             },
         ],
@@ -781,7 +799,10 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "FromPort": 22,
                 "ToPort": 22,
                 "IpRanges": [
-                    {"CidrIp": "10.0.0.0/8", "Description": "SSH to all internal networks"}
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "Description": "SSH to all internal networks",
+                    }
                 ],
             },
             {
@@ -808,19 +829,25 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                 "IpProtocol": "tcp",
                 "FromPort": 8080,
                 "ToPort": 8080,
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "HTTP from anywhere"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "HTTP from anywhere"}
+                ],
             },
             {
                 "IpProtocol": "tcp",
                 "FromPort": 22,
                 "ToPort": 22,
-                "IpRanges": [{"CidrIp": "10.0.0.0/8", "Description": "SSH from internal"}],
+                "IpRanges": [
+                    {"CidrIp": "10.0.0.0/8", "Description": "SSH from internal"}
+                ],
             },
         ],
         "IpPermissionsEgress": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}
+                ],
             },
         ],
         "Tags": [
@@ -837,13 +864,17 @@ SECURITY_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
         "IpPermissions": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "10.0.0.0/8", "Description": "All from internal"}],
+                "IpRanges": [
+                    {"CidrIp": "10.0.0.0/8", "Description": "All from internal"}
+                ],
             },
         ],
         "IpPermissionsEgress": [
             {
                 "IpProtocol": "-1",
-                "IpRanges": [{"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}],
+                "IpRanges": [
+                    {"CidrIp": "0.0.0.0/0", "Description": "Allow all outbound"}
+                ],
             },
         ],
         "Tags": [
@@ -1141,7 +1172,9 @@ def get_vpc_detail(vpc_id: str) -> dict[str, Any] | None:
     route_tables = [rt for rt in ROUTE_TABLE_FIXTURES.values() if rt["VpcId"] == vpc_id]
 
     # Gather associated security groups
-    security_groups = [sg for sg in SECURITY_GROUP_FIXTURES.values() if sg["VpcId"] == vpc_id]
+    security_groups = [
+        sg for sg in SECURITY_GROUP_FIXTURES.values() if sg["VpcId"] == vpc_id
+    ]
 
     # Gather associated NACLs
     nacls = [nacl for nacl in NACL_FIXTURES.values() if nacl["VpcId"] == vpc_id]

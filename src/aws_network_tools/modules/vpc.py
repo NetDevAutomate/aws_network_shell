@@ -262,22 +262,23 @@ class VPCClient(BaseClient):
         sgs = []
         for sg in sg_resp.get("SecurityGroups", []):
             ingress, egress = [], []
-            for r in sg.get("IpPermissions", []):
-                proto = r.get("IpProtocol", "all")
+            # Process ingress rules
+            for rule in sg.get("IpPermissions", []):
+                proto = rule.get("IpProtocol", "all")
                 ports = (
-                    f"{r.get('FromPort', 'all')}-{r.get('ToPort', 'all')}"
-                    if r.get("FromPort")
+                    f"{rule.get('FromPort', 'all')}-{rule.get('ToPort', 'all')}"
+                    if rule.get("FromPort")
                     else "all"
                 )
-                for ip in r.get("IpRanges", []):
+                for ip_range in rule.get("IpRanges", []):
                     ingress.append(
                         {
                             "protocol": proto,
                             "ports": ports,
-                            "source": ip.get("CidrIp", "N/A"),
+                            "source": ip_range.get("CidrIp", "N/A"),
                         }
                     )
-                for grp in r.get("UserIdGroupPairs", []):
+                for grp in rule.get("UserIdGroupPairs", []):
                     ingress.append(
                         {
                             "protocol": proto,
@@ -285,43 +286,43 @@ class VPCClient(BaseClient):
                             "source": grp.get("GroupId", "N/A"),
                         }
                     )
-                if not r.get("IpRanges") and not r.get("UserIdGroupPairs"):
+                if not rule.get("IpRanges") and not rule.get("UserIdGroupPairs"):
                     ingress.append({"protocol": proto, "ports": ports, "source": "N/A"})
-                for r in sg.get("IpPermissionsEgress", []):
-                    proto = r.get("IpProtocol", "all")
-                    ports = (
-                        f"{r.get('FromPort', 'all')}-{r.get('ToPort', 'all')}"
-                        if r.get("FromPort")
-                        else "all"
+            # Process egress rules (separate loop, not nested)
+            for egress_rule in sg.get("IpPermissionsEgress", []):
+                proto = egress_rule.get("IpProtocol", "all")
+                ports = (
+                    f"{egress_rule.get('FromPort', 'all')}-{egress_rule.get('ToPort', 'all')}"
+                    if egress_rule.get("FromPort")
+                    else "all"
+                )
+                for ip_range in egress_rule.get("IpRanges", []):
+                    egress.append(
+                        {
+                            "protocol": proto,
+                            "ports": ports,
+                            "dest": ip_range.get("CidrIp") or "0.0.0.0/0",
+                        }
                     )
-                    for ip in r.get("IpRanges", []):
-                        egress.append(
-                            {
-                                "protocol": proto,
-                                "ports": ports,
-                                "dest": ip.get("CidrIp")
-                                or (".".join(map(str, (0, 0, 0, 0))) + "/0"),
-                            }
-                        )
-                    # IPv6 ranges
-                    for ip6 in r.get("Ipv6Ranges", []):
-                        egress.append(
-                            {
-                                "protocol": proto,
-                                "ports": ports,
-                                "dest": ip6.get("CidrIpv6") or ("::" + "/0"),
-                            }
-                        )
-                    if not r.get("IpRanges") and not r.get("Ipv6Ranges"):
-                        egress.append(
-                            {
-                                "protocol": proto,
-                                "ports": ports,
-                                "dest": (".".join(map(str, (0, 0, 0, 0))) + "/0")
-                                + ", "
-                                + ("::" + "/0"),
-                            }
-                        )
+                # IPv6 ranges
+                for ip6 in egress_rule.get("Ipv6Ranges", []):
+                    egress.append(
+                        {
+                            "protocol": proto,
+                            "ports": ports,
+                            "dest": ip6.get("CidrIpv6") or "::/0",
+                        }
+                    )
+                if not egress_rule.get("IpRanges") and not egress_rule.get(
+                    "Ipv6Ranges"
+                ):
+                    egress.append(
+                        {
+                            "protocol": proto,
+                            "ports": ports,
+                            "dest": "0.0.0.0/0, ::/0",
+                        }
+                    )
             sgs.append(
                 {
                     "id": sg["GroupId"],

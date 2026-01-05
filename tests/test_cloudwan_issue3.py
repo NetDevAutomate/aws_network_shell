@@ -59,9 +59,7 @@ def mock_cloudwan_client(sample_policy_document):
     with patch("boto3.Session") as MockSession:
         MockSession.return_value = MagicMock()
 
-        with patch(
-            "aws_network_tools.modules.cloudwan.CloudWANClient"
-        ) as MockClient:
+        with patch("aws_network_tools.modules.cloudwan.CloudWANClient") as MockClient:
             # Create mock instance
             mock_instance = MagicMock()
             mock_instance.get_policy_document.return_value = sample_policy_document
@@ -84,7 +82,7 @@ def mock_cloudwan_client(sample_policy_document):
 @pytest.fixture
 def shell_in_global_context(mock_cloudwan_client):
     """Create shell in global-network context with cached core networks.
-    
+
     Note: Depends on mock_cloudwan_client to ensure mock is active before shell creation.
     """
     from aws_network_tools.shell import AWSNetShell
@@ -127,6 +125,7 @@ class TestCloudWANIssue3:
         MockClass, mock_instance = mock_cloudwan_client
         # Import and check if the class is mocked
         from aws_network_tools.modules import cloudwan
+
         print(f"\nCloudWANClient type: {type(cloudwan.CloudWANClient)}")
         print(f"Is mock: {cloudwan.CloudWANClient is MockClass}")
         print(f"Mock class: {MockClass}")
@@ -145,22 +144,22 @@ class TestCloudWANIssue3:
             "state": "AVAILABLE",
         }
 
-        print(f"\nManual test of fetch_full_cn logic:")
+        print("\nManual test of fetch_full_cn logic:")
         print(f"1. cloudwan module: {cloudwan}")
         print(f"2. CloudWANClient: {cloudwan.CloudWANClient}")
         print(f"3. Is mock: {cloudwan.CloudWANClient is MockClass}")
 
         try:
-            print(f"4. Creating client...")
+            print("4. Creating client...")
             client = cloudwan.CloudWANClient(shell.profile)
             print(f"5. Client created: {client}, type: {type(client)}")
             print(f"6. client == mock_instance? {client is mock_instance}")
 
-            print(f"7. Calling get_policy_document...")
+            print("7. Calling get_policy_document...")
             policy = client.get_policy_document(cn["id"])
             print(f"8. Policy returned: {policy is not None}")
 
-            print(f"9. Creating full_data...")
+            print("9. Creating full_data...")
             full_data = dict(cn)
             full_data["policy"] = policy
             print(f"10. Success! full_data keys: {list(full_data.keys())}")
@@ -168,6 +167,7 @@ class TestCloudWANIssue3:
         except Exception as e:
             print(f"ERROR at some step: {type(e).__name__}: {e}")
             import traceback
+
             traceback.print_exc()
 
     def test_set_core_network_fetches_policy(
@@ -185,7 +185,9 @@ class TestCloudWANIssue3:
         print(f"\nCaptured stderr:\n{captured.err}")
 
         # Verify: Context was entered
-        assert shell.ctx_type == "core-network", f"Context not entered. Output: {captured.out}"
+        assert shell.ctx_type == "core-network", (
+            f"Context not entered. Output: {captured.out}"
+        )
         assert shell.ctx_id == "core-network-05124a7b0180598f2"
 
         # Verify: Policy was fetched and stored in context data
@@ -360,9 +362,7 @@ class TestCloudWANSegmentsDisplay:
 class TestCloudWANPolicyDisplay:
     """Test policy display formatting."""
 
-    def test_policy_json_format(
-        self, shell_in_global_context, sample_policy_document
-    ):
+    def test_policy_json_format(self, shell_in_global_context, sample_policy_document):
         """Test that policy is displayed as JSON."""
         shell, (MockClass, mock_instance) = shell_in_global_context
 
@@ -377,6 +377,7 @@ class TestCloudWANPolicyDisplay:
 
         # Verify JSON serializable
         import json
+
         json_str = json.dumps(policy, indent=2, default=str)
         assert "{" in json_str
         assert "}" in json_str

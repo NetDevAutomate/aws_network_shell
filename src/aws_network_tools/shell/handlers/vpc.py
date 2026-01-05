@@ -57,7 +57,9 @@ class VPCHandlersMixin:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        self._enter("route-table", rt["id"], rt.get("name") or rt["id"], rt, selection_idx)
+        self._enter(
+            "route-table", rt["id"], rt.get("name") or rt["id"], rt, selection_idx
+        )
         print()  # Add blank line before next prompt
 
     def _show_vpc_route_tables(self):

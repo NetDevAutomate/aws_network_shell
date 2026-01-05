@@ -28,64 +28,64 @@ class ShellRunner:
         self.timeout = timeout
         self.child: pexpect.spawn | None = None
         # Match prompt at end of line: "aws-net> " or "context $"
-        self.prompt_pattern = r'\n(?:aws-net>|.*\$)\s*$'
+        self.prompt_pattern = r"\n(?:aws-net>|.*\$)\s*$"
 
     def start(self):
         """Start the interactive shell."""
-        import os
 
-        cmd = 'aws-net-shell'
+        cmd = "aws-net-shell"
         if self.profile:
-            cmd += f' --profile {self.profile}'
+            cmd += f" --profile {self.profile}"
 
         # Get actual terminal size or use wide default
         try:
             import shutil
+
             cols, rows = shutil.get_terminal_size(fallback=(250, 50))
-        except:
+        except (OSError, ValueError):
             cols, rows = 250, 50  # Extra wide for full data display
 
         self.child = pexpect.spawn(
             cmd,
             timeout=self.timeout,
-            encoding='utf-8',
-            dimensions=(rows, cols)  # Set terminal size for Rich tables
+            encoding="utf-8",
+            dimensions=(rows, cols),  # Set terminal size for Rich tables
         )
         # Wait for initial prompt
         self._wait_for_prompt()
-        print(f"✓ Shell started\n{'='*60}")
+        print(f"✓ Shell started\n{'=' * 60}")
 
     def _wait_for_prompt(self):
         """Wait for shell prompt, handling spinners and partial output."""
         import time
-        
+
         # Collect output until we see a stable prompt
         buffer = ""
         last_size = 0
         stable_count = 0
-        
+
         while stable_count < 3:  # Need 3 stable checks (~0.3s of no new output)
             try:
                 # Non-blocking read with short timeout
-                self.child.expect(r'.+', timeout=0.1)
+                self.child.expect(r".+", timeout=0.1)
                 buffer += self.child.after
             except pexpect.TIMEOUT:
                 pass
-            
+
             # Check if buffer size is stable (no new output)
             if len(buffer) == last_size:
                 stable_count += 1
             else:
                 stable_count = 0
                 last_size = len(buffer)
-            
+
             # Check for prompt indicators
             clean = self._strip_ansi(buffer)
-            if clean.rstrip().endswith(('aws-net>', '$')) and stable_count >= 2:
+            if clean.rstrip().endswith(("aws-net>", "$")) and stable_count >= 2:
                 break
-                
+
             time.sleep(0.1)
-        
+
         return buffer
 
     def run(self, command: str) -> str:
@@ -97,21 +97,22 @@ class ShellRunner:
         print("-" * 60)
 
         self.child.sendline(command)
-        
+
         # Wait for complete output
         import time
+
         time.sleep(0.2)  # Let command start
         output = self._wait_for_prompt()
 
         # Clean ANSI codes for display but keep structure
         clean_output = self._strip_ansi(output)
-        
+
         # Remove the echoed command from output
-        lines = clean_output.split('\n')
+        lines = clean_output.split("\n")
         if lines and command in lines[0]:
             lines = lines[1:]
-        
-        result = '\n'.join(lines).strip()
+
+        result = "\n".join(lines).strip()
         print(result)
         return result
 
@@ -119,41 +120,43 @@ class ShellRunner:
         """Run a sequence of commands."""
         for cmd in commands:
             cmd = cmd.strip()
-            if cmd and not cmd.startswith('#'):
+            if cmd and not cmd.startswith("#"):
                 self.run(cmd)
 
     def close(self):
         """Close the shell."""
         if self.child and self.child.isalive():
-            self.child.sendline('exit')
+            self.child.sendline("exit")
             try:
                 self.child.expect(pexpect.EOF, timeout=5)
-            except:
+            except (pexpect.TIMEOUT, pexpect.EOF):
                 self.child.terminate(force=True)
-        print(f"\n{'='*60}\n✓ Shell closed")
+        print(f"\n{'=' * 60}\n✓ Shell closed")
 
     @staticmethod
     def _strip_ansi(text: str) -> str:
         """Remove ANSI escape codes."""
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        return ansi_escape.sub('', text)
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        return ansi_escape.sub("", text)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Run commands against aws-net-shell interactively',
+        description="Run commands against aws-net-shell interactively",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
-    parser.add_argument('commands', nargs='*', help='Commands to run')
-    parser.add_argument('--profile', '-p', help='AWS profile to use')
-    parser.add_argument('--timeout', '-t', type=int, default=30, help='Command timeout (default: 30s)')
+    parser.add_argument("commands", nargs="*", help="Commands to run")
+    parser.add_argument("--profile", "-p", help="AWS profile to use")
+    parser.add_argument(
+        "--timeout", "-t", type=int, default=30, help="Command timeout (default: 30s)"
+    )
     args = parser.parse_args()
 
     # Get commands from args or stdin
     commands = args.commands
     if not commands and not sys.stdin.isatty():
-        commands = sys.stdin.read().strip().split('\n')
+        commands = sys.stdin.read().strip().split("\n")
 
     if not commands:
         parser.print_help()
@@ -167,5 +170,5 @@ def main():
         runner.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ from typing import Optional
 from rich.console import Console
 from rich.text import Text
 from dataclasses import dataclass, field
-from ..themes import load_theme, get_theme_dir
+from ..themes import load_theme
 from ..config import get_config, RuntimeConfig
 
 console = Console()
@@ -112,12 +112,27 @@ HIERARCHY = {
             "rib",
         ],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
+        "commands": [
+            "show",
+            "set",
+            "find_prefix",
+            "find_null_routes",
+            "refresh",
+            "exit",
+            "end",
+        ],
     },
     "route-table": {
         "show": ["routes"],
         "set": [],
-        "commands": ["show", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
+        "commands": [
+            "show",
+            "find_prefix",
+            "find_null_routes",
+            "refresh",
+            "exit",
+            "end",
+        ],
     },
     "vpc": {
         "show": [
@@ -131,15 +146,39 @@ HIERARCHY = {
             "endpoints",
         ],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
+        "commands": [
+            "show",
+            "set",
+            "find_prefix",
+            "find_null_routes",
+            "refresh",
+            "exit",
+            "end",
+        ],
     },
     "transit-gateway": {
         "show": ["detail", "route-tables", "attachments"],
         "set": ["route-table"],
-        "commands": ["show", "set", "find_prefix", "find_null_routes", "refresh", "exit", "end"],
+        "commands": [
+            "show",
+            "set",
+            "find_prefix",
+            "find_null_routes",
+            "refresh",
+            "exit",
+            "end",
+        ],
     },
     "firewall": {
-        "show": ["firewall", "detail", "firewall-rule-groups", "rule-groups", "policy", "firewall-policy", "firewall-networking"],
+        "show": [
+            "firewall",
+            "detail",
+            "firewall-rule-groups",
+            "rule-groups",
+            "policy",
+            "firewall-policy",
+            "firewall-networking",
+        ],
         "set": ["rule-group"],
         "commands": ["show", "set", "refresh", "exit", "end"],
     },
@@ -191,12 +230,12 @@ class AWSNetShellBase(cmd2.Cmd):
         self.watch_interval: int = 0
         self.context_stack: list[Context] = []
         self._cache: dict = {}
-        
+
         # Load theme and config
         self.config = get_config()
         theme_name = self.config.get_theme_name()
         self.theme = load_theme(theme_name)
-        
+
         # Initialize RuntimeConfig with shell defaults
         RuntimeConfig.set_profile(self.profile)
         RuntimeConfig.set_regions(self.regions)
@@ -224,7 +263,7 @@ class AWSNetShellBase(cmd2.Cmd):
             ]
         )
         self._update_prompt()
-    
+
     def _sync_runtime_config(self):
         """Synchronize shell state with RuntimeConfig singleton."""
         RuntimeConfig.set_profile(self.profile)
@@ -253,18 +292,18 @@ class AWSNetShellBase(cmd2.Cmd):
         if not self.context_stack:
             self.prompt = "aws-net> "
             return
-        
+
         # Get prompt configuration
         style = self.config.get_prompt_style()  # "short" or "long"
         show_indices = self.config.show_indices()
         max_length = self.config.get_max_length()
-        
+
         prompt_parts = []
-        
+
         for i, ctx in enumerate(self.context_stack):
             # Get color for this context type
             color = self.theme.get(ctx.type, "white")
-            
+
             # Get abbreviation for context type
             if ctx.type == "global-network":
                 abbrev = "gl"
@@ -276,7 +315,7 @@ class AWSNetShellBase(cmd2.Cmd):
                 abbrev = "ec"
             else:
                 abbrev = ctx.type[:2]
-            
+
             if style == "short":
                 # Short format: use index number like gl:1, cn:1
                 ctx_name = f"{abbrev}:{ctx.selection_index}"
@@ -291,35 +330,34 @@ class AWSNetShellBase(cmd2.Cmd):
                     # Long format without indices: gl:name
                     display_name = ctx.name or ctx.ref
                     if len(display_name) > max_length:
-                        display_name = display_name[:max_length-3] + "..."
+                        display_name = display_name[: max_length - 3] + "..."
                     ctx_name = f"{abbrev}:{display_name}"
-            
+
             # Create colored text part (no newlines embedded)
-            from rich.text import Text
             colored_part = Text(f"{ctx_name}", style=color)
             prompt_parts.append(colored_part)
-        
+
         # Create the full prompt
         if style == "long":
             # Multi-line prompt with continuation markers
             prompt_text = Text("aws-net> ", style=self.theme.get("prompt_text"))
             separator_style = self.theme.get("prompt_separator")
-            
+
             if prompt_parts:
                 # First context on same line as aws-net>
                 prompt_text.append(prompt_parts[0])
-                
+
                 if len(prompt_parts) > 1:
                     # Multiple contexts - use multi-line format
                     prompt_text.append(Text(" >\n", style=separator_style))
-                    
+
                     # Middle contexts (all except first and last)
                     for i, part in enumerate(prompt_parts[1:-1], 1):
                         indent = "  " * i  # Two spaces per level
                         prompt_text.append(Text(f"{indent}", style=separator_style))
                         prompt_text.append(part)
                         prompt_text.append(Text(" >\n", style=separator_style))
-                    
+
                     # Last context
                     last_idx = len(prompt_parts) - 1
                     indent = "  " * last_idx
@@ -338,20 +376,30 @@ class AWSNetShellBase(cmd2.Cmd):
             prompt_text = Text("aws-net", style=self.theme.get("prompt_text"))
             if prompt_parts:
                 for part in prompt_parts:
-                    prompt_text.append(f">", style=separator_color)
+                    prompt_text.append(">", style=separator_color)
                     prompt_text.append(part)
             prompt_text.append("> ", style=separator_color)
-        
+
         # Render Text to ANSI codes for cmd2
         from rich.console import Console
+
         render_console = Console(force_terminal=True, color_system="standard")
         with render_console.capture() as capture:
             render_console.print(prompt_text, end="")
         self.prompt = capture.get()
 
-    def _enter(self, ctx_type: str, res_id: str, name: str, data: dict = None, selection_index: int = 1):
+    def _enter(
+        self,
+        ctx_type: str,
+        res_id: str,
+        name: str,
+        data: dict = None,
+        selection_index: int = 1,
+    ):
         """Enter a new context."""
-        self.context_stack.append(Context(ctx_type, res_id, name, data or {}, selection_index))
+        self.context_stack.append(
+            Context(ctx_type, res_id, name, data or {}, selection_index)
+        )
         self._update_prompt()
 
     def _resolve(self, items: list, val: str) -> Optional[dict]:
@@ -421,14 +469,14 @@ class AWSNetShellBase(cmd2.Cmd):
 
     def do_refresh(self, args):
         """Refresh cached data. Usage: refresh [target|all]
-        
+
         Examples:
             refresh                    - Refresh current context data
             refresh transit_gateways   - Clear transit gateways cache
             refresh all                - Clear all caches
         """
         target = str(args).strip().lower().replace("-", "_") if args else ""
-        
+
         if not target or target == "current":
             # Refresh current context by clearing relevant cache keys
             context_to_cache = {
@@ -442,24 +490,24 @@ class AWSNetShellBase(cmd2.Cmd):
                 "core-network": "core_networks",
                 "route-table": "core_networks",  # Route tables belong to core networks
             }
-            
+
             cache_key = context_to_cache.get(self.ctx_type)
             if not cache_key:
                 console.print("[yellow]No cache to refresh in current context[/]")
                 return
-                
+
             if cache_key in self._cache:
                 del self._cache[cache_key]
                 console.print(f"[green]Refreshed {cache_key} cache[/]")
             else:
                 console.print(f"[yellow]No cached data for {cache_key}[/]")
-                
+
         elif target == "all":
             # Clear entire cache
             count = len(self._cache)
             self._cache.clear()
             console.print(f"[green]Cleared {count} cache entries[/]")
-            
+
         else:
             # Clear specific cache key with alias support
             cache_aliases = {
@@ -482,7 +530,6 @@ class AWSNetShellBase(cmd2.Cmd):
                 "client_vpn_endpoints": "client_vpn_endpoints",
                 "global_accelerators": "global_accelerators",
                 "vpc_endpoints": "vpc_endpoints",
-                
                 # Singular aliases
                 "vpc": "vpcs",
                 "transit_gateway": "transit_gateways",
@@ -501,7 +548,6 @@ class AWSNetShellBase(cmd2.Cmd):
                 "client_vpn_endpoint": "client_vpn_endpoints",
                 "global_accelerator": "global_accelerators",
                 "vpc_endpoint": "vpc_endpoints",
-                
                 # Common abbreviations
                 "tgw": "transit_gateways",
                 "tgws": "transit_gateways",
@@ -512,9 +558,9 @@ class AWSNetShellBase(cmd2.Cmd):
                 "ga": "global_accelerators",
                 "ec2": "ec2_instances",
             }
-            
+
             cache_key = cache_aliases.get(target, target)
-            
+
             if cache_key in self._cache:
                 del self._cache[cache_key]
                 console.print(f"[green]Refreshed {cache_key} cache[/]")

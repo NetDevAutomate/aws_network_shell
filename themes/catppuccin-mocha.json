@@ -1,20 +1,20 @@
 {
-  "name": "catppuccin-mocha",
-  "description": "Catppuccin Mocha - Dark theme with vibrant colors for prompts",
   "author": "Catppuccin Theme",
-  "upstream": "https://github.com/catppuccin/catppuccin",
   "colors": {
-    "root": "#89b4fa",
-    "global-network": "#cba6f7",
     "core-network": "#f5c2e7",
-    "route-table": "#94e2d5",
-    "vpc": "#a6e3a1",
-    "transit-gateway": "#fab387",
-    "firewall": "#f38ba8",
-    "elb": "#f9e2af",
-    "vpn": "#b4befe",
     "ec2-instance": "#cba6f7",
+    "elb": "#f9e2af",
+    "firewall": "#f38ba8",
+    "global-network": "#cba6f7",
     "prompt_separator": "#9399b2",
-    "prompt_text": "#89b4fa"
-  }
+    "prompt_text": "#89b4fa",
+    "root": "#89b4fa",
+    "route-table": "#94e2d5",
+    "transit-gateway": "#fab387",
+    "vpc": "#a6e3a1",
+    "vpn": "#b4befe"
+  },
+  "description": "Catppuccin Mocha - Dark theme with vibrant colors for prompts",
+  "name": "catppuccin-mocha",
+  "upstream": "https://github.com/catppuccin/catppuccin"
 }

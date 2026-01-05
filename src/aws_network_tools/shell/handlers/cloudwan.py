@@ -154,10 +154,11 @@ class CloudWANHandlersMixin:
                 console.print(
                     "[red]Usage: show policy document-diff <version1> <version2>[/]"
                 )
-                console.print("[dim]Use 'show policy-documents' to see available versions[/]")
+                console.print(
+                    "[dim]Use 'show policy-documents' to see available versions[/]"
+                )
                 return
         # Fall back to default handler
-        from ...shell.main import AWSNetShell
         super(CloudWANHandlersMixin, self).do_show(args)
 
     def _show_policy_document_diff(self, version1: str, version2: str):
@@ -177,11 +178,8 @@ class CloudWANHandlersMixin:
 
         def fetch_doc(version):
             try:
-                resp = (
-                    cloudwan.CloudWANClient(self.profile)
-                    .nm.get_core_network_policy(
-                        CoreNetworkId=cn_id, PolicyVersionId=version
-                    )
+                resp = cloudwan.CloudWANClient(self.profile).nm.get_core_network_policy(
+                    CoreNetworkId=cn_id, PolicyVersionId=version
                 )
                 return json.loads(resp["CoreNetworkPolicy"]["PolicyDocument"])
             except Exception as e:
@@ -207,7 +205,11 @@ class CloudWANHandlersMixin:
 
         diff = list(
             difflib.unified_diff(
-                doc1_str, doc2_str, lineterm="", fromfile=f"Version {v1}", tofile=f"Version {v2}"
+                doc1_str,
+                doc2_str,
+                lineterm="",
+                fromfile=f"Version {v1}",
+                tofile=f"Version {v2}",
             )
         )
 
@@ -407,7 +409,9 @@ class CloudWANHandlersMixin:
                     )
                 console.print(table)
                 console.print()
-            console.print(f"[dim]Total: {total_routes} routes across {len(rts)} route tables[/]")
+            console.print(
+                f"[dim]Total: {total_routes} routes across {len(rts)} route tables[/]"
+            )
         else:
             console.print("[red]Must be in core-network or route-table context[/]")
 

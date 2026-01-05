@@ -144,12 +144,13 @@ class ELBClient(BaseClient):
         Returns:
             List of listener dictionaries
         """
-        client = self.session.client('elbv2', region_name=region)
+        client = self.session.client("elbv2", region_name=region)
         try:
             resp = client.describe_listeners(LoadBalancerArn=elb_arn)
-            return resp.get('Listeners', [])
+            return resp.get("Listeners", [])
         except Exception as e:
             import logging
+
             logging.warning(f"Failed to get listeners for {elb_arn}: {e}")
             return []
 
@@ -163,7 +164,7 @@ class ELBClient(BaseClient):
         Returns:
             List of target group dictionaries
         """
-        client = self.session.client('elbv2', region_name=region)
+        client = self.session.client("elbv2", region_name=region)
         try:
             # Get listeners first to find target groups
             listeners = self.get_listeners(elb_arn, region)
@@ -171,17 +172,18 @@ class ELBClient(BaseClient):
             # Collect unique target group ARNs
             tg_arns = set()
             for listener in listeners:
-                for action in listener.get('DefaultActions', []):
-                    if action.get('TargetGroupArn'):
-                        tg_arns.add(action['TargetGroupArn'])
+                for action in listener.get("DefaultActions", []):
+                    if action.get("TargetGroupArn"):
+                        tg_arns.add(action["TargetGroupArn"])
 
             # Fetch target group details
             if tg_arns:
                 resp = client.describe_target_groups(TargetGroupArns=list(tg_arns))
-                return resp.get('TargetGroups', [])
+                return resp.get("TargetGroups", [])
             return []
         except Exception as e:
             import logging
+
             logging.warning(f"Failed to get target groups for {elb_arn}: {e}")
             return []
 
@@ -195,15 +197,16 @@ class ELBClient(BaseClient):
         Returns:
             Dict mapping target group ARN to list of health descriptions
         """
-        client = self.session.client('elbv2', region_name=region)
+        client = self.session.client("elbv2", region_name=region)
         health_status = {}
 
         for tg_arn in tg_arns:
             try:
                 resp = client.describe_target_health(TargetGroupArn=tg_arn)
-                health_status[tg_arn] = resp.get('TargetHealthDescriptions', [])
+                health_status[tg_arn] = resp.get("TargetHealthDescriptions", [])
             except Exception as e:
                 import logging
+
                 logging.warning(f"Failed to get health for {tg_arn}: {e}")
                 health_status[tg_arn] = []
 
@@ -243,7 +246,7 @@ class ELBClient(BaseClient):
             if not listeners:
                 # Still continue to check target groups even if no listeners
                 pass
-                
+
             for listener in listeners:
                 listener_arn = listener["ListenerArn"]
                 original_default_actions = listener.get("DefaultActions", [])
@@ -275,19 +278,19 @@ class ELBClient(BaseClient):
                             detail["target_groups"].append(tg_detail)
                             # Aggregate target_health from each target group
                             for target in tg_detail.get("targets", []):
-                                detail["target_health"].append({
-                                    "target_group_arn": act["target_group_arn"],
-                                    "target_group_name": tg_detail.get("name"),
-                                    **target,
-                                })
+                                detail["target_health"].append(
+                                    {
+                                        "target_group_arn": act["target_group_arn"],
+                                        "target_group_name": tg_detail.get("name"),
+                                        **target,
+                                    }
+                                )
 
                     listener_data["default_actions"].append(act)
 
                 # If ALB, get rules - use listener_arn (not shadowed variable)
                 if lb["Type"] == "application":
-                    rules_resp = client.describe_rules(
-                        ListenerArn=listener_arn
-                    )
+                    rules_resp = client.describe_rules(ListenerArn=listener_arn)
                     for r in rules_resp.get("Rules", []):
                         if r["IsDefault"]:
                             continue  # Skip default rule as it's covered in DefaultActions usually
@@ -313,11 +316,17 @@ class ELBClient(BaseClient):
                                     seen_target_groups.add(act["target_group_arn"])
                                     detail["target_groups"].append(tg_detail)
                                     for target in tg_detail.get("targets", []):
-                                        detail["target_health"].append({
-                                            "target_group_arn": act["target_group_arn"],
-                                            "target_group_name": tg_detail.get("name"),
-                                            **target,
-                                        })
+                                        detail["target_health"].append(
+                                            {
+                                                "target_group_arn": act[
+                                                    "target_group_arn"
+                                                ],
+                                                "target_group_name": tg_detail.get(
+                                                    "name"
+                                                ),
+                                                **target,
+                                            }
+                                        )
 
                             rule["actions"].append(act)
                         listener_data["rules"].append(rule)
@@ -326,13 +335,16 @@ class ELBClient(BaseClient):
         except Exception as e:
             # Issue #10: Log error but don't abort - continue to return what we have
             import logging
-            logging.getLogger(__name__).warning(f"Error fetching listeners for {elb_arn}: {e}")
+
+            logging.getLogger(__name__).warning(
+                f"Error fetching listeners for {elb_arn}: {e}"
+            )
 
         # Issue #10: If no listeners found, still try to get target groups from ARN patterns
         # Some load balancers have target groups but listeners aren't attached
         if not detail["listeners"] and detail["target_groups"]:
             pass  # We already have target groups from above or will get them below
-            
+
         return detail
 
     def _get_target_group_detail(self, client, tg_arn: str) -> dict:

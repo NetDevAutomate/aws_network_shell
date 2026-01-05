@@ -30,29 +30,45 @@ def clean_output(text: str, compact: bool = False) -> str:
     Returns:
         Cleaned text suitable for markdown code blocks
     """
-    lines = text.split('\n')
+    lines = text.split("\n")
     cleaned = []
 
     for line in lines:
         # Remove ANSI escape sequences (colors, cursor movements)
-        line = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', line)
+        line = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", line)
 
         # Replace box drawing characters with simple ASCII
         box_chars = {
-            '┏': '+', '┓': '+', '┗': '+', '┛': '+',
-            '┣': '+', '┫': '+', '┳': '+', '┻': '+', '╋': '+',
-            '├': '+', '┤': '+', '┬': '+', '┴': '+',
-            '┃': '|', '│': '|',
-            '━': '-', '─': '-',
-            '┡': '+', '┩': '+',
-            '╭': '+', '╮': '+', '╰': '+', '╯': '+',
-            '┼': '+',
+            "┏": "+",
+            "┓": "+",
+            "┗": "+",
+            "┛": "+",
+            "┣": "+",
+            "┫": "+",
+            "┳": "+",
+            "┻": "+",
+            "╋": "+",
+            "├": "+",
+            "┤": "+",
+            "┬": "+",
+            "┴": "+",
+            "┃": "|",
+            "│": "|",
+            "━": "-",
+            "─": "-",
+            "┡": "+",
+            "┩": "+",
+            "╭": "+",
+            "╮": "+",
+            "╰": "+",
+            "╯": "+",
+            "┼": "+",
         }
         for char, replacement in box_chars.items():
             line = line.replace(char, replacement)
 
         # Normalize multiple spaces (but preserve indentation)
-        line = re.sub(r'(?<=\S)  +', ' ', line)
+        line = re.sub(r"(?<=\S)  +", " ", line)
 
         # Remove trailing whitespace
         line = line.rstrip()
@@ -60,23 +76,23 @@ def clean_output(text: str, compact: bool = False) -> str:
         cleaned.append(line)
 
     # Join lines
-    result = '\n'.join(cleaned)
+    result = "\n".join(cleaned)
 
     if compact:
         # Remove multiple consecutive blank lines, keep max 1
-        result = re.sub(r'\n\n\n+', '\n\n', result)
+        result = re.sub(r"\n\n\n+", "\n\n", result)
         # Remove leading/trailing blank lines
         result = result.strip()
     else:
         # Just remove excessive blank lines (keep max 2)
-        result = re.sub(r'\n\n\n+', '\n\n', result)
+        result = re.sub(r"\n\n\n+", "\n\n", result)
 
     return result
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Clean terminal output for git commit messages',
+        description="Clean terminal output for git commit messages",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -91,19 +107,20 @@ Examples:
 
   # From file
   python scripts/clean-output.py < terminal-output.txt > cleaned.txt
-        """
+        """,
     )
     parser.add_argument(
-        '--compact', '-c',
-        action='store_true',
-        help='Remove all blank lines for compact output'
+        "--compact",
+        "-c",
+        action="store_true",
+        help="Remove all blank lines for compact output",
     )
     parser.add_argument(
-        'input_file',
-        nargs='?',
-        type=argparse.FileType('r'),
+        "input_file",
+        nargs="?",
+        type=argparse.FileType("r"),
         default=sys.stdin,
-        help='Input file (default: stdin)'
+        help="Input file (default: stdin)",
     )
 
     args = parser.parse_args()
@@ -116,5 +133,5 @@ Examples:
     print(cleaned)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

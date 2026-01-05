@@ -1,6 +1,5 @@
 """Tests for input validators."""
 
-import pytest
 from aws_network_tools.core.validators import (
     validate_regions,
     validate_profile,
@@ -20,14 +19,18 @@ class TestRegionValidation:
 
     def test_valid_multiple_regions_comma_separated(self):
         """Test multiple regions with comma separation."""
-        is_valid, regions, error = validate_regions("us-east-1,eu-west-1,ap-southeast-1")
+        is_valid, regions, error = validate_regions(
+            "us-east-1,eu-west-1,ap-southeast-1"
+        )
         assert is_valid
         assert regions == ["us-east-1", "eu-west-1", "ap-southeast-1"]
         assert error is None
 
     def test_valid_regions_with_spaces_after_commas(self):
         """Test regions with spaces after commas (should be trimmed)."""
-        is_valid, regions, error = validate_regions("us-east-1, eu-west-1, ap-southeast-1")
+        is_valid, regions, error = validate_regions(
+            "us-east-1, eu-west-1, ap-southeast-1"
+        )
         assert is_valid
         assert regions == ["us-east-1", "eu-west-1", "ap-southeast-1"]
         assert error is None
@@ -81,8 +84,14 @@ class TestRegionValidation:
     def test_all_major_regions_valid(self):
         """Test all major AWS regions are recognized."""
         major_regions = [
-            "us-east-1", "us-west-2", "eu-west-1", "eu-central-1",
-            "ap-southeast-1", "ap-northeast-1", "ca-central-1", "sa-east-1"
+            "us-east-1",
+            "us-west-2",
+            "eu-west-1",
+            "eu-central-1",
+            "ap-southeast-1",
+            "ap-northeast-1",
+            "ca-central-1",
+            "sa-east-1",
         ]
         for region in major_regions:
             is_valid, regions, error = validate_regions(region)

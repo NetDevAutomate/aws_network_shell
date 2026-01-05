@@ -44,9 +44,9 @@ def print_commands(issue: dict):
 
 def run_issue_test(runner: ShellRunner, issue_num: int, issue: dict) -> bool:
     """Run a single issue test and check results."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"ISSUE #{issue_num}: {issue.get('title', 'Untitled')}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     outputs = []
     all_output = ""
@@ -61,13 +61,15 @@ def run_issue_test(runner: ShellRunner, issue_num: int, issue: dict) -> bool:
 
     # Check expectations
     passed = True
-    
+
     # Check for expected error
     if "expect_error" in issue:
         if issue["expect_error"] not in all_output:
             print(f"\n⚠️  Expected error not found: {issue['expect_error']}")
         else:
-            print(f"\n❌ CONFIRMED: Error '{issue['expect_error']}' present (issue exists)")
+            print(
+                f"\n❌ CONFIRMED: Error '{issue['expect_error']}' present (issue exists)"
+            )
             passed = False
 
     # Check for strings that should be present (indicating bug)
@@ -86,7 +88,7 @@ def run_issue_test(runner: ShellRunner, issue_num: int, issue: dict) -> bool:
 
     if passed:
         print(f"\n✅ Issue #{issue_num} appears FIXED or not reproducible")
-    
+
     return passed
 
 
@@ -95,10 +97,16 @@ def main():
     parser.add_argument("--issue", "-i", type=int, help="Run specific issue number")
     parser.add_argument("--profile", "-p", help="AWS profile to use")
     parser.add_argument("--timeout", "-t", type=int, default=60, help="Command timeout")
-    parser.add_argument("--print-commands", action="store_true", 
-                        help="Just print commands for shell_runner.py")
-    parser.add_argument("--yaml", default=Path(__file__).parent / "issue_tests.yaml",
-                        help="Path to issue tests YAML file")
+    parser.add_argument(
+        "--print-commands",
+        action="store_true",
+        help="Just print commands for shell_runner.py",
+    )
+    parser.add_argument(
+        "--yaml",
+        default=Path(__file__).parent / "issue_tests.yaml",
+        help="Path to issue tests YAML file",
+    )
     args = parser.parse_args()
 
     issues = load_issues(Path(args.yaml))
@@ -135,17 +143,17 @@ def main():
         runner.close()
 
     # Summary
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("SUMMARY")
-    print(f"{'='*60}")
-    
+    print(f"{'=' * 60}")
+
     passed = sum(1 for v in results.values() if v)
     failed = sum(1 for v in results.values() if not v)
-    
+
     for issue_num, result in results.items():
         status = "✅ FIXED" if result else "❌ EXISTS"
         print(f"  Issue #{issue_num}: {status}")
-    
+
     print(f"\nTotal: {passed} fixed, {failed} still exist")
     sys.exit(0 if failed == 0 else 1)
 

@@ -73,7 +73,4 @@ def get_all_global_networks() -> list[dict[str, Any]]:
 
 def get_global_networks_by_state(state: str) -> list[dict[str, Any]]:
     """Get Global Networks by state."""
-    return [
-        gn for gn in GLOBAL_NETWORK_FIXTURES.values()
-        if gn.get("State") == state
-    ]
+    return [gn for gn in GLOBAL_NETWORK_FIXTURES.values() if gn.get("State") == state]

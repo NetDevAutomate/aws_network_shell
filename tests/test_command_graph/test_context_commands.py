@@ -7,16 +7,13 @@ All tests follow the same pattern: show→set→command→validate.
 import pytest
 from .base_context_test import BaseContextTestCase
 from .test_data_generator import generate_phase3_test_data
-from .conftest import assert_success
 
 
 class TestContextShowCommands(BaseContextTestCase):
     """Parametrized tests for context show commands."""
 
     @pytest.mark.parametrize(
-        "test_data",
-        generate_phase3_test_data(),
-        ids=lambda t: t["test_id"]
+        "test_data", generate_phase3_test_data(), ids=lambda t: t["test_id"]
     )
     def test_context_show_command(self, test_data):
         """Test show commands work in each context.
@@ -41,7 +38,5 @@ class TestContextShowCommands(BaseContextTestCase):
         # Step 5: Validate expected content
         if test_data["min_count"] > 0:
             self.assert_resource_count(
-                result["output"],
-                test_data["expected"],
-                test_data["min_count"]
+                result["output"], test_data["expected"], test_data["min_count"]
             )

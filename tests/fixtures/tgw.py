@@ -751,7 +751,9 @@ def get_tgw_detail(tgw_id: str) -> dict[str, Any] | None:
 
     # Gather associated route tables
     route_tables = [
-        rt for rt in TGW_ROUTE_TABLE_FIXTURES.values() if rt["TransitGatewayId"] == tgw_id
+        rt
+        for rt in TGW_ROUTE_TABLE_FIXTURES.values()
+        if rt["TransitGatewayId"] == tgw_id
     ]
 
     # Gather associated peerings
@@ -772,12 +774,18 @@ def get_tgw_detail(tgw_id: str) -> dict[str, Any] | None:
 
 def get_attachments_by_tgw(tgw_id: str) -> list[dict[str, Any]]:
     """Get all attachments for a Transit Gateway."""
-    return [a for a in TGW_ATTACHMENT_FIXTURES.values() if a["TransitGatewayId"] == tgw_id]
+    return [
+        a for a in TGW_ATTACHMENT_FIXTURES.values() if a["TransitGatewayId"] == tgw_id
+    ]
 
 
 def get_route_tables_by_tgw(tgw_id: str) -> list[dict[str, Any]]:
     """Get all route tables for a Transit Gateway."""
-    return [rt for rt in TGW_ROUTE_TABLE_FIXTURES.values() if rt["TransitGatewayId"] == tgw_id]
+    return [
+        rt
+        for rt in TGW_ROUTE_TABLE_FIXTURES.values()
+        if rt["TransitGatewayId"] == tgw_id
+    ]
 
 
 def get_attachment_by_id(attachment_id: str) -> dict[str, Any] | None:

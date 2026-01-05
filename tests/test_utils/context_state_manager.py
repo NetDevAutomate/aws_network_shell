@@ -77,7 +77,9 @@ class ContextStateManager:
         # Validate each level
         for i, (expected_type, _) in enumerate(self.expected_stack):
             actual_context = self.shell.context_stack[i]
-            actual_type = actual_context.type  # Context dataclass field is 'type', not 'ctx_type'
+            actual_type = (
+                actual_context.type
+            )  # Context dataclass field is 'type', not 'ctx_type'
 
             assert actual_type == expected_type, (
                 f"Context type mismatch at level {i}: expected '{expected_type}', got '{actual_type}'"
@@ -99,4 +101,6 @@ class ContextStateManager:
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        return f"ContextStateManager(expected={[ctx[0] for ctx in self.expected_stack]})"
+        return (
+            f"ContextStateManager(expected={[ctx[0] for ctx in self.expected_stack]})"
+        )
