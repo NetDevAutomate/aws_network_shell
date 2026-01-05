@@ -171,3 +171,6 @@ hive-mind-prompt-*.txt
 
 # Benchmark data
 .benchmarks/
+
+# Local extras folder
+**extras/

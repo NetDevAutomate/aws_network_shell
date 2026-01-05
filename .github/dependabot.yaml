@@ -19,8 +19,6 @@ updates:
     labels:
       - dependencies
       - python
-    reviewers:
-      - dpadmanabhan
     groups:
       # Group minor and patch updates together
       python-minor:
