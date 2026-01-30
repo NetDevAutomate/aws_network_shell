@@ -2,12 +2,11 @@
 
 import sys
 from unittest.mock import MagicMock
-import pytest
 
 # Mock cmd2 before imports
 mock_cmd2 = MagicMock()
 mock_cmd2.Cmd = MagicMock
-sys.modules['cmd2'] = mock_cmd2
+sys.modules["cmd2"] = mock_cmd2
 
 
 class TestSetRouteTableCacheKey:
@@ -51,7 +50,11 @@ class TestSetRouteTableCacheKey:
         mock_self.ctx = MagicMock()  # Explicitly create ctx mock
         mock_self.ctx.data = {
             "route_tables": [
-                {"id": "rtb-test", "name": "TestRT", "routes": [{"dest": "10.0.0.0/8"}]},
+                {
+                    "id": "rtb-test",
+                    "name": "TestRT",
+                    "routes": [{"dest": "10.0.0.0/8"}],
+                },
             ]
         }
 
@@ -63,5 +66,7 @@ class TestSetRouteTableCacheKey:
         cached_rts = mock_self._cache.get(lookup_key, [])
 
         # Should find the route tables, not empty list
-        assert cached_rts, f"Cache lookup with '{lookup_key}' returned empty - key mismatch!"
+        assert cached_rts, (
+            f"Cache lookup with '{lookup_key}' returned empty - key mismatch!"
+        )
         assert cached_rts[0]["id"] == "rtb-test"

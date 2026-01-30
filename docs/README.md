@@ -3,6 +3,7 @@
 ## Architecture & Codemap
 
 **ARCHITECTURE.md** - Comprehensive technical documentation (15KB)
+
 - System architecture with Mermaid diagrams
 - Module breakdown and interactions
 - Data flow and core workflows
@@ -41,12 +42,14 @@ aws-net> export-graph [filename]
 ### Static Documentation
 
 **command-hierarchy-split.md** - Multi-diagram Mermaid format (11KB)
+
 - Multiple small, focused diagrams
 - One diagram per context (VPC, Transit Gateway, Firewall, etc.)
 - Left-to-right layout for readability
 - **Most readable option for static viewing**
 
 **command-hierarchy-graph.md** - Single unified graph (12KB)
+
 - Complete command hierarchy in one diagram
 - Shows all context relationships
 - Top-down tree layout
@@ -61,6 +64,7 @@ typora docs/command-hierarchy-graph.md
 ## Testing Documentation
 
 See `tests/README.md` for:
+
 - Test framework architecture
 - Running tests
 - Writing new tests
@@ -69,7 +73,8 @@ See `tests/README.md` for:
 ## Scripts Documentation
 
 See `scripts/README.md` and `scripts/AUTOMATION_README.md` for:
-- aws-net-runner usage
+
+- AWS-net-runner usage
 - Workflow automation
 - Issue resolution automation
 - Shell runner API
@@ -77,6 +82,7 @@ See `scripts/README.md` and `scripts/AUTOMATION_README.md` for:
 ## Main Documentation
 
 See root `README.md` for:
+
 - Installation and setup
 - Command categories
 - Usage examples

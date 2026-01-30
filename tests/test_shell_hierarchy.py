@@ -67,7 +67,11 @@ class TestHierarchyDefinition:
 
     def test_firewall_context_has_required_show_options(self):
         """Firewall context must have all required show options."""
-        required = {"detail", "rule-groups", "policy"}  # Issue #7: policy must be available
+        required = {
+            "detail",
+            "rule-groups",
+            "policy",
+        }  # Issue #7: policy must be available
         actual = set(HIERARCHY["firewall"]["show"])
         assert required.issubset(actual), f"Missing: {required - actual}"
 
@@ -393,14 +397,26 @@ class TestFirewallIntegration:
         assert "arn" in policy, "Policy must have 'arn' field"
         # Stateless default actions must be a dict with expected keys
         stateless_defaults = policy.get("stateless_default_actions", {})
-        assert isinstance(stateless_defaults, dict), "stateless_default_actions must be a dict"
-        assert "full_packets" in stateless_defaults, "stateless_default_actions must have 'full_packets'"
-        assert "fragmented" in stateless_defaults, "stateless_default_actions must have 'fragmented'"
+        assert isinstance(stateless_defaults, dict), (
+            "stateless_default_actions must be a dict"
+        )
+        assert "full_packets" in stateless_defaults, (
+            "stateless_default_actions must have 'full_packets'"
+        )
+        assert "fragmented" in stateless_defaults, (
+            "stateless_default_actions must have 'fragmented'"
+        )
         # Stateful engine options must exist
-        assert "stateful_engine_options" in policy, "Policy must have 'stateful_engine_options'"
+        assert "stateful_engine_options" in policy, (
+            "Policy must have 'stateful_engine_options'"
+        )
         engine_opts = policy.get("stateful_engine_options", {})
-        assert "rule_order" in engine_opts, "stateful_engine_options must have 'rule_order'"
-        assert "stream_exception_policy" in engine_opts, "stateful_engine_options must have 'stream_exception_policy'"
+        assert "rule_order" in engine_opts, (
+            "stateful_engine_options must have 'rule_order'"
+        )
+        assert "stream_exception_policy" in engine_opts, (
+            "stateful_engine_options must have 'stream_exception_policy'"
+        )
 
 
 class TestGraphValidation:

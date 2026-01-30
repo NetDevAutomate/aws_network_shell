@@ -95,6 +95,7 @@ class TestRefreshCommand:
         # Set up ELB context
         shell._cache = {"elbs": [{"id": "elb-1"}]}
         from aws_network_tools.shell.base import Context
+
         shell.context_stack = [Context("elb", "arn:aws:...", "my-elb", {}, 1)]
 
         old_stdout = sys.stdout
@@ -112,6 +113,7 @@ class TestRefreshCommand:
         """Test refresh in VPC context clears VPC cache."""
         shell._cache = {"vpcs": [{"id": "vpc-1"}]}
         from aws_network_tools.shell.base import Context
+
         shell.context_stack = [Context("vpc", "vpc-123", "my-vpc", {}, 1)]
 
         old_stdout = sys.stdout
@@ -153,7 +155,7 @@ class TestRefreshCommand:
 
         shell.onecmd("refresh elbs")
         shell.onecmd("refresh vpcs")
-        output = sys.stdout.getvalue()
+        _output = sys.stdout.getvalue()  # Captured but not asserted
 
         sys.stdout = old_stdout
 
@@ -165,6 +167,7 @@ class TestRefreshCommand:
         """Test refresh in transit-gateway context."""
         shell._cache = {"transit_gateways": [{"id": "tgw-1"}]}
         from aws_network_tools.shell.base import Context
+
         shell.context_stack = [Context("transit-gateway", "tgw-123", "my-tgw", {}, 1)]
 
         old_stdout = sys.stdout
@@ -182,6 +185,7 @@ class TestRefreshCommand:
         """Test refresh in firewall context."""
         shell._cache = {"firewalls": [{"id": "fw-1"}]}
         from aws_network_tools.shell.base import Context
+
         shell.context_stack = [Context("firewall", "fw-123", "my-fw", {}, 1)]
 
         old_stdout = sys.stdout
@@ -231,5 +235,6 @@ class TestRefreshCommand:
         ]
 
         for ctx_type in context_types:
-            assert "refresh" in HIERARCHY[ctx_type]["commands"], \
+            assert "refresh" in HIERARCHY[ctx_type]["commands"], (
                 f"refresh not in {ctx_type} commands"
+            )

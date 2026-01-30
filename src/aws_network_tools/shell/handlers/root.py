@@ -42,40 +42,46 @@ class RootHandlersMixin:
         """Show current region scope and available AWS regions."""
         from ...core.validators import VALID_AWS_REGIONS
         from ...core import run_with_spinner
-        
+
         # Show current scope
         if self.regions:
             console.print(f"[bold]Current Scope:[/] {', '.join(self.regions)}")
-            console.print(f"[dim]Discovery limited to {len(self.regions)} region(s)[/]\n")
+            console.print(
+                f"[dim]Discovery limited to {len(self.regions)} region(s)[/]\n"
+            )
         else:
             console.print("[bold]Current Scope:[/] all regions")
             console.print("[dim]Discovery will scan all enabled regions[/]\n")
-        
+
         # Try to fetch actual enabled regions from AWS account
         enabled_regions = None
         try:
+
             def fetch_regions():
                 import boto3
+
                 if self.profile:
                     session = boto3.Session(profile_name=self.profile)
                 else:
                     session = boto3.Session()
-                ec2 = session.client('ec2', region_name='us-east-1')
-                response = ec2.describe_regions(AllRegions=False)  # Only opted-in regions
-                return [r['RegionName'] for r in response['Regions']]
-            
+                ec2 = session.client("ec2", region_name="us-east-1")
+                response = ec2.describe_regions(
+                    AllRegions=False
+                )  # Only opted-in regions
+                return [r["RegionName"] for r in response["Regions"]]
+
             enabled_regions = run_with_spinner(
                 fetch_regions,
                 "Fetching enabled regions from AWS account",
-                console=console
+                console=console,
             )
         except Exception as e:
             console.print(f"[yellow]Could not fetch enabled regions: {e}[/]")
             console.print("[dim]Showing all known AWS regions instead[/]\n")
-        
+
         # Use enabled regions if available, otherwise fall back to static list
         regions_to_show = set(enabled_regions) if enabled_regions else VALID_AWS_REGIONS
-        
+
         # Show available AWS regions grouped by area
         region_groups = {
             "US": [],
@@ -83,7 +89,7 @@ class RootHandlersMixin:
             "Asia Pacific": [],
             "Other": [],
         }
-        
+
         for region in sorted(regions_to_show):
             if region.startswith("us-"):
                 region_groups["US"].append(region)
@@ -95,28 +101,28 @@ class RootHandlersMixin:
                 continue  # Skip China regions
             else:
                 region_groups["Other"].append(region)
-        
+
         console.print("[bold]Available Regions:[/]")
         if enabled_regions:
             console.print("[dim]Showing only regions enabled in your AWS account[/]\n")
         else:
             console.print("[dim]Showing all known AWS regions[/]\n")
-        
+
         for group_name, regions in region_groups.items():
             if regions:
                 console.print(f"[cyan]{group_name}:[/]")
                 # Display in rows of 4
                 for i in range(0, len(regions), 4):
-                    chunk = regions[i:i+4]
+                    chunk = regions[i : i + 4]
                     line = "  " + "  ".join(f"{r:20}" for r in chunk)
                     console.print(line.rstrip())
                 console.print()  # Blank line between groups
-        
-        console.print("[dim]Usage: set regions <region1,region2,...> or set regions all[/]")
+
+        console.print(
+            "[dim]Usage: set regions <region1,region2,...> or set regions all[/]"
+        )
 
     def _show_cache(self, _):
-        from datetime import datetime, timezone
-
         table = Table(title="Cache Status")
         table.add_column("Cache")
         table.add_column("Entries")
@@ -184,7 +190,9 @@ class RootHandlersMixin:
         from ...modules import vpc
 
         vpcs = self._cached(
-            "vpcs", lambda: vpc.VPCClient(self.profile).discover(self.regions), "Fetching VPCs"
+            "vpcs",
+            lambda: vpc.VPCClient(self.profile).discover(self.regions),
+            "Fetching VPCs",
         )
         if not vpcs:
             console.print("[yellow]No VPCs found[/]")
@@ -270,13 +278,16 @@ class RootHandlersMixin:
         # EC2HandlersMixin._show_enis shows instance-specific ENIs from ctx.data
         if self.ctx_type == "ec2-instance":
             from .ec2 import EC2HandlersMixin
+
             EC2HandlersMixin._show_enis(self, arg)
             return
 
         from ...modules import eni
 
         enis_list = self._cached(
-            "enis", lambda: eni.ENIClient(self.profile).discover(self.regions), "Fetching ENIs"
+            "enis",
+            lambda: eni.ENIClient(self.profile).discover(self.regions),
+            "Fetching ENIs",
         )
         eni.ENIDisplay(console).show_list(enis_list)
 
@@ -296,6 +307,7 @@ class RootHandlersMixin:
         # VPCHandlersMixin._show_security_groups shows context-specific SGs from ctx.data
         if self.ctx_type in ("vpc", "ec2-instance"):
             from .vpc import VPCHandlersMixin
+
             VPCHandlersMixin._show_security_groups(self, arg)
             return
 
@@ -331,7 +343,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "route53_resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_endpoints(data)
@@ -341,7 +355,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "route53_resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_rules(data)
@@ -351,7 +367,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "route53_resolver",
-            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(self.regions),
+            lambda: route53_resolver.Route53ResolverClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching Route 53 Resolver",
         )
         route53_resolver.Route53ResolverDisplay(console).show_query_logs(data)
@@ -381,7 +399,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "network_alarms",
-            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(self.regions),
+            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching network alarms",
         )
         network_alarms.NetworkAlarmsDisplay(console).show_alarms(data)
@@ -391,7 +411,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "network_alarms",
-            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(self.regions),
+            lambda: network_alarms.NetworkAlarmsClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching network alarms",
         )
         network_alarms.NetworkAlarmsDisplay(console).show_alarms(
@@ -413,7 +435,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "global_accelerators",
-            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(self.regions),
+            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching Global Accelerators",
         )
         global_accelerator.GlobalAcceleratorDisplay(console).show_accelerators(data)
@@ -423,7 +447,9 @@ class RootHandlersMixin:
 
         data = self._cached(
             "global_accelerators",
-            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(self.regions),
+            lambda: global_accelerator.GlobalAcceleratorClient(self.profile).discover(
+                self.regions
+            ),
             "Fetching Global Accelerators",
         )
         global_accelerator.GlobalAcceleratorDisplay(console).show_endpoint_health(data)
@@ -451,45 +477,49 @@ class RootHandlersMixin:
     # Root set handlers
     def _set_profile(self, val):
         from ...core.validators import validate_profile
-        
+
         is_valid, profile, error = validate_profile(val)
         if not is_valid:
             console.print(f"[red]{error}[/]")
             return
-        
+
         old_profile = self.profile
         self.profile = profile
         console.print(f"[green]Profile: {self.profile or '(default)'}[/]")
         self._sync_runtime_config()
-        
+
         # Auto-clear cache when profile changes
         if old_profile != self.profile:
             count = len(self._cache)
             if count > 0:
                 self._cache.clear()
-                console.print(f"[dim]Cleared {count} cache entries (profile changed)[/]")
+                console.print(
+                    f"[dim]Cleared {count} cache entries (profile changed)[/]"
+                )
 
     def _set_regions(self, val):
         from ...core.validators import validate_regions
-        
+
         is_valid, regions, error = validate_regions(val)
         if not is_valid:
             console.print(f"[red]{error}[/]")
             return
-        
+
         old_regions = self.regions.copy()
         self.regions = regions if regions else []
         console.print(
             f"[green]Regions: {', '.join(self.regions) if self.regions else 'all'}[/]"
         )
         self._sync_runtime_config()
-        
+
         # Auto-clear cache when regions change
         if old_regions != self.regions:
             count = len(self._cache)
             if count > 0:
                 self._cache.clear()
-                console.print(f"[dim]Cleared {count} cache entries (regions changed)[/]")
+                console.print(
+                    f"[dim]Cleared {count} cache entries (regions changed)[/]"
+                )
 
     def _set_no_cache(self, val):
         self.no_cache = val and val.lower() in ("on", "true", "1", "yes")
@@ -498,12 +528,12 @@ class RootHandlersMixin:
 
     def _set_output_format(self, val):
         from ...core.validators import validate_output_format
-        
+
         is_valid, fmt, error = validate_output_format(val)
         if not is_valid:
             console.print(f"[red]{error}[/]")
             return
-        
+
         self.output_format = fmt
         console.print(f"[green]Output-format: {fmt}[/]")
         self._sync_runtime_config()
@@ -534,14 +564,14 @@ class RootHandlersMixin:
 
     def _set_theme(self, theme_name):
         """Set color theme (dracula, catppuccin, or custom)."""
+        from ..themes import load_theme, get_theme_dir
+
         if not theme_name:
-            console.print(f"[red]Usage: set theme <name>[/]")
-            console.print(f"[dim]Available themes: dracula, catppuccin[/]")
+            console.print("[red]Usage: set theme <name>[/]")
+            console.print("[dim]Available themes: dracula, catppuccin[/]")
             console.print(f"[dim]Custom themes in: {get_theme_dir()}[/]")
             return
-        
-        from ..themes import load_theme
-        
+
         try:
             self.theme = load_theme(theme_name)
             self.config.set("prompt.theme", theme_name)
@@ -560,7 +590,7 @@ class RootHandlersMixin:
             console.print("[dim]  short: Compact prompt with indices (gl:1>co:1>)[/]")
             console.print("[dim]  long:  Multi-line with full names[/]")
             return
-        
+
         self.config.set("prompt.style", style)
         self.config.save()
         console.print(f"[green]Prompt style set to: {style}[/]")
@@ -588,7 +618,7 @@ class RootHandlersMixin:
     # Routing cache commands
     def complete_routing_cache(self, text, line, begidx, endidx):
         """Tab completion for routing-cache arguments."""
-        return ['vpc', 'transit-gateway', 'cloud-wan', 'all']
+        return ["vpc", "transit-gateway", "cloud-wan", "all"]
 
     def _show_routing_cache(self, arg):
         """Show routing cache status or detailed routes.
@@ -623,13 +653,19 @@ class RootHandlersMixin:
         for source, data in cache.items():
             routes = data.get("routes", [])
             regions = set(r.get("region", "?") for r in routes)
-            source_display = source.replace("tgw", "Transit Gateway").replace("cloudwan", "Cloud WAN").upper()
+            source_display = (
+                source.replace("tgw", "Transit Gateway")
+                .replace("cloudwan", "Cloud WAN")
+                .upper()
+            )
             table.add_row(source_display, str(len(routes)), ", ".join(sorted(regions)))
 
         console.print(table)
         total = sum(len(d.get("routes", [])) for d in cache.values())
         console.print(f"\n[bold]Total routes cached:[/] {total}")
-        console.print("\n[dim]Use 'show routing-cache vpc|transit-gateway|cloud-wan|all' for details[/]")
+        console.print(
+            "\n[dim]Use 'show routing-cache vpc|transit-gateway|cloud-wan|all' for details[/]"
+        )
 
     def _show_routing_cache_detail(self, cache, filter_source):
         """Show detailed routing cache entries."""
@@ -666,7 +702,9 @@ class RootHandlersMixin:
         if vpc_routes and (filter_source in ["vpc", "all"]):
             self._show_vpc_routes_table(vpc_routes)
 
-        if tgw_routes and (filter_source in ["transit-gateway", "transitgateway", "all"]):
+        if tgw_routes and (
+            filter_source in ["transit-gateway", "transitgateway", "all"]
+        ):
             self._show_transit_gateway_routes_table(tgw_routes)
 
         if cloudwan_routes and (filter_source in ["cloud-wan", "cloudwan", "all"]):
@@ -684,14 +722,16 @@ class RootHandlersMixin:
             title=f"VPC Routes ({len(routes)} total)",
             show_header=True,
             header_style="bold cyan",
-            expand=True
+            expand=True,
         )
 
         # Balanced column widths (no_wrap + ratio control)
         table.add_column("VPC Name", style="cyan", no_wrap=not allow_truncate, ratio=2)
         table.add_column("VPC ID", style="dim", no_wrap=not allow_truncate, ratio=2)
         table.add_column("Region", style="blue", no_wrap=True, ratio=2)
-        table.add_column("Route Table", style="yellow", no_wrap=not allow_truncate, ratio=2)
+        table.add_column(
+            "Route Table", style="yellow", no_wrap=not allow_truncate, ratio=2
+        )
         table.add_column("Destination", style="green", no_wrap=True, ratio=2)
         table.add_column("Target", style="magenta", no_wrap=not allow_truncate, ratio=3)
         table.add_column("State", style="bold green", no_wrap=True, ratio=1)
@@ -704,13 +744,15 @@ class RootHandlersMixin:
                 r.get("route_table") or "",
                 r.get("destination") or "",
                 r.get("target") or "",
-                r.get("state") or ""
+                r.get("state") or "",
             )
 
         console.print(table)
         if len(routes) > display_limit:
-            console.print(f"[dim]Showing first {display_limit} of {len(routes)} routes[/]")
-            console.print(f"[dim]Set 'pager: true' in config to enable pagination[/]")
+            console.print(
+                f"[dim]Showing first {display_limit} of {len(routes)} routes[/]"
+            )
+            console.print("[dim]Set 'pager: true' in config to enable pagination[/]")
 
     def _show_transit_gateway_routes_table(self, routes):
         """Display Transit Gateway routes in detailed table."""
@@ -721,7 +763,7 @@ class RootHandlersMixin:
             title=f"Transit Gateway Routes ({len(routes)} total)",
             show_header=True,
             header_style="bold cyan",
-            expand=True  # Use full terminal width
+            expand=True,  # Use full terminal width
         )
 
         # Add columns with proper styling and no width limits
@@ -743,7 +785,7 @@ class RootHandlersMixin:
                 r.get("destination") or "",
                 r.get("target") or "",
                 r.get("state") or "",
-                r.get("type") or ""
+                r.get("type") or "",
             )
 
         console.print(table)
@@ -758,7 +800,7 @@ class RootHandlersMixin:
             title=f"Cloud WAN Routes ({len(routes)} total)",
             show_header=True,
             header_style="bold cyan",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Core Network", style="cyan", no_wrap=not allow_truncate)
@@ -779,7 +821,7 @@ class RootHandlersMixin:
                 r.get("region") or "",
                 r.get("destination") or "",
                 r.get("target") or "",
-                r.get("state") or ""
+                r.get("state") or "",
             )
 
         console.print(table)
@@ -853,9 +895,9 @@ class RootHandlersMixin:
                                 "region": tgw_region,
                                 "route_table": rt_id,
                                 "destination": r.get("prefix", ""),  # Lowercase
-                                "target": r.get("target", ""),       # Already lowercase
-                                "state": r.get("state", ""),         # Already lowercase
-                                "type": r.get("type", ""),           # Already lowercase
+                                "target": r.get("target", ""),  # Already lowercase
+                                "state": r.get("state", ""),  # Already lowercase
+                                "type": r.get("type", ""),  # Already lowercase
                             }
                         )
             return routes
@@ -916,9 +958,12 @@ class RootHandlersMixin:
         if self.config.get("cache.use_local_cache", False):
             try:
                 from ...core.cache_db import CacheDB
+
                 db = CacheDB()
                 saved_count = db.save_routing_cache(cache, self.profile or "default")
-                console.print(f"[dim]  → Saved {saved_count} routes to local database[/]")
+                console.print(
+                    f"[dim]  → Saved {saved_count} routes to local database[/]"
+                )
             except Exception as e:
                 console.print(f"[yellow]  → Local DB save failed: {e}[/]")
         total = sum(len(d.get("routes", [])) for d in cache.values())
@@ -928,11 +973,14 @@ class RootHandlersMixin:
         """Save routing cache to local SQLite database."""
         cache = self._cache.get("routing-cache", {})
         if not cache:
-            console.print("[yellow]No routing cache to save. Run 'create_routing_cache' first.[/]")
+            console.print(
+                "[yellow]No routing cache to save. Run 'create_routing_cache' first.[/]"
+            )
             return
 
         try:
             from ...core.cache_db import CacheDB
+
             db = CacheDB()
             saved_count = db.save_routing_cache(cache, self.profile or "default")
             console.print(f"[green]✓ Saved {saved_count} routes to local database[/]")
@@ -944,6 +992,7 @@ class RootHandlersMixin:
         """Load routing cache from local SQLite database."""
         try:
             from ...core.cache_db import CacheDB
+
             db = CacheDB()
             cache = db.load_routing_cache(self.profile or "default")
 
@@ -959,7 +1008,11 @@ class RootHandlersMixin:
             for source, data in cache.items():
                 route_count = len(data.get("routes", []))
                 if route_count > 0:
-                    source_display = source.replace("tgw", "Transit Gateway").replace("cloudwan", "Cloud WAN").upper()
+                    source_display = (
+                        source.replace("tgw", "Transit Gateway")
+                        .replace("cloudwan", "Cloud WAN")
+                        .upper()
+                    )
                     console.print(f"  {source_display}: {route_count} routes")
 
         except Exception as e:
@@ -1106,41 +1159,43 @@ class RootHandlersMixin:
     def _show_command_path(self, graph, command: str):
         """Show the path to reach a specific command."""
         results = graph.find_command_path(command)
-        
+
         if not results:
             console.print(f"[yellow]No command found matching '{command}'[/]")
             return
-        
+
         console.print(f"[bold]Paths to '{command}':[/]\n")
-        
+
         for result in results:
             marker = "✓" if result["implemented"] else "○"
-            
+
             if result["is_global"]:
                 console.print(f"{marker} [cyan]{result['command']}[/]")
                 console.print("  [green]Global command[/] - available at root level")
             else:
                 console.print(f"{marker} [cyan]{result['command']}[/]")
                 console.print(f"  Context: [yellow]{result['context']}[/]")
-                
+
                 # Build the full navigation path
                 path_parts = []
                 if result.get("prereq_show"):
                     path_parts.append(result["prereq_show"])
-                
+
                 for p in result["path"][:-1]:  # Exclude the command itself
                     path_parts.append(p)
-                
+
                 if path_parts:
-                    console.print(f"  Path: [blue]{' → '.join(path_parts)} → {result['command']}[/]")
-            
+                    console.print(
+                        f"  Path: [blue]{' → '.join(path_parts)} → {result['command']}[/]"
+                    )
+
             console.print()
 
     def _print_graph_tree(self, node, depth: int):
         """Print graph as tree with prerequisite show commands for context-entering sets."""
         indent = "  " * depth
         marker = "✓" if node.implemented else "○"
-        
+
         # Map set commands to their prerequisite show commands
         prereq_show_map = {
             "set vpc": "show vpcs",
@@ -1153,7 +1208,7 @@ class RootHandlersMixin:
             "set vpn": "show vpns",
             "set route-table": "show route-tables",
         }
-        
+
         if node.enters_context:
             # Show prerequisite show command before set command
             prereq = prereq_show_map.get(node.name)
@@ -1162,7 +1217,7 @@ class RootHandlersMixin:
             console.print(f"{indent}{marker} {node.name} →")
         else:
             console.print(f"{indent}{marker} {node.name}")
-        
+
         for child in node.children:
             self._print_graph_tree(child, depth + 1)
 

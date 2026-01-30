@@ -42,19 +42,19 @@ class TestPushContext:
 
     def test_push_single_context(self, manager):
         """Binary: Push single context to expected stack."""
-        manager.push_context('vpc', {'vpc_id': 'vpc-123'})
+        manager.push_context("vpc", {"vpc_id": "vpc-123"})
 
         assert len(manager.expected_stack) == 1
-        assert manager.expected_stack[0][0] == 'vpc'
+        assert manager.expected_stack[0][0] == "vpc"
 
     def test_push_multiple_contexts(self, manager):
         """Binary: Push multiple contexts maintains order."""
-        manager.push_context('global-network', {'gn_id': 'gn-123'})
-        manager.push_context('core-network', {'cn_id': 'cn-456'})
+        manager.push_context("global-network", {"gn_id": "gn-123"})
+        manager.push_context("core-network", {"cn_id": "cn-456"})
 
         assert len(manager.expected_stack) == 2
-        assert manager.expected_stack[0][0] == 'global-network'
-        assert manager.expected_stack[1][0] == 'core-network'
+        assert manager.expected_stack[0][0] == "global-network"
+        assert manager.expected_stack[1][0] == "core-network"
 
 
 class TestValidateCurrentState:
@@ -75,12 +75,13 @@ class TestValidateCurrentState:
         """Binary: Single context validates successfully."""
         # Manually set shell context
         from aws_network_tools.core import Context
+
         manager.shell.context_stack = [
-            Context(type='vpc', ref='1', name='production-vpc', data={})
+            Context(type="vpc", ref="1", name="production-vpc", data={})
         ]
 
         # Set expected
-        manager.push_context('vpc', {})
+        manager.push_context("vpc", {})
 
         # Validate
         manager.validate_current_state()  # Should not raise
@@ -89,8 +90,9 @@ class TestValidateCurrentState:
         """Binary: Depth mismatch raises AssertionError."""
         # Shell has context, expected is empty
         from aws_network_tools.core import Context
+
         manager.shell.context_stack = [
-            Context(type='vpc', ref='1', name='test', data={})
+            Context(type="vpc", ref="1", name="test", data={})
         ]
 
         with pytest.raises(AssertionError, match="stack depth"):
@@ -99,10 +101,11 @@ class TestValidateCurrentState:
     def test_validate_type_mismatch(self, manager):
         """Binary: Context type mismatch raises AssertionError."""
         from aws_network_tools.core import Context
+
         manager.shell.context_stack = [
-            Context(type='vpc', ref='1', name='test', data={})
+            Context(type="vpc", ref="1", name="test", data={})
         ]
-        manager.push_context('tgw', {})  # Expected tgw, got vpc
+        manager.push_context("tgw", {})  # Expected tgw, got vpc
 
         with pytest.raises(AssertionError, match="[Cc]ontext type"):
             manager.validate_current_state()
@@ -118,12 +121,12 @@ class TestPopContext:
 
     def test_pop_single_context(self, manager):
         """Binary: Pop removes last context from expected stack."""
-        manager.push_context('vpc', {})
-        manager.push_context('subnet', {})
+        manager.push_context("vpc", {})
+        manager.push_context("subnet", {})
 
         manager.pop_context()
         assert len(manager.expected_stack) == 1
-        assert manager.expected_stack[0][0] == 'vpc'
+        assert manager.expected_stack[0][0] == "vpc"
 
     def test_pop_empty_stack_raises(self, manager):
         """Binary: Pop on empty stack raises error."""
@@ -141,8 +144,8 @@ class TestResetState:
 
     def test_reset_clears_expected_stack(self, manager):
         """Binary: Reset clears expected stack."""
-        manager.push_context('vpc', {})
-        manager.push_context('subnet', {})
+        manager.push_context("vpc", {})
+        manager.push_context("subnet", {})
 
         manager.reset()
         assert len(manager.expected_stack) == 0
@@ -162,8 +165,8 @@ class TestGetCurrentContextType:
 
     def test_get_current_context_type(self, manager):
         """Binary: Returns top of expected stack."""
-        manager.push_context('vpc', {})
-        assert manager.get_current_context_type() == 'vpc'
+        manager.push_context("vpc", {})
+        assert manager.get_current_context_type() == "vpc"
 
-        manager.push_context('subnet', {})
-        assert manager.get_current_context_type() == 'subnet'
+        manager.push_context("subnet", {})
+        assert manager.get_current_context_type() == "subnet"

@@ -25,7 +25,9 @@ class FirewallHandlersMixin:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        self._enter("firewall", fw.get("arn", ""), fw.get("name", ""), fw, selection_idx)
+        self._enter(
+            "firewall", fw.get("arn", ""), fw.get("name", ""), fw, selection_idx
+        )
         print()  # Add blank line before next prompt
 
     def _show_firewall(self, _):
@@ -33,6 +35,7 @@ class FirewallHandlersMixin:
         if self.ctx_type != "firewall":
             return
         from ...modules.anfw import ANFWDisplay
+
         ANFWDisplay(console).show_firewall_detail(self.ctx.data)
 
     # Alias for backward compatibility
@@ -60,7 +63,7 @@ class FirewallHandlersMixin:
                 rg.get("name", ""),
                 rg.get("type", ""),
                 str(len(rg.get("rules", []))),
-                f"{rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}"
+                f"{rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}",
             )
         console.print(table)
         console.print("[dim]Use 'set rule-group <#>' to select[/]")
@@ -78,61 +81,59 @@ class FirewallHandlersMixin:
         if not val:
             console.print("[red]Usage: set rule-group <#>[/]")
             return
-        
+
         rgs = self.ctx.data.get("rule_groups", [])
         if not rgs:
             console.print("[yellow]No rule groups available[/]")
             return
-        
+
         # Resolve by index or name
         rg = self._resolve(rgs, val)
         if not rg:
             console.print(f"[red]Rule group not found: {val}[/]")
             return
-        
+
         try:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        
-        self._enter("rule-group", rg.get("name", ""), rg.get("name", ""), rg, selection_idx)
+
+        self._enter(
+            "rule-group", rg.get("name", ""), rg.get("name", ""), rg, selection_idx
+        )
         print()
 
     def _show_rule_group(self, _):
         """Show detailed rule group information."""
         if self.ctx_type != "rule-group":
             return
-        
+
         rg = self.ctx.data
         from rich.panel import Panel
-        from rich.text import Text
-        
+
         console.print(
-            Panel(
-                f"[bold]{rg['name']}[/] ({rg['type']})",
-                title="Rule Group"
-            )
+            Panel(f"[bold]{rg['name']}[/] ({rg['type']})", title="Rule Group")
         )
-        
+
         if rg.get("error"):
             console.print(f"[red]Error: {rg['error']}[/]")
             return
-        
+
         cap_info = f"[dim]Capacity: {rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}[/]"
         console.print(cap_info)
         console.print()
-        
+
         if rg["type"] == "STATEFUL":
             # Stateful rules (Suricata format, domain lists, or 5-tuple)
             rules = rg.get("rules", [])
             if not rules:
                 console.print("[dim]No rules found[/]")
                 return
-            
+
             table = Table(show_header=True, header_style="bold")
             table.add_column("#", style="dim", justify="right")
             table.add_column("Rule", style="cyan")
-            
+
             for i, rule in enumerate(rules, 1):
                 if "rule" in rule:
                     console.print(f"  [dim]{i}.[/] [cyan]{rule['rule']}[/]")
@@ -142,7 +143,7 @@ class FirewallHandlersMixin:
             if not rules:
                 console.print("[dim]No rules found[/]")
                 return
-            
+
             table = Table(show_header=True, header_style="bold")
             table.add_column("#", style="dim", justify="right")
             table.add_column("Priority", style="yellow", justify="right")
@@ -152,24 +153,38 @@ class FirewallHandlersMixin:
             table.add_column("Protocols", style="white")
             table.add_column("Source Ports", style="dim")
             table.add_column("Dest Ports", style="dim")
-            
+
             for i, rule in enumerate(rules, 1):
                 # Format source/dest ports
                 src_ports = rule.get("source_ports", [])
                 dst_ports = rule.get("dest_ports", [])
-                
-                src_port_str = ", ".join(
-                    f"{p.get('FromPort', '')}-{p.get('ToPort', '')}" if p.get('FromPort') != p.get('ToPort') 
-                    else str(p.get('FromPort', ''))
-                    for p in src_ports
-                ) if src_ports else "Any"
-                
-                dst_port_str = ", ".join(
-                    f"{p.get('FromPort', '')}-{p.get('ToPort', '')}" if p.get('FromPort') != p.get('ToPort')
-                    else str(p.get('FromPort', ''))
-                    for p in dst_ports
-                ) if dst_ports else "Any"
-                
+
+                src_port_str = (
+                    ", ".join(
+                        (
+                            f"{p.get('FromPort', '')}-{p.get('ToPort', '')}"
+                            if p.get("FromPort") != p.get("ToPort")
+                            else str(p.get("FromPort", ""))
+                        )
+                        for p in src_ports
+                    )
+                    if src_ports
+                    else "Any"
+                )
+
+                dst_port_str = (
+                    ", ".join(
+                        (
+                            f"{p.get('FromPort', '')}-{p.get('ToPort', '')}"
+                            if p.get("FromPort") != p.get("ToPort")
+                            else str(p.get("FromPort", ""))
+                        )
+                        for p in dst_ports
+                    )
+                    if dst_ports
+                    else "Any"
+                )
+
                 table.add_row(
                     str(i),
                     str(rule.get("priority", "")),
@@ -178,25 +193,25 @@ class FirewallHandlersMixin:
                     ", ".join(rule.get("destinations", [])) or "Any",
                     ", ".join(str(p) for p in rule.get("protocols", [])) or "Any",
                     src_port_str,
-                    dst_port_str
+                    dst_port_str,
                 )
-            
+
             console.print(table)
 
     def _show_policy(self, _):
         """Show firewall policy with rule groups summary."""
         if self.ctx_type != "firewall":
             return
-        
+
         policy = self.ctx.data.get("policy", {})
         if not policy:
             console.print("[yellow]No policy data available[/]")
             return
-        
+
         from rich.panel import Panel
-        
+
         console.print(Panel(f"[bold]{policy.get('name', 'N/A')}[/]", title="Policy"))
-        
+
         # Show rule groups in table format
         rgs = self.ctx.data.get("rule_groups", [])
         if rgs:
@@ -212,6 +227,6 @@ class FirewallHandlersMixin:
                     rg["name"],
                     rg["type"],
                     str(len(rg.get("rules", []))),
-                    f"{rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}"
+                    f"{rg.get('consumed_capacity', 0)}/{rg.get('capacity', 0)}",
                 )
             console.print(table)

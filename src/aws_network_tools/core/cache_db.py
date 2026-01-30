@@ -6,9 +6,8 @@ Supports future web frontend with standard SQL queries.
 
 import sqlite3
 import json
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 
 
 class CacheDB:
@@ -29,7 +28,8 @@ class CacheDB:
     def _init_schema(self):
         """Create database schema if not exists."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS routing_cache (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     source TEXT NOT NULL,
@@ -45,25 +45,33 @@ class CacheDB:
                     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     profile TEXT
                 )
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_routing_source
                 ON routing_cache(source)
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_routing_resource
                 ON routing_cache(resource_id)
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_routing_destination
                 ON routing_cache(destination)
-            """)
+            """
+            )
 
             # General topology cache
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS topology_cache (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     cache_key TEXT NOT NULL,
@@ -72,16 +80,21 @@ class CacheDB:
                     profile TEXT,
                     UNIQUE(cache_key, profile)
                 )
-            """)
+            """
+            )
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_topology_key
                 ON topology_cache(cache_key)
-            """)
+            """
+            )
 
             conn.commit()
 
-    def save_routing_cache(self, cache_data: Dict[str, Any], profile: str = "default") -> int:
+    def save_routing_cache(
+        self, cache_data: Dict[str, Any], profile: str = "default"
+    ) -> int:
         """Save routing cache to database.
 
         Args:
@@ -100,29 +113,53 @@ class CacheDB:
                 routes = data.get("routes", [])
 
                 for route in routes:
-                    conn.execute("""
+                    conn.execute(
+                        """
                         INSERT INTO routing_cache (
                             source, resource_id, resource_name, region,
                             route_table_id, destination, target, state, type,
                             metadata, profile
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        source,
-                        route.get("vpc_id") or route.get("tgw_id") or route.get("core_network_id"),
-                        route.get("vpc_name") or route.get("tgw_name") or route.get("core_network_name"),
-                        route.get("region"),
-                        route.get("route_table"),
-                        route.get("destination"),
-                        route.get("target"),
-                        route.get("state"),
-                        route.get("type"),
-                        json.dumps({k: v for k, v in route.items() if k not in [
-                            "vpc_id", "tgw_id", "core_network_id", "vpc_name", "tgw_name",
-                            "core_network_name", "region", "route_table", "destination",
-                            "target", "state", "type", "source"
-                        ]}),
-                        profile
-                    ))
+                    """,
+                        (
+                            source,
+                            route.get("vpc_id")
+                            or route.get("tgw_id")
+                            or route.get("core_network_id"),
+                            route.get("vpc_name")
+                            or route.get("tgw_name")
+                            or route.get("core_network_name"),
+                            route.get("region"),
+                            route.get("route_table"),
+                            route.get("destination"),
+                            route.get("target"),
+                            route.get("state"),
+                            route.get("type"),
+                            json.dumps(
+                                {
+                                    k: v
+                                    for k, v in route.items()
+                                    if k
+                                    not in [
+                                        "vpc_id",
+                                        "tgw_id",
+                                        "core_network_id",
+                                        "vpc_name",
+                                        "tgw_name",
+                                        "core_network_name",
+                                        "region",
+                                        "route_table",
+                                        "destination",
+                                        "target",
+                                        "state",
+                                        "type",
+                                        "source",
+                                    ]
+                                }
+                            ),
+                            profile,
+                        ),
+                    )
                     count += 1
 
             conn.commit()
@@ -139,13 +176,20 @@ class CacheDB:
         """
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT * FROM routing_cache
                 WHERE profile = ?
                 ORDER BY source, resource_id, route_table_id
-            """, (profile,))
+            """,
+                (profile,),
+            )
 
-            routes_by_source = {"vpc": {"routes": []}, "tgw": {"routes": []}, "cloudwan": {"routes": []}}
+            routes_by_source = {
+                "vpc": {"routes": []},
+                "tgw": {"routes": []},
+                "cloudwan": {"routes": []},
+            }
 
             for row in cursor:
                 route = {
@@ -187,13 +231,18 @@ class CacheDB:
             profile: AWS profile name
         """
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO topology_cache (cache_key, cache_data, profile, cached_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            """, (cache_key, json.dumps(data), profile))
+            """,
+                (cache_key, json.dumps(data), profile),
+            )
             conn.commit()
 
-    def load_topology_cache(self, cache_key: str, profile: str = "default") -> Optional[Any]:
+    def load_topology_cache(
+        self, cache_key: str, profile: str = "default"
+    ) -> Optional[Any]:
         """Load topology cache entry.
 
         Args:
@@ -204,10 +253,13 @@ class CacheDB:
             Cached data or None if not found/expired
         """
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT cache_data, cached_at FROM topology_cache
                 WHERE cache_key = ? AND profile = ?
-            """, (cache_key, profile))
+            """,
+                (cache_key, profile),
+            )
 
             row = cursor.fetchone()
             if not row:
@@ -233,13 +285,15 @@ class CacheDB:
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT
                     COUNT(*) as total_routes,
                     COUNT(DISTINCT profile) as profiles,
                     COUNT(DISTINCT source) as sources
                 FROM routing_cache
-            """)
+            """
+            )
             routing_stats = dict(cursor.fetchone())
 
             cursor = conn.execute("SELECT COUNT(*) FROM topology_cache")
@@ -248,5 +302,7 @@ class CacheDB:
             return {
                 "routing_cache": routing_stats,
                 "topology_cache": {"entries": topology_count},
-                "db_size_bytes": self.db_path.stat().st_size if self.db_path.exists() else 0
+                "db_size_bytes": self.db_path.stat().st_size
+                if self.db_path.exists()
+                else 0,
             }

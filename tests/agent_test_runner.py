@@ -13,12 +13,12 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 
 @dataclass
 class TestResult:
     """Result of a single test execution."""
+
     test_id: str
     command: str
     passed: bool = False
@@ -32,6 +32,7 @@ class TestResult:
 @dataclass
 class TestState:
     """Persistent state across test execution."""
+
     baseline: dict = field(default_factory=dict)
     extracted: dict = field(default_factory=dict)
     context_stack: list[str] = field(default_factory=list)
@@ -73,8 +74,6 @@ class ShellTestRunner:
     def start_shell(self):
         """Start the interactive shell process using PTY for proper TTY behavior."""
         import pty
-        import os
-        import time
 
         cmd = f"cd {self.working_dir} && source .venv/bin/activate && aws-net-shell --profile {self.profile}"
 
@@ -88,7 +87,7 @@ class ShellTestRunner:
             stdout=slave_fd,
             stderr=slave_fd,
             executable="/bin/bash",
-            close_fds=True
+            close_fds=True,
         )
 
         # Close slave fd in parent (child keeps it open)
@@ -102,11 +101,12 @@ class ShellTestRunner:
 
         print(f"✓ Shell started (captured {len(startup_output)} chars during init)")
 
-    def _read_until_prompt_pty(self, timeout: float = 30.0, idle_timeout: float = 2.0) -> str:
+    def _read_until_prompt_pty(
+        self, timeout: float = 30.0, idle_timeout: float = 2.0
+    ) -> str:
         """Read shell output from PTY until we see a prompt."""
         import select
         import time
-        import os
 
         output = []
         start_time = time.time()
@@ -125,13 +125,17 @@ class ShellTestRunner:
                     chunk = os.read(self.master_fd, 1024)
                     if not chunk:
                         break
-                    decoded = chunk.decode('utf-8', errors='replace')
+                    decoded = chunk.decode("utf-8", errors="replace")
                     output.append(decoded)
                     last_char_time = time.time()
 
                     # Check for common prompts
                     current = "".join(output)[-50:]
-                    if current.endswith("> ") or current.endswith("# ") or current.endswith("$ "):
+                    if (
+                        current.endswith("> ")
+                        or current.endswith("# ")
+                        or current.endswith("$ ")
+                    ):
                         break
                 except OSError:
                     break
@@ -145,14 +149,13 @@ class ShellTestRunner:
 
     def run_command(self, command: str) -> str:
         """Send command to shell via PTY and capture output."""
-        import os
         import time
 
         if not self.shell_process:
             self.start_shell()
 
         # Send command via PTY
-        os.write(self.master_fd, (command + "\n").encode('utf-8'))
+        os.write(self.master_fd, (command + "\n").encode("utf-8"))
         time.sleep(0.5)  # Allow command to start processing
 
         # Use 5min overall timeout for slow AWS API calls, 10s idle for table rendering
@@ -179,16 +182,18 @@ class ShellTestRunner:
             print(f"  AWS CLI error: {e}")
         return None
 
-    def validate_count(self, output: str, expected_count: int, item_type: str) -> tuple[bool, str]:
+    def validate_count(
+        self, output: str, expected_count: int, item_type: str
+    ) -> tuple[bool, str]:
         """Validate row count in table output."""
         # Count table rows - Rich tables use │ as column separator
         # Strip ANSI escape codes for accurate parsing
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
         lines = output.strip().split("\n")
         table_rows = []
         for line in lines:
             # Strip ANSI codes for parsing
-            clean_line = ansi_escape.sub('', line)
+            clean_line = ansi_escape.sub("", line)
 
             # Match Rich table rows: │ 1  │ or standard rows starting with number
             if "│" in clean_line:
@@ -202,9 +207,14 @@ class ShellTestRunner:
         if actual_count == expected_count:
             return True, f"✓ {item_type} count: {actual_count}"
         else:
-            return False, f"✗ {item_type} count: expected {expected_count}, got {actual_count}"
+            return (
+                False,
+                f"✗ {item_type} count: expected {expected_count}, got {actual_count}",
+            )
 
-    def validate_ids_present(self, output: str, expected_ids: list[str]) -> tuple[bool, str]:
+    def validate_ids_present(
+        self, output: str, expected_ids: list[str]
+    ) -> tuple[bool, str]:
         """Validate that expected IDs appear in output."""
         missing = [id_ for id_ in expected_ids if id_ not in output]
         if not missing:
@@ -228,10 +238,10 @@ class ShellTestRunner:
     def extract_first_row_number(self, output: str) -> str | None:
         """Extract the row number from first data row."""
         # Strip ANSI escape codes
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
         lines = output.strip().split("\n")
         for line in lines:
-            clean_line = ansi_escape.sub('', line)
+            clean_line = ansi_escape.sub("", line)
 
             # Handle Rich table format: │ 1  │ ...
             if "│" in clean_line:
@@ -244,18 +254,22 @@ class ShellTestRunner:
                 return match.group(1)
         return None
 
-    def run_test(self, test_id: str, command: str,
-                 baseline_key: str | None = None,
-                 baseline_command: str | None = None,
-                 validations: list[dict] | None = None,
-                 extractions: list[dict] | None = None) -> TestResult:
+    def run_test(
+        self,
+        test_id: str,
+        command: str,
+        baseline_key: str | None = None,
+        baseline_command: str | None = None,
+        validations: list[dict] | None = None,
+        extractions: list[dict] | None = None,
+    ) -> TestResult:
         """Execute a single test with validation."""
         result = TestResult(test_id=test_id, command=command)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"TEST: {test_id}")
         print(f"COMMAND: {command}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Substitute variables in command
         for key, value in self.state.extracted.items():
@@ -292,7 +306,9 @@ class ShellTestRunner:
         if validations:
             for v in validations:
                 if v["type"] == "count":
-                    passed, msg = self.validate_count(result.output, v["expected"], v.get("item", "items"))
+                    passed, msg = self.validate_count(
+                        result.output, v["expected"], v.get("item", "items")
+                    )
                     result.details.append(msg)
                     if not passed:
                         result.passed = False
@@ -323,9 +339,9 @@ class ShellTestRunner:
 
     def run_phase_1_baseline(self):
         """Phase 1: Verify baselines are loaded."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 1: INFRASTRUCTURE BASELINE")
-        print("="*60)
+        print("=" * 60)
 
         baseline = self.state.baseline
 
@@ -337,15 +353,20 @@ class ShellTestRunner:
 
         if "tgws" in baseline and baseline["tgws"]:
             self.state.extracted["tgw_count"] = len(baseline["tgws"])
-            self.state.extracted["tgw_ids"] = [t["TransitGatewayId"] for t in baseline["tgws"]]
+            self.state.extracted["tgw_ids"] = [
+                t["TransitGatewayId"] for t in baseline["tgws"]
+            ]
             print(f"✓ TGWs: {len(baseline['tgws'])}")
 
         if "vpns" in baseline and baseline["vpns"]:
             self.state.extracted["vpn_count"] = len(baseline["vpns"])
-            self.state.extracted["vpn_ids"] = [v["VpnConnectionId"] for v in baseline["vpns"]]
+            self.state.extracted["vpn_ids"] = [
+                v["VpnConnectionId"] for v in baseline["vpns"]
+            ]
             # Check tunnel status
             tunnels_up = sum(
-                1 for v in baseline["vpns"]
+                1
+                for v in baseline["vpns"]
                 for t in (v.get("VgwTelemetry") or [])
                 if t.get("Status") == "UP"
             )
@@ -371,9 +392,9 @@ class ShellTestRunner:
 
     def run_phase_2_root_commands(self):
         """Phase 2: Test root level commands."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 2: ROOT LEVEL COMMANDS")
-        print("="*60)
+        print("=" * 60)
 
         # Test: show vpcs (multi-region - just check no errors and extraction works)
         self.run_test(
@@ -382,7 +403,10 @@ class ShellTestRunner:
             baseline_key="vpcs",
             validations=[
                 # Shell queries all regions, so just check baseline VPC is present
-                {"type": "ids_present", "ids": self.state.extracted.get("vpc_ids", [])[:5]},
+                {
+                    "type": "ids_present",
+                    "ids": self.state.extracted.get("vpc_ids", [])[:5],
+                },
             ],
             extractions=[{"type": "first_row_number", "key": "first_vpc_number"}],
         )
@@ -415,16 +439,20 @@ class ShellTestRunner:
             test_id="ROOT_005",
             command="show global-networks",
             validations=[
-                {"type": "count", "expected": self.state.extracted.get("gn_count", 0), "item": "Global Networks"},
+                {
+                    "type": "count",
+                    "expected": self.state.extracted.get("gn_count", 0),
+                    "item": "Global Networks",
+                },
             ],
             extractions=[{"type": "first_row_number", "key": "first_gn_number"}],
         )
 
     def run_phase_3_vpc_context(self):
         """Phase 3: Test VPC context commands."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 3: VPC CONTEXT")
-        print("="*60)
+        print("=" * 60)
 
         first_vpc = self.state.extracted.get("first_vpc_number")
         if not first_vpc:
@@ -475,9 +503,9 @@ class ShellTestRunner:
 
     def run_phase_4_tgw_context(self):
         """Phase 4: Test Transit Gateway context commands."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 4: TRANSIT GATEWAY CONTEXT")
-        print("="*60)
+        print("=" * 60)
 
         first_tgw = self.state.extracted.get("first_tgw_number")
         if not first_tgw:
@@ -514,9 +542,9 @@ class ShellTestRunner:
 
     def run_phase_5_vpn_context(self):
         """Phase 5: Test VPN context commands (requires active tunnel)."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 5: VPN CONTEXT")
-        print("="*60)
+        print("=" * 60)
 
         tunnels_up = self.state.extracted.get("tunnels_up", 0)
         if tunnels_up == 0:
@@ -551,9 +579,9 @@ class ShellTestRunner:
 
     def run_phase_6_firewall_context(self):
         """Phase 6: Test Firewall context commands."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 6: FIREWALL CONTEXT")
-        print("="*60)
+        print("=" * 60)
 
         first_fw = self.state.extracted.get("first_fw_number")
         if not first_fw:
@@ -582,9 +610,9 @@ class ShellTestRunner:
 
     def run_phase_7_cloudwan_context(self):
         """Phase 7: Test CloudWAN context commands."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("PHASE 7: CLOUDWAN CONTEXT")
-        print("="*60)
+        print("=" * 60)
 
         first_gn = self.state.extracted.get("first_gn_number")
         if not first_gn:
@@ -662,32 +690,35 @@ class ShellTestRunner:
 
     def cleanup(self):
         """Clean up shell process and PTY file descriptor."""
-        import os
         if self.shell_process:
             try:
                 # Try to send exit command via PTY
                 os.write(self.master_fd, b"exit\n")
-            except:
+            except OSError:
                 pass
             self.shell_process.terminate()
             try:
                 self.shell_process.wait(timeout=5)
-            except:
+            except subprocess.TimeoutExpired:
                 self.shell_process.kill()
 
         # Close PTY file descriptor
-        if hasattr(self, 'master_fd'):
+        if hasattr(self, "master_fd"):
             try:
                 os.close(self.master_fd)
-            except:
+            except OSError:
                 pass
 
 
 def main():
     parser = argparse.ArgumentParser(description="AWS Network Shell Test Runner")
-    parser.add_argument("--profile", default="taylaand+net-dev-Admin", help="AWS profile")
+    parser.add_argument(
+        "--profile", default="taylaand+net-dev-Admin", help="AWS profile"
+    )
     parser.add_argument("--working-dir", default=".", help="Working directory")
-    parser.add_argument("--baseline-dir", default="/tmp", help="Baseline files directory")
+    parser.add_argument(
+        "--baseline-dir", default="/tmp", help="Baseline files directory"
+    )
     parser.add_argument("--output", default=None, help="Output report file")
     args = parser.parse_args()
 
@@ -712,9 +743,9 @@ def main():
     # Generate report
     report = runner.generate_report()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("FINAL REPORT")
-    print("="*60)
+    print("=" * 60)
     print(f"Total: {report['summary']['total']}")
     print(f"Passed: {report['summary']['passed']}")
     print(f"Failed: {report['summary']['failed']}")

@@ -28,21 +28,25 @@ tests/
 ## Running Tests
 
 ### Quick Test (Core Framework)
+
 ```bash
 pytest tests/test_command_graph/ tests/test_utils/ tests/unit/ -v
 ```
 
 ### Full Test Suite
+
 ```bash
 pytest tests/ -v
 ```
 
 ### Specific Context Tests
+
 ```bash
 pytest tests/test_command_graph/test_context_commands.py -v
 ```
 
 ### Integration Tests (Real AWS)
+
 ```bash
 AWS_PROFILE=your-profile pytest tests/integration/ -m integration
 ```
@@ -58,6 +62,7 @@ AWS_PROFILE=your-profile pytest tests/integration/ -m integration
 ## Key Components
 
 ### BaseContextTestCase
+
 Reusable test helpers for command graph testing.
 
 ```python
@@ -68,24 +73,29 @@ class MyTest(BaseContextTestCase):
 ```
 
 ### Parametrized Tests
+
 Efficient test generation using test_data_generator.py.
 
 ### pexpect Integration
-Real CLI testing using aws-net-shell process.
+
+Real CLI testing using AWS-net-shell process.
 
 ## Automation
 
 ### Issue Investigation
+
 ```bash
 uv run python scripts/issue_investigator.py --issue 9 --agent-prompt
 ```
 
 ### Automated Resolution
+
 ```bash
 uv run python scripts/automated_issue_resolver.py --issue 9
 ```
 
 ### Workflow Execution
+
 ```bash
 uv run python scripts/shell_runner.py "show vpcs" "set vpc 1" "show subnets"
 ```

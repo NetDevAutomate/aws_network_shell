@@ -68,7 +68,9 @@ INTERFACE_VPC_ENDPOINT_FIXTURES: dict[str, dict[str, Any]] = {
                 "DnsName": "vpce-0prods3iface123456-abc123-eu-west-1c.s3.eu-west-1.vpce.amazonaws.com",
                 "HostedZoneId": "Z7HUB22UULQXV",
             },
-            {"DnsName": "bucket.vpce-0prods3iface123456-abc123.s3.eu-west-1.vpce.amazonaws.com"},
+            {
+                "DnsName": "bucket.vpce-0prods3iface123456-abc123.s3.eu-west-1.vpce.amazonaws.com"
+            },
             {"DnsName": "s3.eu-west-1.amazonaws.com"},
         ],
         "CreationTimestamp": datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
@@ -302,7 +304,9 @@ INTERFACE_VPC_ENDPOINT_FIXTURES: dict[str, dict[str, Any]] = {
         "PolicyDocument": None,
         "RouteTableIds": [],
         "SubnetIds": ["subnet-0devpriv2a1234567"],
-        "Groups": [{"GroupId": "sg-0devall12345678901", "GroupName": "development-all-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0devall12345678901", "GroupName": "development-all-sg"}
+        ],
         "PrivateDnsEnabled": True,
         "RequesterManaged": False,
         "NetworkInterfaceIds": ["eni-0devlambep2a123456"],
@@ -615,7 +619,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1a",
         "Description": "VPC Endpoint Interface vpce-0prods3iface123456",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.10.100",
         "PrivateIpAddresses": [
             {
@@ -626,7 +632,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prods3iface123456",
     },
     "eni-0prods3ep1b1234567": {
@@ -635,7 +641,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1b",
         "Description": "VPC Endpoint Interface vpce-0prods3iface123456",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.11.100",
         "PrivateIpAddresses": [
             {
@@ -646,7 +654,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prods3iface123456",
     },
     "eni-0prods3ep1c1234567": {
@@ -655,7 +663,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1c",
         "Description": "VPC Endpoint Interface vpce-0prods3iface123456",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.12.100",
         "PrivateIpAddresses": [
             {
@@ -666,7 +676,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prods3iface123456",
     },
     # Production DynamoDB Interface Endpoint ENIs
@@ -676,7 +686,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1a",
         "Description": "VPC Endpoint Interface vpce-0proddynamoiface12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.10.101",
         "PrivateIpAddresses": [
             {
@@ -687,7 +699,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0proddynamoiface12",
     },
     "eni-0proddynep1b123456": {
@@ -696,7 +708,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1b",
         "Description": "VPC Endpoint Interface vpce-0proddynamoiface12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.11.101",
         "PrivateIpAddresses": [
             {
@@ -707,7 +721,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0proddynamoiface12",
     },
     # Production Lambda Interface Endpoint ENIs
@@ -717,7 +731,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1a",
         "Description": "VPC Endpoint Interface vpce-0prodlambdaiface12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.10.102",
         "PrivateIpAddresses": [
             {
@@ -728,7 +744,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prodlambdaiface12",
     },
     "eni-0prodlambep1b12345": {
@@ -737,7 +753,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1b",
         "Description": "VPC Endpoint Interface vpce-0prodlambdaiface12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.11.102",
         "PrivateIpAddresses": [
             {
@@ -748,7 +766,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prodlambdaiface12",
     },
     "eni-0prodlambep1c12345": {
@@ -757,7 +775,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1c",
         "Description": "VPC Endpoint Interface vpce-0prodlambdaiface12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.12.102",
         "PrivateIpAddresses": [
             {
@@ -768,7 +788,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prodlambdaiface12",
     },
     # Production EC2 API Interface Endpoint ENIs
@@ -778,7 +798,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1a",
         "Description": "VPC Endpoint Interface vpce-0prodec2apiface123",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.10.103",
         "PrivateIpAddresses": [
             {
@@ -789,7 +811,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prodec2apiface123",
     },
     "eni-0prodec2ep1b123456": {
@@ -798,7 +820,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1b",
         "Description": "VPC Endpoint Interface vpce-0prodec2apiface123",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.11.103",
         "PrivateIpAddresses": [
             {
@@ -809,7 +833,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0prodec2apiface123",
     },
     # Shared Services - Custom App Service ENIs
@@ -819,7 +843,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1a",
         "Description": "VPC Endpoint Interface vpce-0sharedappservice12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.10.150",
         "PrivateIpAddresses": [
             {
@@ -830,7 +856,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0sharedappservice12",
     },
     "eni-0sharedapp1b123456": {
@@ -839,7 +865,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0prod1234567890ab",
         "AvailabilityZone": "eu-west-1b",
         "Description": "VPC Endpoint Interface vpce-0sharedappservice12",
-        "Groups": [{"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodapp123456789", "GroupName": "production-app-sg"}
+        ],
         "PrivateIpAddress": "10.0.11.150",
         "PrivateIpAddresses": [
             {
@@ -850,7 +878,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0sharedappservice12",
     },
     # Staging S3 Interface Endpoint ENI (pending state)
@@ -871,7 +899,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "in-use",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0stags3iface123456",
     },
     # Development Lambda Interface Endpoint ENI (deleting state)
@@ -881,7 +909,9 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "VpcId": "vpc-0dev01234567890ab",
         "AvailabilityZone": "ap-southeast-2a",
         "Description": "VPC Endpoint Interface vpce-0devlambdaiface123",
-        "Groups": [{"GroupId": "sg-0devall12345678901", "GroupName": "development-all-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0devall12345678901", "GroupName": "development-all-sg"}
+        ],
         "PrivateIpAddress": "10.2.10.100",
         "PrivateIpAddresses": [
             {
@@ -892,7 +922,7 @@ VPC_ENDPOINT_ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "RequesterManaged": True,
         "Status": "available",
         "InterfaceType": "vpc_endpoint",
-        "RequesterId": "AKIAIOSFODNN7EXAMPLE",
+        "RequesterId": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         "VpcEndpointId": "vpce-0devlambdaiface123",
     },
 }
@@ -927,9 +957,7 @@ def get_gateway_endpoints_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
 
 def get_all_endpoints_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
     """Get all VPC endpoints (interface and gateway) in a VPC."""
-    return get_interface_endpoints_by_vpc(vpc_id) + get_gateway_endpoints_by_vpc(
-        vpc_id
-    )
+    return get_interface_endpoints_by_vpc(vpc_id) + get_gateway_endpoints_by_vpc(vpc_id)
 
 
 def get_endpoint_service_by_id(service_id: str) -> dict[str, Any] | None:

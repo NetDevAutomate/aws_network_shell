@@ -6,19 +6,19 @@ The fix: Root handlers should check ctx_type and skip when in specific context.
 """
 
 import sys
-import pytest
 from unittest.mock import MagicMock, patch
 from dataclasses import dataclass
 
 # Mock cmd2 BEFORE importing shell modules
 mock_cmd2 = MagicMock()
 mock_cmd2.Cmd = MagicMock
-sys.modules['cmd2'] = mock_cmd2
+sys.modules["cmd2"] = mock_cmd2
 
 
 @dataclass
 class MockContext:
     """Mock Context object for testing."""
+
     ctx_type: str
     ref: str
     label: str
@@ -47,11 +47,11 @@ class TestRootHandlerContextAwareness:
                 "enis": [
                     {"id": "eni-instance-001", "private_ip": "10.0.1.100"},
                 ],
-            }
+            },
         )
 
         # Track if discover() gets called
-        with patch('aws_network_tools.modules.eni.ENIClient') as mock_eni:
+        with patch("aws_network_tools.modules.eni.ENIClient") as mock_eni:
             mock_eni.return_value.discover.return_value = [
                 {"id": "eni-all-001"},
                 {"id": "eni-all-002"},
@@ -64,8 +64,9 @@ class TestRootHandlerContextAwareness:
             # The fix: discover() should NOT be called when in ec2-instance context
             # Before fix: This assertion fails (discover IS called via _cached)
             # After fix: This assertion passes (returns early)
-            assert not mock_self._cached.called, \
+            assert not mock_self._cached.called, (
                 "Root _show_enis should NOT call _cached() when in ec2-instance context"
+            )
 
     def test_root_show_enis_runs_when_at_root_level(self):
         """Root _show_enis should run normally when at root level (no context)."""
@@ -74,18 +75,21 @@ class TestRootHandlerContextAwareness:
         mock_self = MagicMock()
         mock_self.ctx_type = None  # Root level
         mock_self.ctx = None
-        mock_self._cached = MagicMock(return_value=[
-            {"id": "eni-001"},
-            {"id": "eni-002"},
-        ])
+        mock_self._cached = MagicMock(
+            return_value=[
+                {"id": "eni-001"},
+                {"id": "eni-002"},
+            ]
+        )
 
-        with patch('aws_network_tools.modules.eni.ENIDisplay'):
+        with patch("aws_network_tools.modules.eni.ENIDisplay"):
             # At root level, the handler should run and use _cached
             RootHandlersMixin._show_enis(mock_self, None)
 
             # Should call _cached to fetch ENIs at root level
-            assert mock_self._cached.called, \
+            assert mock_self._cached.called, (
                 "Root _show_enis should call _cached() at root level"
+            )
 
     def test_root_show_security_groups_skips_when_in_ec2_context(self):
         """Bug: _show_security_groups in root.py should skip when ctx_type == 'ec2-instance'."""
@@ -99,14 +103,15 @@ class TestRootHandlerContextAwareness:
             label="my-instance",
             data={
                 "security_groups": [{"id": "sg-instance-001"}],
-            }
+            },
         )
 
         # The fix: _cached should NOT be called in ec2-instance context
         RootHandlersMixin._show_security_groups(mock_self, None)
 
-        assert not mock_self._cached.called, \
+        assert not mock_self._cached.called, (
             "Root _show_security_groups should NOT call _cached() in ec2-instance context"
+        )
 
     def test_root_show_security_groups_skips_when_in_vpc_context(self):
         """_show_security_groups should also skip when ctx_type == 'vpc'."""
@@ -120,13 +125,14 @@ class TestRootHandlerContextAwareness:
             label="my-vpc",
             data={
                 "security_groups": [{"id": "sg-vpc-001"}],
-            }
+            },
         )
 
         RootHandlersMixin._show_security_groups(mock_self, None)
 
-        assert not mock_self._cached.called, \
+        assert not mock_self._cached.called, (
             "Root _show_security_groups should NOT call _cached() in vpc context"
+        )
 
     def test_root_show_security_groups_runs_when_at_root_level(self):
         """Root _show_security_groups should run normally at root level."""
@@ -135,18 +141,21 @@ class TestRootHandlerContextAwareness:
         mock_self = MagicMock()
         mock_self.ctx_type = None  # Root level
         mock_self.ctx = None
-        mock_self._cached = MagicMock(return_value={
-            "unused_groups": [],
-            "risky_rules": [],
-            "nacl_issues": [],
-        })
+        mock_self._cached = MagicMock(
+            return_value={
+                "unused_groups": [],
+                "risky_rules": [],
+                "nacl_issues": [],
+            }
+        )
 
-        with patch('aws_network_tools.modules.security.SecurityDisplay'):
+        with patch("aws_network_tools.modules.security.SecurityDisplay"):
             RootHandlersMixin._show_security_groups(mock_self, None)
 
             # Should call _cached at root level
-            assert mock_self._cached.called, \
+            assert mock_self._cached.called, (
                 "Root _show_security_groups should call _cached() at root level"
+            )
 
 
 class TestMRODocumentation:
@@ -158,7 +167,7 @@ class TestMRODocumentation:
         from aws_network_tools.shell.handlers.ec2 import EC2HandlersMixin
 
         # Both define _show_enis - this is the source of the conflict
-        assert hasattr(RootHandlersMixin, '_show_enis'), "Root has _show_enis"
-        assert hasattr(EC2HandlersMixin, '_show_enis'), "EC2 has _show_enis"
+        assert hasattr(RootHandlersMixin, "_show_enis"), "Root has _show_enis"
+        assert hasattr(EC2HandlersMixin, "_show_enis"), "EC2 has _show_enis"
 
         # The fix makes root handler context-aware, so MRO conflict is resolved

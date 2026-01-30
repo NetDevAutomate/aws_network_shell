@@ -8,14 +8,11 @@ Binary pass/fail tests for:
 - action commands (clear, clear_cache, exit, etc.)
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from tests.test_command_graph.conftest import (
     assert_success,
-    assert_failure,
     assert_output_contains,
-    assert_output_not_contains,
     assert_context_type,
     assert_context_stack_depth,
 )
@@ -377,9 +374,11 @@ class TestTopLevelActionCommands:
 
     def test_create_routing_cache_command(self, command_runner, isolated_shell):
         """Test: create_routing_cache - builds routing cache."""
-        with patch("aws_network_tools.modules.vpc.VPCClient"), patch(
-            "aws_network_tools.modules.tgw.TGWClient"
-        ), patch("aws_network_tools.modules.cloudwan.CloudWANClient"):
+        with (
+            patch("aws_network_tools.modules.vpc.VPCClient"),
+            patch("aws_network_tools.modules.tgw.TGWClient"),
+            patch("aws_network_tools.modules.cloudwan.CloudWANClient"),
+        ):
             # Command uses underscore: create_routing_cache
             result = command_runner.run("create_routing_cache")
 

@@ -62,6 +62,7 @@ Paths to 'find-prefix':
 ```
 
 ### Available Graph Operations
+
 - `show graph` - Display command tree structure
 - `show graph stats` - Show command statistics
 - `show graph validate` - Verify all handlers implemented
@@ -125,6 +126,7 @@ aws-net>fi:1>ru:2> show rule-group
 ```
 
 ### Firewall Commands Summary
+
 - **Contexts**: firewall → rule-group (2-level hierarchy)
 - **Commands**: show firewall, show rule-groups, show policy, set rule-group, show rule-group
 - **Display**: Complete rule details including ports, protocols, actions, and Suricata rules
@@ -175,6 +177,7 @@ aws-net>vp:1> show tunnels
 ```
 
 ### VPN Commands Summary
+
 - **Context**: vpn (1-level hierarchy)
 - **Commands**: show detail, show tunnels
 - **Display**: IPSec tunnel status with outside IPs, BGP route counts, status messages
@@ -247,6 +250,7 @@ pytest tests/ -v
 ```
 
 ### Test Coverage
+
 - **Root commands**: 42 commands
 - **Context commands**: 35+ commands
 - **Total coverage**: 77+ commands
@@ -255,6 +259,7 @@ pytest tests/ -v
 ## 📖 Usage Examples
 
 ### Basic Commands
+
 ```bash
 aws-net> show vpcs
 aws-net> show global-networks
@@ -263,6 +268,7 @@ aws-net> show detail
 ```
 
 ### Context Navigation
+
 ```bash
 # Enter VPC context
 aws-net> set vpc 1
@@ -278,6 +284,7 @@ tgw> exit
 ```
 
 ### AWS Operations
+
 ```bash
 # Trace between IPs
 aws-net> trace 192.168.1.10 10.0.0.5
@@ -290,6 +297,7 @@ aws-net> find_null_routes
 ```
 
 ### Cache Management
+
 ```bash
 # Scenario: ELBs haven't finished provisioning yet
 aws-net> show elbs
@@ -320,6 +328,7 @@ Cleared 5 cache entries
 ## 📊 Commands by Category
 
 ### Cache Management (2)
+
 - `clear_cache` - Clear all cached data permanently
 - `refresh [target|all]` - Refresh cached data selectively
   - `refresh` - Refresh current context (e.g., in ELB context, clears ELB cache)
@@ -328,6 +337,7 @@ Cleared 5 cache entries
   - `refresh all` - Clear all caches globally
 
 ### Show Commands (34)
+
 - Network Resources: `vpcs`, `transit_gateways`, `firewalls`, `elbs`, `vpns`
 - Compute: `ec2-instances`, `enis`
 - Connectivity: `dx-connections`, `peering-connections`
@@ -338,10 +348,12 @@ Cleared 5 cache entries
 - System: `config`, `cache`, `routing-cache`
 
 ### Set Commands (8 Contexts)
+
 - `vpc`, `transit-gateway`, `global-network`, `core-network`
 - `firewall`, `ec2-instance`, `elb`, `vpn`
 
 ### Action Commands (9)
+
 - `write <file>`, `trace <src> <dst>`, `find_ip <ip>`
 - `find_prefix <cidr>`, `find_null_routes`
 - `reachability`, `populate_cache`, `clear_cache`
@@ -354,6 +366,7 @@ Cleared 5 cache entries
 **Purpose**: Pre-fetch ALL topology data across all modules for comprehensive analysis
 
 **What it caches**:
+
 - VPCs, subnets, route tables, security groups, NACLs
 - Transit Gateways, attachments, peerings, route tables
 - Cloud WAN (global networks, core networks, segments, attachments)
@@ -382,11 +395,13 @@ Cache populated
 **Purpose**: Build specialized cache of ONLY routing data for fast route lookups and analysis
 
 **What it caches**:
+
 - VPC route table entries (all route tables across all VPCs)
 - Transit Gateway route table entries (all TGW route tables)
 - Cloud WAN route table entries (by core network, segment, and region)
 
 **Enables Commands**:
+
 - `find_prefix <cidr>` - Find which route tables contain a prefix
 - `find_null_routes` - Find blackhole/null routes across all routing domains
 - `show routing-cache <filter>` - View cached routes with filtering
@@ -403,6 +418,7 @@ Building routing cache...
 ```
 
 **View Cached Routes**:
+
 ```bash
 # Summary
 aws-net> show routing-cache
@@ -428,12 +444,14 @@ aws-net> show routing-cache all              # Everything (comprehensive view)
 | **When to use** | Before exploration/demos | Before routing troubleshooting |
 
 **Recommendation**:
+
 - Use `populate_cache` for general exploration and comprehensive analysis
 - Use `create_routing_cache` specifically for routing troubleshooting and prefix searches
 
 ## 🔧 Configuration
 
 Default configuration in `pyproject.toml`:
+
 - **Timeout**: 120 seconds per command
 - **Regions**: All enabled regions
 - **Cache**: Enabled by default
@@ -457,6 +475,7 @@ pytest tests/ -v
 ## 📦 Dependencies
 
 Core dependencies:
+
 - **boto3**: AWS SDK
 - **rich**: Terminal formatting
 - **cmd2**: Shell framework
@@ -478,9 +497,10 @@ MIT License - see LICENSE file for details
 ## 📝 Changelog
 
 ### 2024-12-08
+
 - ✅ VPN tunnel inspection: show tunnels displays VgwTelemetry data with UP/DOWN status
 - ✅ VPN detail view: show detail includes tunnel summary with outside IPs and BGP routes
-- ✅ Debug logging: aws-net-runner --debug flag with comprehensive logging to /tmp/
+- ✅ Debug logging: AWS-net-runner --debug flag with comprehensive logging to /tmp/
 - ✅ Network Firewall enhancements: rule-group context with detailed rule inspection
 - ✅ Enhanced firewall commands: show firewall, show rule-groups with indexes
 - ✅ STATELESS rules: Complete display with ports, protocols, actions
@@ -489,21 +509,23 @@ MIT License - see LICENSE file for details
 - ✅ Persistent routing cache with SQLite (save/load commands)
 - ✅ Enhanced routing cache display: vpc, transit-gateway, cloud-wan filters
 - ✅ Terminal width detection for proper Rich table rendering
-- ✅ aws-net-runner tool for programmatic shell execution
+- ✅ AWS-net-runner tool for programmatic shell execution
 
 ### 2024-12-05
+
 - ✅ ELB commands implementation (listeners, targets, health)
 - ✅ VPN context commands (detail, tunnels)
 - ✅ Firewall policy command
 - ✅ Core-network commands registration fix
 - ✅ Direct resource selection without show command
 - ✅ Automated issue resolution workflow
-- ✅ Consolidated CLI to aws-net-shell only
+- ✅ Consolidated CLI to AWS-net-shell only
 - ✅ Multi-level context prompt fix
 - ✅ Comprehensive testing framework with pexpect integration
 - ✅ Graph-based command testing
 
 ### 2024-12-02
+
 - ✅ Comprehensive command graph with context navigation
 - ✅ Dynamic command discovery (78+ commands)
 - ✅ Command graph Mermaid diagrams

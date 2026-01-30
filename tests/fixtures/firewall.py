@@ -218,9 +218,13 @@ RULE_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                             "RuleDefinition": {
                                 "MatchAttributes": {
                                     "Sources": [{"AddressDefinition": "10.0.0.0/16"}],
-                                    "Destinations": [{"AddressDefinition": "0.0.0.0/0"}],
+                                    "Destinations": [
+                                        {"AddressDefinition": "0.0.0.0/0"}
+                                    ],
                                     "SourcePorts": [{"FromPort": 0, "ToPort": 65535}],
-                                    "DestinationPorts": [{"FromPort": 443, "ToPort": 443}],
+                                    "DestinationPorts": [
+                                        {"FromPort": 443, "ToPort": 443}
+                                    ],
                                     "Protocols": [6],
                                 },
                                 "Actions": ["aws:pass"],
@@ -231,9 +235,13 @@ RULE_GROUP_FIXTURES: dict[str, dict[str, Any]] = {
                             "RuleDefinition": {
                                 "MatchAttributes": {
                                     "Sources": [{"AddressDefinition": "10.0.0.0/16"}],
-                                    "Destinations": [{"AddressDefinition": "0.0.0.0/0"}],
+                                    "Destinations": [
+                                        {"AddressDefinition": "0.0.0.0/0"}
+                                    ],
                                     "SourcePorts": [{"FromPort": 0, "ToPort": 65535}],
-                                    "DestinationPorts": [{"FromPort": 80, "ToPort": 80}],
+                                    "DestinationPorts": [
+                                        {"FromPort": 80, "ToPort": 80}
+                                    ],
                                     "Protocols": [6],
                                 },
                                 "Actions": ["aws:pass"],
@@ -566,6 +574,4 @@ def get_rule_group_by_arn(rule_group_arn: str) -> dict[str, Any] | None:
 
 def get_firewalls_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
     """Get all firewalls in a VPC."""
-    return [
-        fw for fw in NETWORK_FIREWALL_FIXTURES.values() if fw["VpcId"] == vpc_id
-    ]
+    return [fw for fw in NETWORK_FIREWALL_FIXTURES.values() if fw["VpcId"] == vpc_id]

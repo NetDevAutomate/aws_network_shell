@@ -539,9 +539,7 @@ def get_endpoints_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
         List of endpoints in the VPC
     """
     return [
-        ep
-        for ep in CLIENT_VPN_ENDPOINT_FIXTURES.values()
-        if ep.get("VpcId") == vpc_id
+        ep for ep in CLIENT_VPN_ENDPOINT_FIXTURES.values() if ep.get("VpcId") == vpc_id
     ]
 
 

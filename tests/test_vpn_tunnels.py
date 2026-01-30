@@ -148,9 +148,9 @@ if __name__ == "__main__":
     total = len(results)
     passed = sum(results)
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"Results: {passed}/{total} tests passed")
     print(f"BINARY: {'✅ PASS' if all_passed else '❌ FAIL'}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     sys.exit(0 if all_passed else 1)

@@ -603,7 +603,7 @@ class CommandGraph:
 
     def find_command_path(self, command: str) -> list[dict]:
         """Find all paths to reach a command.
-        
+
         Returns list of dicts with:
         - path: list of commands to reach the target
         - context: the context where command is available
@@ -611,44 +611,48 @@ class CommandGraph:
         """
         results = []
         command_lower = command.lower().strip()
-        
+
         # Search all nodes for matching commands
         for node_id, node in self.nodes.items():
             node_name_lower = node.name.lower()
-            
+
             # Match by full name or partial
             if command_lower == node_name_lower or command_lower in node_name_lower:
                 path_info = self._build_path_to_node(node)
                 if path_info:
                     results.append(path_info)
-        
+
         return results
 
     def _build_path_to_node(self, target_node: CommandNode) -> Optional[dict]:
         """Build the path from root to a target node."""
         if target_node.node_type == NodeType.ROOT:
             return None
-            
+
         # Find path by traversing from root
         path = []
-        
+
         def find_path(node: CommandNode, current_path: list) -> bool:
             if node.id == target_node.id:
                 path.extend(current_path + [node.name])
                 return True
             for child in node.children:
-                if find_path(child, current_path + ([node.name] if node.node_type != NodeType.ROOT else [])):
+                if find_path(
+                    child,
+                    current_path
+                    + ([node.name] if node.node_type != NodeType.ROOT else []),
+                ):
                     return True
             return False
-        
+
         find_path(self.root, [])
-        
+
         if not path:
             return None
-            
+
         # Determine if global (root level) or requires context navigation
         is_global = target_node.context is None
-        
+
         # Build prerequisite show command for context-entering sets
         prereq_show = None
         if not is_global and len(path) > 1:
@@ -659,7 +663,7 @@ class CommandGraph:
                     # Map to corresponding show command
                     show_map = {
                         "vpc": "show vpcs",
-                        "transit-gateway": "show transit_gateways", 
+                        "transit-gateway": "show transit_gateways",
                         "global-network": "show global-networks",
                         "core-network": "show core-networks",
                         "firewall": "show firewalls",
@@ -669,7 +673,7 @@ class CommandGraph:
                         "route-table": "show route-tables",
                     }
                     prereq_show = show_map.get(resource)
-        
+
         return {
             "command": target_node.name,
             "path": path,

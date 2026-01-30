@@ -294,7 +294,8 @@ def get_peering_by_id(pcx_id: str) -> dict[str, Any] | None:
 def get_active_peerings() -> list[dict[str, Any]]:
     """Get all active VPC peering connections."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["Status"]["Code"] == "active"
     ]
 
@@ -305,15 +306,15 @@ def get_peerings_by_status(status: str) -> list[dict[str, Any]]:
     Valid statuses: active, pending-acceptance, provisioning, failed, deleting, deleted
     """
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
-        if pcx["Status"]["Code"] == status
+        pcx for pcx in VPC_PEERING_FIXTURES.values() if pcx["Status"]["Code"] == status
     ]
 
 
 def get_peerings_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
     """Get all VPC peering connections for a specific VPC (requester or accepter)."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["RequesterVpcInfo"]["VpcId"] == vpc_id
         or pcx["AccepterVpcInfo"]["VpcId"] == vpc_id
     ]
@@ -322,7 +323,8 @@ def get_peerings_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
 def get_intra_region_peerings(region: str) -> list[dict[str, Any]]:
     """Get intra-region VPC peering connections."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["RequesterVpcInfo"]["Region"] == region
         and pcx["AccepterVpcInfo"]["Region"] == region
     ]
@@ -331,7 +333,8 @@ def get_intra_region_peerings(region: str) -> list[dict[str, Any]]:
 def get_cross_region_peerings() -> list[dict[str, Any]]:
     """Get cross-region VPC peering connections."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["RequesterVpcInfo"]["Region"] != pcx["AccepterVpcInfo"]["Region"]
     ]
 
@@ -339,7 +342,8 @@ def get_cross_region_peerings() -> list[dict[str, Any]]:
 def get_cross_account_peerings() -> list[dict[str, Any]]:
     """Get cross-account VPC peering connections."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["RequesterVpcInfo"]["OwnerId"] != pcx["AccepterVpcInfo"]["OwnerId"]
     ]
 
@@ -347,16 +351,22 @@ def get_cross_account_peerings() -> list[dict[str, Any]]:
 def get_peerings_with_dns_resolution() -> list[dict[str, Any]]:
     """Get VPC peering connections with DNS resolution enabled."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
-        if (pcx["RequesterVpcInfo"]["PeeringOptions"]["AllowDnsResolutionFromRemoteVpc"]
-            or pcx["AccepterVpcInfo"]["PeeringOptions"]["AllowDnsResolutionFromRemoteVpc"])
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
+        if (
+            pcx["RequesterVpcInfo"]["PeeringOptions"]["AllowDnsResolutionFromRemoteVpc"]
+            or pcx["AccepterVpcInfo"]["PeeringOptions"][
+                "AllowDnsResolutionFromRemoteVpc"
+            ]
+        )
     ]
 
 
 def get_peerings_by_owner(owner_id: str) -> list[dict[str, Any]]:
     """Get VPC peering connections where account is requester or accepter."""
     return [
-        pcx for pcx in VPC_PEERING_FIXTURES.values()
+        pcx
+        for pcx in VPC_PEERING_FIXTURES.values()
         if pcx["RequesterVpcInfo"]["OwnerId"] == owner_id
         or pcx["AccepterVpcInfo"]["OwnerId"] == owner_id
     ]

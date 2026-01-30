@@ -1,7 +1,8 @@
 """Utility command handlers (trace, find_ip, run, cache, write)."""
 
-from rich.console import Console
 import boto3
+from rich.console import Console
+from rich.table import Table
 
 console = Console()
 

@@ -1,0 +1,8 @@
+# CODEOWNERS file
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Each line is a file pattern followed by one or more owners.
+# Order matters: later patterns override earlier ones.
+# Owners are notified when matching files are changed.
+#
+# Update the GitHub username below to match the repository owner/maintainer.

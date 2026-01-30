@@ -1,23 +1,23 @@
 {
-  "name": "catppuccin-mocha-vibrant",
-  "description": "Catppuccin Mocha with more vibrant, saturated colors for dark terminals",
   "author": "aws-network-shell",
   "colors": {
-    "root": "#89b4fa",
-    "global-network": "#cba6f7",
     "core-network": "#f5c2e7",
-    "route-table": "#94e2d5",
-    "vpc": "#a6e3a1",
-    "transit-gateway": "#fab387",
-    "firewall": "#f38ba8",
-    "elb": "#f9e2af",
-    "vpn": "#b4befe",
     "ec2-instance": "#cba6f7",
+    "elb": "#f9e2af",
+    "firewall": "#f38ba8",
+    "global-network": "#cba6f7",
     "prompt_separator": "#9399b2",
     "prompt_text": "#89b4fa",
-    "table_header": "#cba6f7",
+    "root": "#89b4fa",
+    "route-table": "#94e2d5",
     "table_border": "#6c7086",
+    "table_header": "#cba6f7",
+    "table_row_even": "#313244",
     "table_row_odd": "#45475a",
-    "table_row_even": "#313244"
-  }
+    "transit-gateway": "#fab387",
+    "vpc": "#a6e3a1",
+    "vpn": "#b4befe"
+  },
+  "description": "Catppuccin Mocha with more vibrant, saturated colors for dark terminals",
+  "name": "catppuccin-mocha-vibrant"
 }

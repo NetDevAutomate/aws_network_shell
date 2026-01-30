@@ -399,10 +399,16 @@ class AWSNetShell(
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='AWS Network Tools Interactive Shell')
-    parser.add_argument('--profile', '-p', help='AWS profile to use')
-    parser.add_argument('--no-cache', action='store_true', help='Disable caching')
-    parser.add_argument('--format', choices=['table', 'json', 'yaml'], default='table', help='Output format')
+
+    parser = argparse.ArgumentParser(description="AWS Network Tools Interactive Shell")
+    parser.add_argument("--profile", "-p", help="AWS profile to use")
+    parser.add_argument("--no-cache", action="store_true", help="Disable caching")
+    parser.add_argument(
+        "--format",
+        choices=["table", "json", "yaml"],
+        default="table",
+        help="Output format",
+    )
 
     args, unknown = parser.parse_known_args()
 

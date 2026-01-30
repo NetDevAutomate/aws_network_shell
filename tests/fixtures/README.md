@@ -5,27 +5,33 @@ High-quality mock data for comprehensive testing without AWS resource deployment
 ## 📁 Available Fixtures
 
 ### Core Network Resources
+
 - **`vpc.py`** - VPCs, Subnets, Route Tables, Security Groups, NACLs
 - **`tgw.py`** - Transit Gateways, Attachments, Route Tables, Peerings
 - **`cloudwan.py`** - Core Networks, Segments, Attachments, Policies, Routes
 - **`cloudwan_connect.py`** - Connect Peers, BGP Sessions, GRE Tunnels
 
 ### Compute & Network Interfaces
+
 - **`ec2.py`** - EC2 Instances, ENIs (including Lambda, RDS, ALB ENIs)
 - **`elb.py`** - Application/Network Load Balancers, Target Groups, Listeners, Health Checks
 
 ### Hybrid Connectivity
+
 - **`vpn.py`** - Site-to-Site VPN, Customer Gateways, VPN Gateways, Direct Connect
 - **`client_vpn.py`** - Client VPN Endpoints, Routes, Authorization Rules
 
 ### Gateway Resources
+
 - **`gateways.py`** - Internet Gateways, NAT Gateways, Elastic IPs, Egress-only IGWs
 
 ### Security & Filtering
+
 - **`firewall.py`** - Network Firewalls, Policies, Rule Groups (Suricata/5-tuple/Domain)
 - **`prefix_lists.py`** - Customer-Managed and AWS-Managed Prefix Lists
 
 ### Additional Services
+
 - **`peering.py`** - VPC Peering Connections (intra-region, cross-region, cross-account)
 - **`vpc_endpoints.py`** - Interface/Gateway Endpoints, PrivateLink Services
 - **`route53_resolver.py`** - Resolver Endpoints, Rules, Query Logging
@@ -235,6 +241,7 @@ Network Firewall
 ## 🎯 Best Practices
 
 ### 1. **Consistent ID Patterns**
+
 ```python
 # Follow AWS ID patterns
 vpc_id = "vpc-0prod1234567890ab"      # 17 hex chars after prefix
@@ -243,6 +250,7 @@ tgw_id = "tgw-0prod12345678901"        # 17 hex chars after prefix
 ```
 
 ### 2. **Multi-Region Coverage**
+
 ```python
 # Always include 3 regions minimum
 regions = ["eu-west-1", "us-east-1", "ap-southeast-2"]
@@ -250,6 +258,7 @@ environments = ["production", "staging", "development"]
 ```
 
 ### 3. **Cross-References**
+
 ```python
 # Reference existing fixture IDs
 nat_gateway = {
@@ -262,6 +271,7 @@ nat_gateway = {
 ```
 
 ### 4. **Include All States**
+
 ```python
 # Cover operational and transitional states
 states = ["available", "pending", "deleting", "deleted", "failed"]
@@ -275,7 +285,9 @@ nat_failed = {
 ```
 
 ### 5. **Helper Functions**
+
 Every fixture file should include:
+
 - `get_*_by_id()` - Primary ID lookup
 - `get_*s_by_vpc()` - VPC-scoped queries
 - `get_*s_by_state()` - State filtering
@@ -283,6 +295,7 @@ Every fixture file should include:
 - Custom queries specific to resource type
 
 ### 6. **Docstrings**
+
 ```python
 """Get comprehensive [resource] detail with all associated resources.
 
@@ -337,18 +350,23 @@ def test_nat_gateway_has_eip():
 ## 📚 Resources for Creating Fixtures
 
 ### AWS Documentation
+
 Use AWS MCP server to read official docs:
+
 ```python
 # In Claude Code:
 # "Read AWS documentation for [resource] API using MCP server"
 ```
 
 ### Boto3 Documentation
-- https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html
-- https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/networkmanager.html
+
+- <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html>
+- <https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/networkmanager.html>
 
 ### Module Source Code
+
 Your modules are the **best reference** for expected data structure:
+
 - `src/aws_network_tools/modules/[resource].py`
 - Look for `describe_*` boto3 API calls
 - Check what fields are accessed in display/processing code
@@ -381,12 +399,14 @@ done
 ## 🎓 Learning Resources
 
 ### Understanding AWS API Responses
+
 1. **AWS CLI with --debug**: See raw API responses
 2. **AWS MCP Server**: Fetch real resource details
 3. **boto3 documentation**: Official API reference
 4. **Module code**: Your own code shows expected structure
 
 ### Creating Realistic Test Data
+
 1. **Use realistic CIDR blocks**: RFC1918 private ranges
 2. **Follow naming conventions**: Environment-tier-region-az pattern
 3. **Include tags**: Name, Environment, ManagedBy, Purpose
@@ -394,7 +414,9 @@ done
 5. **Include failure cases**: Test error handling paths
 
 ### Cross-Reference Validation
+
 Run this check to ensure fixture integrity:
+
 ```python
 from tests.fixtures import get_all_gateways_by_vpc, VPC_FIXTURES
 

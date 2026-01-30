@@ -8,6 +8,7 @@ This document shows the command hierarchy using multiple smaller, readable diagr
 ## Commands Overview
 
 ### Cache Management
+
 - `clear_cache` - Clear all cached data (permanent)
 - `refresh [target|all]` - Refresh specific or all cached data
   - `refresh` - Refresh current context data
@@ -16,11 +17,13 @@ This document shows the command hierarchy using multiple smaller, readable diagr
   - Available in all contexts for immediate cache invalidation
 
 ### Navigation
+
 - `exit` - Go back one context level
 - `end` - Return to root level
 - `clear` - Clear the screen
 
 ### Resource Discovery
+
 - `find_ip <ip-address>` - Locate IP address across AWS resources
 - `find_prefix <cidr>` - Find routes matching CIDR prefix
 - `find_null_routes` - Show blackhole routes
@@ -167,7 +170,7 @@ graph LR
     firewall_context --> firewall_show_networking
     firewall_set_rule_group{"set rule-group → rule-group"}:::set
     firewall_context --> firewall_set_rule_group
-    
+
     rule_group_context["rule-group context"]:::context
     firewall_set_rule_group --> rule_group_context
     rule_group_show_rule_group["show rule-group"]:::show

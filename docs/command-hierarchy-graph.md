@@ -171,107 +171,120 @@ Commands available immediately after starting the shell:
 **Entry Command**: ✓ `set global-network` → enters `global-network` context
 
 **Show Commands**:
-  - ✓ `show core-networks`
-  - ✓ `show detail`
+
+- ✓ `show core-networks`
+- ✓ `show detail`
 
 ### Core Network Context
 
 **Entry Command**: ✓ `set core-network` → enters `core-network` context
 
 **Show Commands**:
-  - ✓ `show blackhole-routes`
-  - ✓ `show connect-attachments`
-  - ✓ `show connect-peers`
-  - ✓ `show detail`
-  - ✓ `show policy`
-  - ✓ `show policy-change-events`
-  - ✓ `show rib`
-  - ✓ `show route-tables`
-  - ✓ `show routes`
-  - ✓ `show segments`
+
+- ✓ `show blackhole-routes`
+- ✓ `show connect-attachments`
+- ✓ `show connect-peers`
+- ✓ `show detail`
+- ✓ `show policy`
+- ✓ `show policy-change-events`
+- ✓ `show rib`
+- ✓ `show route-tables`
+- ✓ `show routes`
+- ✓ `show segments`
 
 **Action Commands**:
-  - ✓ `find_null_routes`
-  - ✓ `find_prefix`
+
+- ✓ `find_null_routes`
+- ✓ `find_prefix`
 
 ### Route Table Context
 
 **Entry Command**: ✓ `set route-table` → enters `route-table` context
 
 **Show Commands**:
-  - ✓ `show routes`
+
+- ✓ `show routes`
 
 **Action Commands**:
-  - ✓ `find_null_routes`
-  - ✓ `find_prefix`
+
+- ✓ `find_null_routes`
+- ✓ `find_prefix`
 
 ### Vpc Context
 
 **Entry Command**: ✓ `set vpc` → enters `vpc` context
 
 **Show Commands**:
-  - ✓ `show detail`
-  - ✓ `show endpoints`
-  - ✓ `show internet-gateways`
-  - ✓ `show nacls`
-  - ✓ `show nat-gateways`
-  - ✓ `show route-tables`
-  - ✓ `show security-groups`
-  - ✓ `show subnets`
+
+- ✓ `show detail`
+- ✓ `show endpoints`
+- ✓ `show internet-gateways`
+- ✓ `show nacls`
+- ✓ `show nat-gateways`
+- ✓ `show route-tables`
+- ✓ `show security-groups`
+- ✓ `show subnets`
 
 **Action Commands**:
-  - ✓ `find_null_routes`
-  - ✓ `find_prefix`
+
+- ✓ `find_null_routes`
+- ✓ `find_prefix`
 
 ### Transit Gateway Context
 
 **Entry Command**: ✓ `set transit-gateway` → enters `transit-gateway` context
 
 **Show Commands**:
-  - ✓ `show attachments`
-  - ✓ `show detail`
-  - ✓ `show route-tables`
+
+- ✓ `show attachments`
+- ✓ `show detail`
+- ✓ `show route-tables`
 
 **Action Commands**:
-  - ✓ `find_null_routes`
-  - ✓ `find_prefix`
+
+- ✓ `find_null_routes`
+- ✓ `find_prefix`
 
 ### Firewall Context
 
 **Entry Command**: ✓ `set firewall` → enters `firewall` context
 
 **Show Commands**:
-  - ✓ `show detail`
-  - ✓ `show policy`
-  - ✓ `show rule-groups`
+
+- ✓ `show detail`
+- ✓ `show policy`
+- ✓ `show rule-groups`
 
 ### Ec2 Instance Context
 
 **Entry Command**: ✓ `set ec2-instance` → enters `ec2-instance` context
 
 **Show Commands**:
-  - ✓ `show detail`
-  - ✓ `show enis`
-  - ✓ `show routes`
-  - ✓ `show security-groups`
+
+- ✓ `show detail`
+- ✓ `show enis`
+- ✓ `show routes`
+- ✓ `show security-groups`
 
 ### Elb Context
 
 **Entry Command**: ✓ `set elb` → enters `elb` context
 
 **Show Commands**:
-  - ✓ `show detail`
-  - ✓ `show health`
-  - ✓ `show listeners`
-  - ✓ `show targets`
+
+- ✓ `show detail`
+- ✓ `show health`
+- ✓ `show listeners`
+- ✓ `show targets`
 
 ### Vpn Context
 
 **Entry Command**: ✓ `set vpn` → enters `vpn` context
 
 **Show Commands**:
-  - ✓ `show detail`
-  - ✓ `show tunnels`
+
+- ✓ `show detail`
+- ✓ `show tunnels`
 
 ## Entity Relationships
 

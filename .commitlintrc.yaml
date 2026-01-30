@@ -1,0 +1,130 @@
+---
+# Commitlint configuration
+# https://commitlint.js.org/
+#
+# Enforces Conventional Commits format:
+#   <type>(<scope>): <subject>
+#
+# Examples:
+#   feat(vpc): add subnet discovery command
+#   fix(shell): correct context prompt rendering
+#   docs(readme): update installation instructions
+#   refactor(core): extract base handler class
+#   test(vpn): add tunnel status tests
+
+extends:
+  - "@commitlint/config-conventional"
+
+rules:
+  # Type must be one of the allowed values
+  type-enum:
+    - 2
+    - always
+    - - feat      # New feature
+      - fix       # Bug fix
+      - docs      # Documentation changes
+      - style     # Code style (formatting, semicolons, etc.)
+      - refactor  # Code refactoring (no feature or fix)
+      - perf      # Performance improvement
+      - test      # Add or update tests
+      - build     # Build system or dependencies
+      - ci        # CI/CD configuration
+      - chore     # Maintenance tasks
+      - revert    # Revert a commit
+
+  # Type must be lowercase
+  type-case:
+    - 2
+    - always
+    - lower-case
+
+  # Type is required
+  type-empty:
+    - 2
+    - never
+
+  # Scope should be lowercase
+  scope-case:
+    - 2
+    - always
+    - lower-case
+
+  # Scope is optional but encouraged
+  scope-empty:
+    - 0
+    - never
+
+  # Common scopes for this project
+  scope-enum:
+    - 1
+    - always
+    - - vpc          # VPC-related commands
+      - tgw          # Transit Gateway commands
+      - firewall     # Network Firewall commands
+      - vpn          # VPN commands
+      - elb          # Load balancer commands
+      - ec2          # EC2 instance commands
+      - cloudwan     # Cloud WAN commands
+      - shell        # Shell framework
+      - core         # Core utilities
+      - cli          # CLI interface
+      - handlers     # Command handlers
+      - models       # Data models
+      - modules      # AWS service modules
+      - traceroute   # Traceroute functionality
+      - cache        # Caching system
+      - graph        # Command graph
+      - config       # Configuration
+      - tests        # Test infrastructure
+      - docs         # Documentation
+      - deps         # Dependencies
+      - ci           # CI/CD
+
+  # Subject must not be empty
+  subject-empty:
+    - 2
+    - never
+
+  # Subject should be lowercase
+  subject-case:
+    - 2
+    - always
+    - - lower-case
+      - sentence-case
+
+  # Subject should not end with period
+  subject-full-stop:
+    - 2
+    - never
+    - "."
+
+  # Header max length (type + scope + subject)
+  header-max-length:
+    - 2
+    - always
+    - 72
+
+  # Body max line length
+  body-max-line-length:
+    - 2
+    - always
+    - 100
+
+  # Footer max line length
+  footer-max-line-length:
+    - 2
+    - always
+    - 100
+
+  # Body should be separated from subject by blank line
+  body-leading-blank:
+    - 2
+    - always
+
+  # Footer should be separated from body by blank line
+  footer-leading-blank:
+    - 2
+    - always
+
+# Help message displayed on failure
+helpUrl: "https://www.conventionalcommits.org/"

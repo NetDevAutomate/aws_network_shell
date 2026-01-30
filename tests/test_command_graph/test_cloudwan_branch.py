@@ -13,7 +13,6 @@ Binary pass/fail criteria for every test.
 import pytest
 from tests.test_command_graph.conftest import (
     assert_success,
-    assert_failure,
     assert_output_contains,
     assert_context_type,
 )
@@ -70,7 +69,7 @@ class TestGlobalNetworkBranch:
         """Test: set global-network using ID (enters global-network context)."""
         # Show first to populate data
         command_runner.run("show global-networks")
-        
+
         result = command_runner.run("set global-network global-network-0prod123")
 
         assert_success(result)
@@ -150,7 +149,9 @@ class TestCoreNetworkBranch:
 
         # Step 1: Enter global-network context (show→set)
         command_runner.run("show global-networks")
-        command_runner.run("set global-network 1")  # Use #1 (global-network-0prod123 has core network)
+        command_runner.run(
+            "set global-network 1"
+        )  # Use #1 (global-network-0prod123 has core network)
 
         # Step 2: Enter core-network context (show→set)
         command_runner.run("show core-networks")
@@ -206,9 +207,7 @@ class TestCoreNetworkBranch:
         assert_output_contains(result, "core-network-0global123")
         assert_output_contains(result, "Segments")
 
-    def test_show_segments(
-        self, command_runner, isolated_shell, mock_cloudwan_client
-    ):
+    def test_show_segments(self, command_runner, isolated_shell, mock_cloudwan_client):
         """Test: show segments in core-network context."""
         # Navigate to core-network context using proper pattern
         enter_core_network_context(command_runner)

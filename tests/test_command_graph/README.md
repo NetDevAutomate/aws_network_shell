@@ -1,9 +1,11 @@
 # Command Graph Test Suite
 
 ## Overview
+
 Comprehensive test suite for AWS Network Shell command graph testing with binary pass/fail validation.
 
 ## Test Structure
+
 ```
 tests/test_command_graph/
 ├── README.md (this file)
@@ -25,6 +27,7 @@ tests/test_command_graph/
 ## Testing Methodology
 
 ### TDD Approach
+
 1. Write failing test first
 2. Run test and capture failure
 3. Implement minimal code to pass
@@ -32,12 +35,15 @@ tests/test_command_graph/
 5. Move to next test
 
 ### Binary Pass/Fail
+
 All tests use binary assertions:
+
 - `assert result.exit_code == 0` for success
 - `assert result.exit_code != 0` for expected failures
 - `assert "expected_text" in result.output` for data validation
 
 ### Mock Strategy
+
 - ALL boto3 calls are mocked
 - Use fixture data from `tests/fixtures/`
 - No real AWS API calls
@@ -60,6 +66,7 @@ pytest tests/test_command_graph/test_top_level_commands.py::test_show_version -v
 ```
 
 ## Test Coverage Goals
+
 - 100% of HIERARCHY commands tested
 - All context transitions validated
 - All show/set command combinations
@@ -67,4 +74,5 @@ pytest tests/test_command_graph/test_top_level_commands.py::test_show_version -v
 - Output format validation (table, json, yaml)
 
 ## Known Limitations
+
 See `test_coverage_report.py` for commands that cannot be tested and justification.

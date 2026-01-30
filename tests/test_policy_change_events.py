@@ -6,8 +6,8 @@ when running 'show policy-change-events' in core-network context.
 Root cause: The sorting function used `x.get("created_at") or ""` which mixed
 datetime objects (from AWS API) with empty strings (for None values).
 """
+
 from datetime import datetime
-import pytest
 
 
 class TestPolicyChangeEventsSorting:
@@ -31,7 +31,7 @@ class TestPolicyChangeEventsSorting:
 
         # This should not raise TypeError
         result = sorted(events, key=sort_key, reverse=True)
-        
+
         # Newest first, None last
         assert [e["version"] for e in result] == [3, 1, 2]
 
@@ -78,10 +78,10 @@ class TestPolicyChangeEventsSorting:
             {"version": 1, "created_at": datetime(2024, 1, 1)},
             {"version": 2, "created_at": None},  # This becomes "" with `or ""`
         ]
-        
+
         # Old buggy code: sorted(events, key=lambda x: (x.get("created_at") or ""), reverse=True)
         # This raises: TypeError: '<' not supported between instances of 'datetime.datetime' and 'str'
-        
+
         # New fixed code:
         def sort_key(x):
             val = x.get("created_at")
@@ -90,7 +90,7 @@ class TestPolicyChangeEventsSorting:
             if isinstance(val, datetime):
                 return val
             return datetime.min
-        
+
         # Should not raise TypeError
         result = sorted(events, key=sort_key, reverse=True)
         assert len(result) == 2

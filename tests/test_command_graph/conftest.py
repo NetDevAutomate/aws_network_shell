@@ -8,7 +8,7 @@ This module provides:
 """
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 from io import StringIO
 from rich.console import Console
 
@@ -16,36 +16,18 @@ from rich.console import Console
 from tests.fixtures import (
     GLOBAL_NETWORK_FIXTURES,
     VPC_FIXTURES,
-    SUBNET_FIXTURES,
-    ROUTE_TABLE_FIXTURES,
-    SECURITY_GROUP_FIXTURES,
-    NACL_FIXTURES,
     TGW_FIXTURES,
     TGW_ATTACHMENT_FIXTURES,
     TGW_ROUTE_TABLE_FIXTURES,
     CLOUDWAN_FIXTURES,
-    CLOUDWAN_ATTACHMENT_FIXTURES,
-    CLOUDWAN_SEGMENT_FIXTURES,
     EC2_INSTANCE_FIXTURES,
     ENI_FIXTURES,
     ELB_FIXTURES,
     TARGET_GROUP_FIXTURES,
     LISTENER_FIXTURES,
     VPN_CONNECTION_FIXTURES,
-    CUSTOMER_GATEWAY_FIXTURES,
-    VPN_GATEWAY_FIXTURES,
     NETWORK_FIREWALL_FIXTURES,
-    FIREWALL_POLICY_FIXTURES,
-    RULE_GROUP_FIXTURES,
-    IGW_FIXTURES,
-    NAT_GATEWAY_FIXTURES,
-    get_global_network_by_id,
     get_vpc_detail,
-    get_tgw_detail,
-    get_core_network_detail,
-    get_elb_detail,
-    get_vpn_detail,
-    get_firewall_detail,
 )
 
 
@@ -203,16 +185,30 @@ def mock_vpc_client():
             # Transform to VPCClient format
             return {
                 "id": vpc_id,
-                "name": next((t["Value"] for t in vpc_data.get("Tags", []) if t["Key"] == "Name"), vpc_id),
+                "name": next(
+                    (
+                        t["Value"]
+                        for t in vpc_data.get("Tags", [])
+                        if t["Key"] == "Name"
+                    ),
+                    vpc_id,
+                ),
                 "region": region or self._get_region_from_id(vpc_id),
                 "cidrs": [vpc_data["CidrBlock"]],
                 "azs": [],
                 "subnets": [
                     {
                         "id": s["SubnetId"],
-                        "name": next((t["Value"] for t in s.get("Tags", []) if t["Key"] == "Name"), s["SubnetId"]),
+                        "name": next(
+                            (
+                                t["Value"]
+                                for t in s.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
+                            s["SubnetId"],
+                        ),
                         "az": s["AvailabilityZone"],
-                        "cidr": s["CidrBlock"]
+                        "cidr": s["CidrBlock"],
                     }
                     for s in fixture_detail["subnets"]
                 ],
@@ -221,9 +217,18 @@ def mock_vpc_client():
                 "route_tables": [
                     {
                         "id": rt["RouteTableId"],
-                        "name": next((t["Value"] for t in rt.get("Tags", []) if t["Key"] == "Name"), rt["RouteTableId"]),
-                        "main": any(a.get("Main", False) for a in rt.get("Associations", [])),
-                        "routes": []
+                        "name": next(
+                            (
+                                t["Value"]
+                                for t in rt.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
+                            rt["RouteTableId"],
+                        ),
+                        "main": any(
+                            a.get("Main", False) for a in rt.get("Associations", [])
+                        ),
+                        "routes": [],
                     }
                     for rt in fixture_detail["route_tables"]
                 ],
@@ -231,14 +236,21 @@ def mock_vpc_client():
                     {
                         "id": sg["GroupId"],
                         "name": sg.get("GroupName", ""),
-                        "description": sg.get("Description", "")
+                        "description": sg.get("Description", ""),
                     }
                     for sg in fixture_detail["security_groups"]
                 ],
                 "nacls": [
                     {
                         "id": nacl["NetworkAclId"],
-                        "name": next((t["Value"] for t in nacl.get("Tags", []) if t["Key"] == "Name"), nacl["NetworkAclId"])
+                        "name": next(
+                            (
+                                t["Value"]
+                                for t in nacl.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
+                            nacl["NetworkAclId"],
+                        ),
                     }
                     for nacl in fixture_detail["nacls"]
                 ],
@@ -246,7 +258,7 @@ def mock_vpc_client():
                 "endpoints": [],
                 "encrypted": [],
                 "no_ingress": [],
-                "tags": {}
+                "tags": {},
             }
 
         def _get_region_from_id(self, vpc_id: str) -> str:
@@ -279,7 +291,11 @@ def mock_tgw_client():
                     {
                         "id": att["TransitGatewayAttachmentId"],
                         "name": next(
-                            (t["Value"] for t in att.get("Tags", []) if t["Key"] == "Name"),
+                            (
+                                t["Value"]
+                                for t in att.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
                             att["TransitGatewayAttachmentId"],
                         ),
                         "type": att.get("ResourceType", ""),
@@ -294,7 +310,11 @@ def mock_tgw_client():
                     {
                         "id": rt["TransitGatewayRouteTableId"],
                         "name": next(
-                            (t["Value"] for t in rt.get("Tags", []) if t["Key"] == "Name"),
+                            (
+                                t["Value"]
+                                for t in rt.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
                             rt["TransitGatewayRouteTableId"],
                         ),
                         "routes": [],
@@ -343,6 +363,7 @@ def mock_cloudwan_client():
 
         def _setup_nm_client(self):
             """Setup nm client to return fixture data."""
+
             # Mock describe_global_networks - return ALL global networks from fixtures
             def mock_describe_global_networks():
                 return {"GlobalNetworks": list(GLOBAL_NETWORK_FIXTURES.values())}
@@ -354,22 +375,30 @@ def mock_cloudwan_client():
             core_networks = []
             for cn_id, cn_data in CLOUDWAN_FIXTURES.items():
                 # Format matches what CloudWANClient.discover() returns
-                core_networks.append({
-                    "id": cn_data["CoreNetworkId"],
-                    "name": next(
-                        (t["Value"] for t in cn_data.get("Tags", []) if t["Key"] == "Name"),
-                        cn_id
-                    ),
-                    "arn": cn_data["CoreNetworkArn"],
-                    "global_network_id": cn_data["GlobalNetworkId"],
-                    "state": cn_data["State"],
-                    "regions": [edge["EdgeLocation"] for edge in cn_data.get("Edges", [])],
-                    "segments": [seg for seg in cn_data.get("Segments", [])],
-                    "nfgs": [],  # Network Function Groups - required by CloudWANDisplay.show_detail
-                    "route_tables": [],
-                    "policy": None,
-                    "core_networks": [],  # For compatibility
-                })
+                core_networks.append(
+                    {
+                        "id": cn_data["CoreNetworkId"],
+                        "name": next(
+                            (
+                                t["Value"]
+                                for t in cn_data.get("Tags", [])
+                                if t["Key"] == "Name"
+                            ),
+                            cn_id,
+                        ),
+                        "arn": cn_data["CoreNetworkArn"],
+                        "global_network_id": cn_data["GlobalNetworkId"],
+                        "state": cn_data["State"],
+                        "regions": [
+                            edge["EdgeLocation"] for edge in cn_data.get("Edges", [])
+                        ],
+                        "segments": [seg for seg in cn_data.get("Segments", [])],
+                        "nfgs": [],  # Network Function Groups - required by CloudWANDisplay.show_detail
+                        "route_tables": [],
+                        "policy": None,
+                        "core_networks": [],  # For compatibility
+                    }
+                )
             return core_networks
 
         def list_connect_peers(self, cn_id):
@@ -380,17 +409,23 @@ def mock_cloudwan_client():
             for peer_id, peer_data in CONNECT_PEER_FIXTURES.items():
                 if peer_data.get("CoreNetworkId") == cn_id:
                     config = peer_data.get("Configuration", {})
-                    peers.append({
-                        "id": peer_data["ConnectPeerId"],
-                        "name": next(
-                            (t["Value"] for t in peer_data.get("Tags", []) if t["Key"] == "Name"),
-                            peer_id
-                        ),
-                        "state": peer_data["State"],
-                        "edge_location": peer_data.get("EdgeLocation", ""),
-                        "protocol": config.get("Protocol", "GRE"),
-                        "bgp_configurations": config.get("BgpConfigurations", []),
-                    })
+                    peers.append(
+                        {
+                            "id": peer_data["ConnectPeerId"],
+                            "name": next(
+                                (
+                                    t["Value"]
+                                    for t in peer_data.get("Tags", [])
+                                    if t["Key"] == "Name"
+                                ),
+                                peer_id,
+                            ),
+                            "state": peer_data["State"],
+                            "edge_location": peer_data.get("EdgeLocation", ""),
+                            "protocol": config.get("Protocol", "GRE"),
+                            "bgp_configurations": config.get("BgpConfigurations", []),
+                        }
+                    )
             return peers
 
         def list_connect_attachments(self, cn_id):
@@ -401,17 +436,23 @@ def mock_cloudwan_client():
             for att_id, att_data in CONNECT_ATTACHMENT_FIXTURES.items():
                 if att_data.get("CoreNetworkId") == cn_id:
                     options = att_data.get("ConnectOptions", {})
-                    attachments.append({
-                        "id": att_data["AttachmentId"],
-                        "name": next(
-                            (t["Value"] for t in att_data.get("Tags", []) if t["Key"] == "Name"),
-                            att_id
-                        ),
-                        "state": att_data["State"],
-                        "edge_location": att_data.get("EdgeLocation", ""),
-                        "segment": att_data.get("SegmentName", ""),
-                        "protocol": options.get("Protocol", "GRE"),
-                    })
+                    attachments.append(
+                        {
+                            "id": att_data["AttachmentId"],
+                            "name": next(
+                                (
+                                    t["Value"]
+                                    for t in att_data.get("Tags", [])
+                                    if t["Key"] == "Name"
+                                ),
+                                att_id,
+                            ),
+                            "state": att_data["State"],
+                            "edge_location": att_data.get("EdgeLocation", ""),
+                            "segment": att_data.get("SegmentName", ""),
+                            "protocol": options.get("Protocol", "GRE"),
+                        }
+                    )
             return attachments
 
         def get_core_network_detail(self, cn_id):
@@ -421,6 +462,7 @@ def mock_cloudwan_client():
             to get full detail before entering context.
             """
             from tests.fixtures.cloudwan import get_core_network_detail
+
             return get_core_network_detail(cn_id)
 
         def get_policy_document(self, cn_id):
@@ -439,7 +481,6 @@ def mock_cloudwan_client():
 
         def list_policy_versions(self, cn_id):
             """Return policy versions for core network."""
-            from tests.fixtures.cloudwan import CLOUDWAN_POLICY_FIXTURE
 
             cn_data = CLOUDWAN_FIXTURES.get(cn_id)
             if not cn_data:
@@ -512,7 +553,11 @@ def mock_ec2_client():
             return {
                 "id": instance_data["InstanceId"],
                 "name": next(
-                    (t["Value"] for t in instance_data.get("Tags", []) if t["Key"] == "Name"),
+                    (
+                        t["Value"]
+                        for t in instance_data.get("Tags", [])
+                        if t["Key"] == "Name"
+                    ),
                     instance_id,
                 ),
                 "type": instance_data["InstanceType"],
@@ -523,7 +568,10 @@ def mock_ec2_client():
                 "subnet_id": instance_data["SubnetId"],
                 "private_ip": instance_data["PrivateIpAddress"],
                 "enis": [
-                    {"id": eni["NetworkInterfaceId"], "private_ip": eni.get("PrivateIpAddress", "")}
+                    {
+                        "id": eni["NetworkInterfaceId"],
+                        "private_ip": eni.get("PrivateIpAddress", ""),
+                    }
                     for eni in ENI_FIXTURES.values()
                     if eni.get("Attachment", {}).get("InstanceId") == instance_id
                 ],
@@ -584,12 +632,12 @@ def mock_elb_client():
             # Get associated listeners and target groups
             listeners = [
                 {
-                    "arn": l["ListenerArn"],
-                    "port": l["Port"],
-                    "protocol": l["Protocol"],
+                    "arn": lis["ListenerArn"],
+                    "port": lis["Port"],
+                    "protocol": lis["Protocol"],
                 }
-                for l in LISTENER_FIXTURES.values()
-                if l.get("LoadBalancerArn") == elb_arn
+                for lis in LISTENER_FIXTURES.values()
+                if lis.get("LoadBalancerArn") == elb_arn
             ]
 
             target_groups = [
@@ -701,11 +749,15 @@ def mock_all_clients(
     # Patch all client classes at module level
     monkeypatch.setattr("aws_network_tools.modules.vpc.VPCClient", mock_vpc_client)
     monkeypatch.setattr("aws_network_tools.modules.tgw.TGWClient", mock_tgw_client)
-    monkeypatch.setattr("aws_network_tools.modules.cloudwan.CloudWANClient", mock_cloudwan_client)
+    monkeypatch.setattr(
+        "aws_network_tools.modules.cloudwan.CloudWANClient", mock_cloudwan_client
+    )
     monkeypatch.setattr("aws_network_tools.modules.ec2.EC2Client", mock_ec2_client)
     monkeypatch.setattr("aws_network_tools.modules.elb.ELBClient", mock_elb_client)
     monkeypatch.setattr("aws_network_tools.modules.vpn.VPNClient", mock_vpn_client)
-    monkeypatch.setattr("aws_network_tools.modules.anfw.ANFWClient", mock_firewall_client)
+    monkeypatch.setattr(
+        "aws_network_tools.modules.anfw.ANFWClient", mock_firewall_client
+    )
 
     yield
 
@@ -732,21 +784,21 @@ def assert_output_contains(result: dict, text: str):
 
 def assert_output_not_contains(result: dict, text: str):
     """Assert output does not contain specific text."""
-    assert (
-        text not in result["output"]
-    ), f"Did not expect '{text}' in output:\n{result['output']}"
+    assert text not in result["output"], (
+        f"Did not expect '{text}' in output:\n{result['output']}"
+    )
 
 
 def assert_context_type(shell, expected_ctx_type: str):
     """Assert shell is in expected context."""
-    assert (
-        shell.ctx_type == expected_ctx_type
-    ), f"Expected context '{expected_ctx_type}', got '{shell.ctx_type}'"
+    assert shell.ctx_type == expected_ctx_type, (
+        f"Expected context '{expected_ctx_type}', got '{shell.ctx_type}'"
+    )
 
 
 def assert_context_stack_depth(shell, expected_depth: int):
     """Assert context stack has expected depth."""
     actual_depth = len(shell.context_stack)
-    assert (
-        actual_depth == expected_depth
-    ), f"Expected stack depth {expected_depth}, got {actual_depth}"
+    assert actual_depth == expected_depth, (
+        f"Expected stack depth {expected_depth}, got {actual_depth}"
+    )

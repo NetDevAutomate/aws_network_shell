@@ -25,11 +25,12 @@ class VPNHandlersMixin:
             selection_idx = int(val)
         except ValueError:
             selection_idx = 1
-        
+
         # Fetch full VPN details including tunnels
         from ...modules import vpn
+
         vpn_detail = vpn.VPNClient(self.profile).get_vpn_detail(v["id"], v["region"])
-        
+
         self._enter("vpn", v["id"], v.get("name", v["id"]), vpn_detail, selection_idx)
         print()  # Add blank line before next prompt
 
@@ -38,7 +39,9 @@ class VPNHandlersMixin:
         from ...modules import vpn
 
         vpns = self._cached(
-            "vpns", lambda: vpn.VPNClient(self.profile).discover(self.regions), "Fetching VPNs"
+            "vpns",
+            lambda: vpn.VPNClient(self.profile).discover(self.regions),
+            "Fetching VPNs",
         )
         if not vpns:
             console.print("[yellow]No VPN connections found[/]")

@@ -86,11 +86,15 @@ class BaseContextTestCase:
         set_cmd = self._get_set_command(resource_type)
 
         # Execute show→set sequence
-        results = self.execute_sequence([show_cmd, f'{set_cmd} {index}'])
+        results = self.execute_sequence([show_cmd, f"{set_cmd} {index}"])
 
         # Validate both commands succeeded
-        assert results[0]['exit_code'] == 0, f"show command failed: {results[0].get('output', '')}"
-        assert results[1]['exit_code'] == 0, f"set command failed: {results[1].get('output', '')}"
+        assert results[0]["exit_code"] == 0, (
+            f"show command failed: {results[0].get('output', '')}"
+        )
+        assert results[1]["exit_code"] == 0, (
+            f"set command failed: {results[1].get('output', '')}"
+        )
 
         return results[1]
 
@@ -100,19 +104,19 @@ class BaseContextTestCase:
         Handles pluralization and command name mapping.
         """
         # Special cases with underscore commands
-        if resource_type == 'transit-gateway':
-            return 'show transit_gateways'  # Underscore, not hyphen
-        elif resource_type == 'global-network':
-            return 'show global-networks'
-        elif resource_type == 'core-network':
-            return 'show core-networks'
+        if resource_type == "transit-gateway":
+            return "show transit_gateways"  # Underscore, not hyphen
+        elif resource_type == "global-network":
+            return "show global-networks"
+        elif resource_type == "core-network":
+            return "show core-networks"
 
         # Default: add 's' for plural
-        return f'show {resource_type}s'
+        return f"show {resource_type}s"
 
     def _get_set_command(self, resource_type: str) -> str:
         """Get correct set command for resource type."""
-        return f'set {resource_type}'
+        return f"set {resource_type}"
 
     def assert_context(self, expected_type: str, has_data: bool = False):
         """Assert shell is in expected context type.
@@ -154,7 +158,9 @@ class BaseContextTestCase:
             f"Expected context depth {expected_depth}, got {actual_depth}"
         )
 
-    def assert_resource_count(self, output: str, resource_name: str, min_count: int = 1):
+    def assert_resource_count(
+        self, output: str, resource_name: str, min_count: int = 1
+    ):
         """Assert output contains minimum resource count.
 
         Args:

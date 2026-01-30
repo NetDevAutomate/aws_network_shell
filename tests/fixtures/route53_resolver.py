@@ -521,23 +521,22 @@ def get_resolver_endpoint_by_id(endpoint_id: str) -> dict[str, Any] | None:
 def get_resolver_endpoints_by_vpc(vpc_id: str) -> list[dict[str, Any]]:
     """Get all resolver endpoints for a specific VPC."""
     return [
-        ep for ep in RESOLVER_ENDPOINT_FIXTURES.values()
-        if ep["HostVPCId"] == vpc_id
+        ep for ep in RESOLVER_ENDPOINT_FIXTURES.values() if ep["HostVPCId"] == vpc_id
     ]
 
 
 def get_resolver_endpoints_by_direction(direction: str) -> list[dict[str, Any]]:
     """Get resolver endpoints by direction (INBOUND or OUTBOUND)."""
     return [
-        ep for ep in RESOLVER_ENDPOINT_FIXTURES.values()
-        if ep["Direction"] == direction
+        ep for ep in RESOLVER_ENDPOINT_FIXTURES.values() if ep["Direction"] == direction
     ]
 
 
 def get_operational_endpoints() -> list[dict[str, Any]]:
     """Get all operational resolver endpoints."""
     return [
-        ep for ep in RESOLVER_ENDPOINT_FIXTURES.values()
+        ep
+        for ep in RESOLVER_ENDPOINT_FIXTURES.values()
         if ep["Status"] == "OPERATIONAL"
     ]
 
@@ -555,7 +554,8 @@ def get_resolver_rule_by_id(rule_id: str) -> dict[str, Any] | None:
 def get_resolver_rules_by_type(rule_type: str) -> list[dict[str, Any]]:
     """Get resolver rules by type (FORWARD, SYSTEM, RECURSIVE)."""
     return [
-        rule for rule in RESOLVER_RULE_FIXTURES.values()
+        rule
+        for rule in RESOLVER_RULE_FIXTURES.values()
         if rule["RuleType"] == rule_type
     ]
 
@@ -568,7 +568,8 @@ def get_forward_rules() -> list[dict[str, Any]]:
 def get_resolver_rules_by_endpoint(endpoint_id: str) -> list[dict[str, Any]]:
     """Get all resolver rules associated with an endpoint."""
     return [
-        rule for rule in RESOLVER_RULE_FIXTURES.values()
+        rule
+        for rule in RESOLVER_RULE_FIXTURES.values()
         if rule.get("ResolverEndpointId") == endpoint_id
     ]
 
@@ -599,7 +600,8 @@ def get_query_log_config_by_id(config_id: str) -> dict[str, Any] | None:
 def get_query_log_configs_by_status(status: str) -> list[dict[str, Any]]:
     """Get query logging configurations by status (CREATED, CREATING, DELETING)."""
     return [
-        config for config in QUERY_LOG_CONFIG_FIXTURES.values()
+        config
+        for config in QUERY_LOG_CONFIG_FIXTURES.values()
         if config["Status"] == status
     ]
 

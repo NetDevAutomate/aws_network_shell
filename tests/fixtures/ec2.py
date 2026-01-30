@@ -77,7 +77,7 @@ EC2_INSTANCE_FIXTURES: dict[str, dict[str, Any]] = {
         ],
         "IamInstanceProfile": {
             "Arn": "arn:aws:iam::123456789012:instance-profile/production-web-profile",
-            "Id": "AKIAIOSFODNN7EXAMPLE",
+            "Id": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         },
         "Tags": [
             {"Key": "Name", "Value": "production-web-1a"},
@@ -151,7 +151,7 @@ EC2_INSTANCE_FIXTURES: dict[str, dict[str, Any]] = {
         ],
         "IamInstanceProfile": {
             "Arn": "arn:aws:iam::123456789012:instance-profile/production-web-profile",
-            "Id": "AKIAIOSFODNN7EXAMPLE",
+            "Id": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         },
         "Tags": [
             {"Key": "Name", "Value": "production-web-1b"},
@@ -233,7 +233,7 @@ EC2_INSTANCE_FIXTURES: dict[str, dict[str, Any]] = {
         ],
         "IamInstanceProfile": {
             "Arn": "arn:aws:iam::123456789012:instance-profile/bastion-profile",
-            "Id": "AKIAIOSFODNN7EXAMPLE",
+            "Id": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         },
         "Tags": [
             {"Key": "Name", "Value": "shared-bastion-1a"},
@@ -306,7 +306,7 @@ EC2_INSTANCE_FIXTURES: dict[str, dict[str, Any]] = {
         ],
         "IamInstanceProfile": {
             "Arn": "arn:aws:iam::123456789012:instance-profile/staging-app-profile",
-            "Id": "AKIAIOSFODNN7EXAMPLE",
+            "Id": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
         },
         "Tags": [
             {"Key": "Name", "Value": "staging-app-1a"},
@@ -368,7 +368,10 @@ EC2_INSTANCE_FIXTURES: dict[str, dict[str, Any]] = {
                     "DeleteOnTermination": True,
                 },
                 "Groups": [
-                    {"GroupId": "sg-0devall12345678901", "GroupName": "development-all-sg"}
+                    {
+                        "GroupId": "sg-0devall12345678901",
+                        "GroupName": "development-all-sg",
+                    }
                 ],
                 "SourceDestCheck": True,
                 "Status": "in-use",
@@ -455,7 +458,9 @@ ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "Status": "in-use",
         "SourceDestCheck": True,
         "InterfaceType": "network_load_balancer",
-        "Groups": [{"GroupId": "sg-0prodweb123456789", "GroupName": "production-web-alb-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodweb123456789", "GroupName": "production-web-alb-sg"}
+        ],
         "Attachment": {
             "AttachmentId": "ela-attach-0alb1a123",
             "DeviceIndex": 1,
@@ -494,7 +499,9 @@ ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "Status": "in-use",
         "SourceDestCheck": True,
         "InterfaceType": "network_load_balancer",
-        "Groups": [{"GroupId": "sg-0prodweb123456789", "GroupName": "production-web-alb-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0prodweb123456789", "GroupName": "production-web-alb-sg"}
+        ],
         "Attachment": {
             "AttachmentId": "ela-attach-0alb1b123",
             "DeviceIndex": 1,
@@ -596,7 +603,9 @@ ENI_FIXTURES: dict[str, dict[str, Any]] = {
         "Status": "in-use",
         "SourceDestCheck": True,
         "InterfaceType": "interface",
-        "Groups": [{"GroupId": "sg-0proddb1234567890", "GroupName": "production-db-sg"}],
+        "Groups": [
+            {"GroupId": "sg-0proddb1234567890", "GroupName": "production-db-sg"}
+        ],
         "Attachment": {
             "AttachmentId": "eni-attach-0rds1a1234",
             "DeviceIndex": 1,

@@ -367,9 +367,7 @@ def main():
         "--resource", required=True, help="Resource type (vpc, nat-gateway, etc.)"
     )
     parser.add_argument("--count", type=int, default=1, help="Number of fixtures")
-    parser.add_argument(
-        "--from-api", action="store_true", help="Fetch from AWS API"
-    )
+    parser.add_argument("--from-api", action="store_true", help="Fetch from AWS API")
     parser.add_argument("--resource-id", help="AWS resource ID (for --from-api)")
     parser.add_argument(
         "--template-only", action="store_true", help="Generate file template only"
@@ -409,7 +407,7 @@ def main():
             # Validate
             errors = generator.validate_fixture(sanitized, args.resource)
             if errors:
-                print(f"\n⚠️  Validation warnings:")
+                print("\n⚠️  Validation warnings:")
                 for error in errors:
                     print(f"  - {error}")
             else:
