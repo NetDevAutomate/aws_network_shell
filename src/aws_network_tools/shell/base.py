@@ -176,8 +176,6 @@ HIERARCHY = {
             "firewall-rule-groups",
             "rule-groups",
             "policy",
-            "firewall-policy",
-            "firewall-networking",
         ],
         "set": ["rule-group"],
         "commands": ["show", "set", "refresh", "exit", "end"],

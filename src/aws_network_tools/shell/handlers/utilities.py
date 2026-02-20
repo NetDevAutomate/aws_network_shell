@@ -186,7 +186,7 @@ class UtilityHandlersMixin:
             console.print("[red]Usage: trace <src_ip> <dst_ip> [--no-cache][/]")
             return
         try:
-            from ..traceroute import AWSTraceroute
+            from ...traceroute import AWSTraceroute
             import asyncio
             import concurrent.futures
 

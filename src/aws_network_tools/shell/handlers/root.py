@@ -641,7 +641,7 @@ class RootHandlersMixin:
 
         # Show detailed routes if argument provided
         if arg in ["vpc", "transit-gateway", "cloud-wan", "all"]:
-            self._show_routing_cache_detail(cache, arg)
+            self._render_routing_cache_detail(cache, arg)
             return
 
         # Default: Show summary
@@ -667,7 +667,7 @@ class RootHandlersMixin:
             "\n[dim]Use 'show routing-cache vpc|transit-gateway|cloud-wan|all' for details[/]"
         )
 
-    def _show_routing_cache_detail(self, cache, filter_source):
+    def _render_routing_cache_detail(self, cache, filter_source):
         """Show detailed routing cache entries."""
         # Map user input to cache keys
         source_map = {
@@ -700,17 +700,17 @@ class RootHandlersMixin:
         cloudwan_routes = [r for r in all_routes if r.get("source") == "cloudwan"]
 
         if vpc_routes and (filter_source in ["vpc", "all"]):
-            self._show_vpc_routes_table(vpc_routes)
+            self._render_vpc_routes_table(vpc_routes)
 
         if tgw_routes and (
             filter_source in ["transit-gateway", "transitgateway", "all"]
         ):
-            self._show_transit_gateway_routes_table(tgw_routes)
+            self._render_transit_gateway_routes_table(tgw_routes)
 
         if cloudwan_routes and (filter_source in ["cloud-wan", "cloudwan", "all"]):
-            self._show_cloud_wan_routes_table(cloudwan_routes)
+            self._render_cloud_wan_routes_table(cloudwan_routes)
 
-    def _show_vpc_routes_table(self, routes):
+    def _render_vpc_routes_table(self, routes):
         """Display VPC routes in detailed table."""
         allow_truncate = self.config.get("display.allow_truncate", False)
         use_pager = self.config.get("display.pager", False)
@@ -754,7 +754,7 @@ class RootHandlersMixin:
             )
             console.print("[dim]Set 'pager: true' in config to enable pagination[/]")
 
-    def _show_transit_gateway_routes_table(self, routes):
+    def _render_transit_gateway_routes_table(self, routes):
         """Display Transit Gateway routes in detailed table."""
         # Check terminal width and config
         allow_truncate = self.config.get("display.allow_truncate", True)
@@ -792,7 +792,7 @@ class RootHandlersMixin:
         if len(routes) > 100:
             console.print(f"[dim]Showing first 100 of {len(routes)} routes[/]")
 
-    def _show_cloud_wan_routes_table(self, routes):
+    def _render_cloud_wan_routes_table(self, routes):
         """Display Cloud WAN routes in detailed table."""
         allow_truncate = self.config.get("display.allow_truncate", True)
 
