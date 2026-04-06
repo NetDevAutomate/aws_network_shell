@@ -1,16 +1,29 @@
 # AWS Network Tools - Architecture & Codemap
 
-**Version**: 1.0.0
-**Last Updated**: 2025-12-09
+**Version**: 2.0.0
+**Last Updated**: 2026-04-06
 
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
 3. [Module Breakdown](#module-breakdown)
-4. [Data Flow](#data-flow)
-5. [Core Workflows](#core-workflows)
-6. [Extension Guide](#extension-guide)
+4. [Class Diagrams](#class-diagrams)
+5. [Application Lifecycle](#application-lifecycle)
+6. [Data Flow](#data-flow)
+7. [Core Workflows](#core-workflows)
+8. [Deep-Dive: Traceroute Architecture](#deep-dive-traceroute-architecture)
+9. [Deep-Dive: Caching Architecture](#deep-dive-caching-architecture)
+10. [Deep-Dive: Context Navigation](#deep-dive-context-navigation)
+11. [Adding a New Service Module](#adding-a-new-service-module)
+12. [Extension Guide](#extension-guide)
+13. [Interfaces & Contracts](#interfaces--contracts)
+14. [Testing Architecture](#testing-architecture)
+15. [Configuration System](#configuration-system)
+16. [Performance Optimizations](#performance-optimizations)
+17. [Security Considerations](#security-considerations)
+18. [Troubleshooting & Debugging](#troubleshooting--debugging)
+19. [Appendix](#appendix)
 
 ---
 
@@ -512,6 +525,794 @@ class ServiceHandlersMixin:
 
 ---
 
+## Class Diagrams
+
+### Shell Class Hierarchy
+
+`AWSNetShell` is assembled through multiple inheritance. The nine handler mixins each own their domain's commands; `AWSNetShellBase` owns all shared state.
+
+```mermaid
+classDiagram
+    direction TB
+
+    class AWSNetShellBase {
+        +profile: str
+        +regions: list[str]
+        +no_cache: bool
+        +output_format: str
+        +context_stack: list[Context]
+        +_cache: dict
+        +theme: dict
+        +config: AppConfig
+        +ctx: Context
+        +ctx_type: str
+        +ctx_id: str
+        +hierarchy: dict
+        +_enter(ctx_type, res_id, name, data, index)
+        +_exit()
+        +_resolve(items, val) dict
+        +_update_prompt()
+        +_sync_runtime_config()
+        +precmd(line) Statement
+        +do_exit(args)
+        +do_end(args)
+        +do_refresh(args)
+        +do_clear_cache(args)
+        +do_help(args)
+        +default(stmt)
+    }
+
+    class RootHandlersMixin {
+        +_show_vpcs(args)
+        +_show_transit_gateways(args)
+        +_show_firewalls(args)
+        +_show_elbs(args)
+        +_show_vpns(args)
+        +_show_ec2_instances(args)
+        +_show_global_networks(args)
+        +_show_enis(args)
+        +_show_security_groups(args)
+        +_show_version(args)
+        +_show_config(args)
+        +_show_regions(args)
+        +do_find_prefix(args)
+        +do_find_null_routes(args)
+        +do_trace(args)
+    }
+
+    class CloudWANHandlersMixin {
+        +_show_segments(args)
+        +_show_policy_documents(args)
+        +_show_live_policy(args)
+        +_show_cloudwan_route_tables(args)
+        +_show_cloudwan_routes(args)
+        +_show_blackhole_routes(args)
+        +_show_core_networks(args)
+        +_show_connect_attachments(args)
+        +_show_rib(args)
+        +_set_global_network(val)
+        +_set_core_network(val)
+        +_set_cloudwan_route_table(val)
+        +_cloudwan_find_prefix(prefix)
+        +_cloudwan_find_null_routes()
+    }
+
+    class VPCHandlersMixin {
+        +_show_vpc_route_tables(args)
+        +_show_subnets(args)
+        +_show_nacls(args)
+        +_show_internet_gateways(args)
+        +_show_nat_gateways(args)
+        +_show_endpoints(args)
+        +_set_vpc(val)
+        +_set_vpc_route_table(val)
+        +_vpc_find_prefix(prefix)
+        +_vpc_find_null_routes()
+    }
+
+    class TGWHandlersMixin {
+        +_show_transit_gateway_route_tables(args)
+        +_show_tgw_attachments(args)
+        +_set_transit_gateway(val)
+        +_set_tgw_route_table(val)
+        +_tgw_find_prefix(prefix)
+        +_tgw_find_null_routes()
+    }
+
+    class EC2HandlersMixin {
+        +_show_ec2_security_groups(args)
+        +_show_ec2_enis(args)
+        +_show_ec2_routes(args)
+        +_set_ec2_instance(val)
+    }
+
+    class FirewallHandlersMixin {
+        +_show_firewall_rule_groups(args)
+        +_show_firewall_policy(args)
+        +_set_firewall(val)
+        +_set_rule_group(val)
+    }
+
+    class ELBHandlersMixin {
+        +_show_elb_listeners(args)
+        +_show_elb_targets(args)
+        +_show_elb_health(args)
+        +_set_elb(val)
+    }
+
+    class VPNHandlersMixin {
+        +_show_vpn_tunnels(args)
+        +_set_vpn(val)
+    }
+
+    class UtilityHandlersMixin {
+        +do_populate_cache(args)
+        +do_find_ip(args)
+        +do_write(args)
+        +do_validate_graph(args)
+        +do_export_graph(args)
+        +_show_cache(args)
+        +_show_routing_cache(args)
+        +_show_graph(args)
+        +_set_profile(val)
+        +_set_regions(val)
+        +_set_theme(val)
+        +_set_output_format(val)
+    }
+
+    class AWSNetShell {
+        +_cached(key, fetch_fn, msg) Any
+        +_emit_json_or_table(data, render_fn)
+        +_run_with_pipe(fn, pipe_filter)
+        +_watch_loop(fn, interval)
+        +do_show(args)
+        +do_set(args)
+        +do_find_prefix(args)
+        +do_find_null_routes(args)
+        +complete_show(text, line, begidx, endidx)
+        +complete_set(text, line, begidx, endidx)
+    }
+
+    AWSNetShell --|> RootHandlersMixin
+    AWSNetShell --|> CloudWANHandlersMixin
+    AWSNetShell --|> VPCHandlersMixin
+    AWSNetShell --|> TGWHandlersMixin
+    AWSNetShell --|> EC2HandlersMixin
+    AWSNetShell --|> FirewallHandlersMixin
+    AWSNetShell --|> VPNHandlersMixin
+    AWSNetShell --|> ELBHandlersMixin
+    AWSNetShell --|> UtilityHandlersMixin
+    AWSNetShell --|> AWSNetShellBase
+```
+
+### BaseClient Hierarchy
+
+Every module's Client class inherits `BaseClient`, which provides the configured boto3 session and region resolution.
+
+```mermaid
+classDiagram
+    direction TB
+
+    class BaseClient {
+        +profile: str
+        +session: boto3.Session
+        +max_workers: int
+        +client(service, region_name) boto3.Client
+        +get_regions() list[str]
+    }
+
+    class CloudWANClient {
+        +_nm_region: str
+        +nm: boto3.Client
+        +list_global_networks() list[dict]
+        +get_core_network(id) dict
+        +list_core_networks(gn_id) list[dict]
+        +list_attachments(cn_id) list[dict]
+        +get_routes(cn_id, segment, edge) list[dict]
+        +get_rib(cn_id, segment, edge) list[dict]
+        +list_policy_versions(cn_id) list[dict]
+        +get_policy_change_events(cn_id) list[dict]
+    }
+
+    class VPCClient {
+        +discover(regions) list[dict]
+        +get_vpc_detail(vpc_id, region) dict
+        +get_route_tables(vpc_id, region) list[dict]
+        +get_subnets(vpc_id, region) list[dict]
+        +get_nacls(vpc_id, region) list[dict]
+        +get_security_groups(vpc_id, region) list[dict]
+        +get_nat_gateways(vpc_id, region) list[dict]
+        +get_endpoints(vpc_id, region) list[dict]
+    }
+
+    class TGWClient {
+        +discover(regions) list[dict]
+        +get_route_tables(tgw_id, region) list[dict]
+        +get_attachments(tgw_id, region) list[dict]
+        +get_routes(rt_id, region) list[dict]
+    }
+
+    class EC2Client {
+        +discover(regions) list[dict]
+        +get_instance_detail(instance_id, region) dict
+    }
+
+    class ANFWClient {
+        +discover(regions) list[dict]
+        +get_firewall_detail(arn, region) dict
+        +get_rule_group(arn, region) dict
+        +get_policy(arn, region) dict
+    }
+
+    class ELBClient {
+        +discover(regions) list[dict]
+        +get_elb_detail(arn, region) dict
+        +get_listeners(arn, region) list[dict]
+        +get_target_groups(arn, region) list[dict]
+        +get_target_health(tg_arn, region) list[dict]
+    }
+
+    class VPNClient {
+        +discover(regions) list[dict]
+        +get_vpn_detail(vpn_id, region) dict
+        +get_tunnels(vpn_id, region) list[dict]
+    }
+
+    class ENIClient {
+        +discover(regions) list[dict]
+        +find_by_ip(ip, regions) dict
+    }
+
+    BaseClient <|-- CloudWANClient
+    BaseClient <|-- VPCClient
+    BaseClient <|-- TGWClient
+    BaseClient <|-- EC2Client
+    BaseClient <|-- ANFWClient
+    BaseClient <|-- ELBClient
+    BaseClient <|-- VPNClient
+    BaseClient <|-- ENIClient
+```
+
+### Display Hierarchy
+
+Each module's Display class wraps Rich console output. All inherit `BaseDisplay` which provides the `route_table()` helper and cache info panel.
+
+```mermaid
+classDiagram
+    direction TB
+
+    class BaseDisplay {
+        +console: Console
+        +print_cache_info(cache_info)
+        +route_table(title, routes, columns) Table
+    }
+
+    class CloudWANDisplay {
+        +show_detail(cn_data)
+        +show_segments(segments)
+        +show_routes(routes)
+        +show_policy(policy)
+        +show_attachments(attachments)
+        +show_rib(rib_entries)
+    }
+
+    class VPCDisplay {
+        +show_detail(vpc_data)
+        +show_route_tables(route_tables)
+        +show_subnets(subnets)
+        +show_nacls(nacls)
+        +show_security_groups(sgs)
+    }
+
+    class TGWDisplay {
+        +show_tgw_detail(tgw_data)
+        +show_route_tables(route_tables)
+        +show_routes(routes)
+        +show_attachments(attachments)
+    }
+
+    class ANFWDisplay {
+        +show_firewall_detail(fw_data)
+        +show_rule_group(rule_group)
+        +show_policy(policy)
+    }
+
+    class ELBDisplay {
+        +show_elb_detail(elb_data)
+        +show_listeners(listeners)
+        +show_target_groups(tgs)
+        +show_target_health(health)
+    }
+
+    class VPNDisplay {
+        +show_vpn_detail(vpn_data)
+        +show_tunnels(tunnels)
+    }
+
+    class ENIDisplay {
+        +show_enis(enis)
+        +show_eni_detail(eni)
+    }
+
+    BaseDisplay <|-- CloudWANDisplay
+    BaseDisplay <|-- VPCDisplay
+    BaseDisplay <|-- TGWDisplay
+    BaseDisplay <|-- ANFWDisplay
+    BaseDisplay <|-- ELBDisplay
+    BaseDisplay <|-- VPNDisplay
+    BaseDisplay <|-- ENIDisplay
+```
+
+### Model Hierarchy
+
+Pydantic models enforce ID format validation at construction time via `field_validator`. All models use `ConfigDict(extra="allow")` for forward-compatible AWS API responses.
+
+```mermaid
+classDiagram
+    direction TB
+
+    class AWSResource {
+        +id: str
+        +name: Optional[str]
+        +region: str
+        +validate_id(v) str
+        +to_dict() dict
+    }
+
+    class CIDRBlock {
+        +cidr: str
+        +validate_cidr(v) str
+    }
+
+    class VPCModel {
+        +cidr: Optional[str]
+        +cidrs: list[str]
+        +state: str
+        +is_default: bool
+        +subnets: list[SubnetModel]
+        +route_tables: list[RouteTableModel]
+        +security_groups: list[SecurityGroupModel]
+        +validate_vpc_id(v) str
+    }
+
+    class SubnetModel {
+        +cidr: str
+        +az: str
+        +public: bool
+    }
+
+    class RouteTableModel {
+        +is_main: bool
+        +subnets: list[str]
+        +routes: list[RouteModel]
+    }
+
+    class RouteModel {
+        +destination: str
+        +target: str
+        +state: Literal[active, blackhole]
+        +type: Optional[str]
+    }
+
+    class SecurityGroupModel {
+        +description: Optional[str]
+        +vpc_id: str
+        +ingress: list[dict]
+        +egress: list[dict]
+    }
+
+    class CoreNetworkModel {
+        +global_network_id: str
+        +global_network_name: Optional[str]
+        +state: str
+        +segments: list[str]
+        +regions: list[str]
+        +route_tables: list[dict]
+        +policy: Optional[dict]
+        +validate_cn_id(v) str
+    }
+
+    class SegmentModel {
+        +edge_locations: list[str]
+        +isolate_attachments: bool
+        +require_attachment_acceptance: bool
+    }
+
+    class CloudWANRouteModel {
+        +prefix: str
+        +target: str
+        +target_type: Optional[str]
+        +state: Literal[ACTIVE, BLACKHOLE]
+        +type: Optional[str]
+    }
+
+    class TGWModel {
+        +state: str
+        +asn: Optional[int]
+        +attachments: list[TGWAttachmentModel]
+        +route_tables: list[TGWRouteTableModel]
+        +validate_tgw_id(v) str
+    }
+
+    class TGWRouteTableModel {
+        +routes: list[TGWRouteModel]
+        +associations: list[str]
+        +propagations: list[str]
+    }
+
+    class TGWAttachmentModel {
+        +type: str
+        +state: str
+        +resource_id: Optional[str]
+        +resource_owner: Optional[str]
+    }
+
+    class EC2InstanceModel {
+        +type: str
+        +state: str
+        +az: str
+        +vpc_id: Optional[str]
+        +subnet_id: Optional[str]
+        +private_ip: Optional[str]
+        +enis: list[ENIModel]
+        +security_groups: list[dict]
+        +validate_instance_id(v) str
+    }
+
+    class ENIModel {
+        +vpc_id: str
+        +subnet_id: str
+        +private_ip: str
+        +public_ip: Optional[str]
+        +mac_address: Optional[str]
+        +interface_type: str
+        +instance_id: Optional[str]
+        +validate_eni_id(v) str
+    }
+
+    AWSResource <|-- VPCModel
+    AWSResource <|-- SubnetModel
+    AWSResource <|-- RouteTableModel
+    AWSResource <|-- RouteModel
+    AWSResource <|-- SecurityGroupModel
+    AWSResource <|-- CoreNetworkModel
+    AWSResource <|-- SegmentModel
+    AWSResource <|-- CloudWANRouteModel
+    AWSResource <|-- TGWModel
+    AWSResource <|-- TGWRouteTableModel
+    AWSResource <|-- TGWAttachmentModel
+    AWSResource <|-- EC2InstanceModel
+    AWSResource <|-- ENIModel
+    VPCModel *-- SubnetModel
+    VPCModel *-- RouteTableModel
+    VPCModel *-- SecurityGroupModel
+    RouteTableModel *-- RouteModel
+    TGWModel *-- TGWAttachmentModel
+    TGWModel *-- TGWRouteTableModel
+    EC2InstanceModel *-- ENIModel
+```
+
+### ModuleInterface and Implementations
+
+```mermaid
+classDiagram
+    direction TB
+
+    class ModuleInterface {
+        <<abstract>>
+        +name: str
+        +commands: dict[str,str]
+        +context_commands: dict[str,list[str]]
+        +show_commands: dict[str,list[str]]
+        +execute(shell, command, args)*
+    }
+
+    class CloudWANModule {
+        +name = "cloudwan"
+        +commands: global-network
+        +execute(shell, command, args)
+        -_enter_global_network(shell, args)
+        -_enter_core_network(shell, args)
+    }
+
+    class VPCModule {
+        +name = "vpc"
+        +commands: vpc
+        +execute(shell, command, args)
+    }
+
+    class TGWModule {
+        +name = "tgw"
+        +commands: transit-gateway
+        +execute(shell, command, args)
+    }
+
+    class ANFWModule {
+        +name = "anfw"
+        +commands: firewall
+        +execute(shell, command, args)
+    }
+
+    class ELBModule {
+        +name = "elb"
+        +commands: elb
+        +execute(shell, command, args)
+    }
+
+    class VPNModule {
+        +name = "vpn"
+        +commands: vpn
+        +execute(shell, command, args)
+    }
+
+    class ENIModule {
+        +name = "eni"
+        +commands: eni
+        +execute(shell, command, args)
+    }
+
+    ModuleInterface <|-- CloudWANModule
+    ModuleInterface <|-- VPCModule
+    ModuleInterface <|-- TGWModule
+    ModuleInterface <|-- ANFWModule
+    ModuleInterface <|-- ELBModule
+    ModuleInterface <|-- VPNModule
+    ModuleInterface <|-- ENIModule
+```
+
+---
+
+## Application Lifecycle
+
+### Startup Flow
+
+From the `main()` entry point through to the interactive loop.
+
+```mermaid
+flowchart TD
+    A([aws-net-shell invoked]) --> B[argparse: profile, no-cache, format]
+    B --> C[AWSNetShell instantiated]
+    C --> D[AWSNetShellBase.__init__]
+    D --> E[cmd2.Cmd.__init__]
+    E --> F[Load AppConfig\n~/.aws-network-tools/config.json]
+    F --> G[load_theme: catppuccin-mocha etc]
+    G --> H[RuntimeConfig.set_profile / set_regions]
+    H --> I[Hide internal cmd2 commands]
+    I --> J[_update_prompt: render aws-net> ]
+    J --> K[Apply CLI args: profile, no_cache, format]
+    K --> L[shell.cmdloop]
+    L --> M([User prompt displayed])
+
+    style A fill:#2d5a27
+    style M fill:#4a4a8a
+```
+
+### Command Lifecycle
+
+Full path from keystroke to rendered output.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant cmd2 as cmd2.Cmd
+    participant Base as AWSNetShellBase
+    participant Main as AWSNetShell
+    participant Handler as HandlerMixin
+    participant Cache as _cache dict
+    participant FileCache as Cache class
+    participant Module as ServiceClient
+    participant AWS as AWS API
+
+    U->>cmd2: Enter command text
+    cmd2->>Base: precmd(line)
+    Base->>Base: Expand alias (sh→show, ex→exit)
+    Base-->>cmd2: Expanded statement
+    cmd2->>Main: do_show(args) or do_set(args)
+
+    alt show command
+        Main->>Main: Parse opt, arg, watch, pipe
+        Main->>Main: Validate opt in hierarchy["show"]
+        Main->>Handler: _show_{opt}(arg)
+        Handler->>Cache: key in self._cache?
+        alt Memory cache hit
+            Cache-->>Handler: Cached list
+        else Memory cache miss
+            Handler->>Main: _cached(key, fetch_fn, msg)
+            Main->>Module: fetch_fn() via run_with_spinner
+            Module->>FileCache: Cache.get(current_account)
+            alt File cache hit
+                FileCache-->>Module: Cached data
+            else File cache miss
+                Module->>AWS: boto3 API call
+                AWS-->>Module: Response
+                Module->>FileCache: Cache.set(data, ttl, account_id)
+            end
+            Module-->>Main: Processed list
+            Main->>Cache: _cache[key] = data
+        end
+        Handler->>Main: _emit_json_or_table(data, render_fn)
+        Main-->>U: Table / JSON / YAML output
+    end
+
+    alt set command
+        Main->>Main: Parse opt, val
+        Main->>Main: Validate opt in hierarchy["set"]
+        Main->>Handler: _set_{opt}(val)
+        Handler->>Cache: Look up list from _cache
+        Handler->>Base: _resolve(items, val)
+        Base-->>Handler: Matched resource dict
+        Handler->>Module: get_detail(id, region)
+        Module->>AWS: Detail API call
+        AWS-->>Module: Full resource data
+        Handler->>Base: _enter(ctx_type, ref, name, data, idx)
+        Base->>Base: context_stack.append(Context)
+        Base->>Base: _update_prompt()
+        Base-->>U: New prompt rendered
+    end
+
+    Note over Base: postcmd hooks run after every command
+```
+
+### Session Lifecycle
+
+State changes that affect the whole session rather than a single command.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Fresh: Shell starts
+
+    Fresh --> ProfileSet: set profile <name>
+    ProfileSet --> Fresh: RuntimeConfig updated\n_cache cleared
+
+    Fresh --> RegionScoped: set regions us-east-1,eu-west-1
+    RegionScoped --> Fresh: set regions (empty clears scope)
+
+    Fresh --> NoCacheMode: set no-cache on
+    NoCacheMode --> Fresh: set no-cache off
+
+    Fresh --> OutputChanged: set output-format json|yaml|table
+    OutputChanged --> Fresh: (persists for session)
+
+    Fresh --> ThemeChanged: set theme dracula|catppuccin-mocha
+    ThemeChanged --> Fresh: Prompt recoloured immediately
+
+    Fresh --> InContext: set vpc|tgw|firewall|elb|vpn|etc
+    InContext --> InContext: set route-table|rule-group\n(deeper context)
+    InContext --> Fresh: exit (pop one level)\nor end (return to root)
+```
+
+### User Context State Diagram
+
+Complete view of all navigable states and their available commands.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Root: Shell start
+
+    state Root {
+        [*] --> root_idle
+        root_idle: show vpcs|tgws|elbs|firewalls|vpns|ec2-instances|global-networks|enis|...
+        root_idle: set vpc|transit-gateway|firewall|elb|vpn|ec2-instance|global-network
+        root_idle: trace|find_ip|find_prefix|find_null_routes|populate_cache
+    }
+
+    Root --> GlobalNetwork: set global-network N
+    Root --> VPC: set vpc N
+    Root --> TransitGateway: set transit-gateway N
+    Root --> Firewall: set firewall N
+    Root --> ELB: set elb N
+    Root --> EC2Instance: set ec2-instance N
+    Root --> VPN: set vpn N
+
+    state GlobalNetwork {
+        [*] --> gn_idle
+        gn_idle: show detail|core-networks
+        gn_idle: set core-network N
+    }
+
+    GlobalNetwork --> CoreNetwork: set core-network N
+    GlobalNetwork --> Root: exit
+
+    state CoreNetwork {
+        [*] --> cn_idle
+        cn_idle: show detail|segments|routes|route-tables|blackhole-routes
+        cn_idle: show policy-documents|live-policy|connect-attachments|connect-peers|rib
+        cn_idle: set route-table N
+        cn_idle: find_prefix|find_null_routes
+    }
+
+    CoreNetwork --> CloudWANRouteTable: set route-table N
+    CoreNetwork --> GlobalNetwork: exit
+    CoreNetwork --> Root: end
+
+    state CloudWANRouteTable {
+        [*] --> cwrt_idle
+        cwrt_idle: show routes
+        cwrt_idle: find_prefix|find_null_routes
+    }
+
+    CloudWANRouteTable --> CoreNetwork: exit
+    CloudWANRouteTable --> Root: end
+
+    state VPC {
+        [*] --> vpc_idle
+        vpc_idle: show detail|route-tables|subnets|security-groups|nacls
+        vpc_idle: show internet-gateways|nat-gateways|endpoints
+        vpc_idle: set route-table N
+        vpc_idle: find_prefix|find_null_routes
+    }
+
+    VPC --> VPCRouteTable: set route-table N
+    VPC --> Root: exit
+    VPC --> Root: end
+
+    state VPCRouteTable {
+        [*] --> vpcrt_idle
+        vpcrt_idle: show routes
+        vpcrt_idle: find_prefix|find_null_routes
+    }
+
+    VPCRouteTable --> VPC: exit
+    VPCRouteTable --> Root: end
+
+    state TransitGateway {
+        [*] --> tgw_idle
+        tgw_idle: show detail|route-tables|attachments
+        tgw_idle: set route-table N
+        tgw_idle: find_prefix|find_null_routes
+    }
+
+    TransitGateway --> TGWRouteTable: set route-table N
+    TransitGateway --> Root: exit
+    TransitGateway --> Root: end
+
+    state TGWRouteTable {
+        [*] --> tgwrt_idle
+        tgwrt_idle: show routes
+        tgwrt_idle: find_prefix|find_null_routes
+    }
+
+    TGWRouteTable --> TransitGateway: exit
+    TGWRouteTable --> Root: end
+
+    state Firewall {
+        [*] --> fw_idle
+        fw_idle: show detail|firewall|rule-groups|policy
+        fw_idle: set rule-group N
+    }
+
+    Firewall --> RuleGroup: set rule-group N
+    Firewall --> Root: exit
+
+    state RuleGroup {
+        [*] --> rg_idle
+        rg_idle: show rule-group
+    }
+
+    RuleGroup --> Firewall: exit
+    RuleGroup --> Root: end
+
+    state ELB {
+        [*] --> elb_idle
+        elb_idle: show detail|listeners|targets|health
+    }
+    ELB --> Root: exit
+
+    state EC2Instance {
+        [*] --> ec2_idle
+        ec2_idle: show detail|security-groups|enis|routes
+    }
+    EC2Instance --> Root: exit
+
+    state VPN {
+        [*] --> vpn_idle
+        vpn_idle: show detail|tunnels
+    }
+    VPN --> Root: exit
+```
+
+---
+
 ## Data Flow
 
 ### Command Execution Pipeline
@@ -764,7 +1565,304 @@ sequenceDiagram
 
 ---
 
-## Core Workflows
+## Deep-Dive: Traceroute Architecture
+
+The `trace` command performs a deterministic, API-driven hop-by-hop network path analysis. Unlike ICMP traceroute, it reads AWS control-plane data: route tables, attachment configurations, and the ENI index. No packets are sent.
+
+### Component Relationships
+
+```mermaid
+graph TB
+    subgraph "Shell Layer"
+        RootHandler[RootHandlersMixin\ndo_trace]
+    end
+
+    subgraph "Traceroute Engine"
+        Engine[AWSTraceroute\ntrace src dst]
+        Discovery[TopologyDiscovery\ndiscover]
+        Topology[NetworkTopology\n- eni_index\n- route_tables\n- tgws\n- vpcs\n- cwan_attachments]
+        Staleness[StalenessChecker\nis_stale]
+        Models[Hop / TraceResult]
+    end
+
+    subgraph "Core Infrastructure"
+        FileCache[Cache class\ntopology namespace]
+    end
+
+    subgraph "AWS APIs"
+        NM[NetworkManager API]
+        EC2[EC2 API regions]
+    end
+
+    RootHandler --> Engine
+    Engine --> Discovery
+    Discovery --> Staleness
+    Staleness --> EC2
+    Discovery --> FileCache
+    Discovery --> NM
+    Discovery --> EC2
+    Discovery --> Topology
+    Engine --> Topology
+    Engine --> Models
+
+    style Engine fill:#1a4a6e
+    style Topology fill:#4a4a8a
+    style FileCache fill:#2d5a27
+```
+
+### Step-by-Step Trace Algorithm
+
+```mermaid
+flowchart TD
+    Start([trace src_ip dst_ip]) --> T1[_ensure_topology\nload or discover NetworkTopology]
+
+    T1 --> T2[_find_eni_cached src_ip\nLook up eni_index]
+    T2 --> T3[_find_eni_cached dst_ip\nLook up eni_index]
+
+    T3 --> T4{Both ENIs found?}
+    T4 -->|No| FAIL1([blocked: IP not in topology])
+    T4 -->|Yes| T5[Emit Hop 1: source ENI]
+
+    T5 --> T6[_get_route_table_cached subnet_id\nCheck topology.route_tables]
+    T6 --> T7[Emit Hop 2: source route table]
+
+    T7 --> T8[_find_best_route routes dst_ip\nLongest prefix match]
+    T8 --> T9{Route found?}
+    T9 -->|No| FAIL2([blocked: no route to dst])
+    T9 -->|Yes| T10{Route target type?}
+
+    T10 -->|local + same VPC| DIRECT[Emit Hop N: destination ENI\nreachable = True]
+    T10 -->|core_network_arn present| CW[_trace_via_cloudwan\nWalk CWAN attachments\n& segment route tables]
+    T10 -->|tgw- prefix| TGW[_trace_via_tgw\nWalk TGW route tables\n& VPC attachment]
+    T10 -->|other| FAIL3([blocked: unsupported target])
+
+    CW --> RESULT([TraceResult with hop list])
+    TGW --> RESULT
+    DIRECT --> RESULT
+
+    style Start fill:#2d5a27
+    style RESULT fill:#4a4a8a
+    style FAIL1 fill:#8b0000
+    style FAIL2 fill:#8b0000
+    style FAIL3 fill:#8b0000
+```
+
+### Topology Discovery
+
+`TopologyDiscovery.discover()` runs concurrently across all regions using a `ThreadPoolExecutor` (20 workers). It builds the `NetworkTopology` dataclass which is then serialised to the `topology` cache namespace.
+
+**Discovery sequence**:
+
+1. Fetch account ID (STS GetCallerIdentity)
+2. Enumerate enabled regions
+3. Per-region (concurrent): fetch VPCs, TGW route tables, ENIs, subnet-to-route-table mappings
+4. Fetch Cloud WAN global networks, core networks, attachments, live policy
+5. Build `eni_index`: `{ip: {eni_id, vpc_id, subnet_id, region}}` for O(1) IP lookups
+6. Serialise to `~/.cache/aws-network-tools/topology.json`
+
+**Staleness checking** (`StalenessChecker`): Before using cached topology, the engine samples up to 5 regions and compares current TGW/VPC counts against saved markers. A count change invalidates the cache and triggers a full re-discovery.
+
+---
+
+## Deep-Dive: Caching Architecture
+
+The system uses three independent cache layers. Each layer has a distinct scope and invalidation mechanism.
+
+### Three-Layer Overview
+
+```mermaid
+graph TB
+    subgraph "L1: Memory Cache"
+        direction LR
+        MC[self._cache\ndict in AWSNetShell\nSession-scoped]
+        MCKeys["Keys: vpcs, elbs, transit_gateways,\nfirewalls, global_networks, core_networks,\nenis, security_groups, route53_resolver,\npeering_connections, prefix_lists ..."]
+        MCInv[Invalidated by:\nrefresh command\nprofile switch]
+    end
+
+    subgraph "L2: File Cache"
+        direction LR
+        FC[Cache class\nJSON files per namespace\nPersists across restarts]
+        FCKeys["~/.cache/aws-network-tools/\n  cloudwan.json\n  topology.json\n  [namespace].json"]
+        FCInv[Invalidated by:\nTTL expiry (default 15min)\naccount_id mismatch\nclear_cache command]
+    end
+
+    subgraph "L3: Routing Cache"
+        direction LR
+        RC[Routing Cache\nPre-computed route tables\nAll services cross-referenced]
+        RCKeys["Built by: populate_cache command\nUsed by: find_prefix at root level\nStored via topology Cache namespace"]
+        RCInv[Invalidated by:\nmanual populate_cache\nTopology staleness check]
+    end
+
+    Handler --> MC
+    MC -->|Miss| Fetch
+    Fetch --> FC
+    FC -->|Miss| AWS[AWS API]
+    AWS --> FC
+    FC --> MC
+
+    RootFindPrefix[find_prefix at root] --> RC
+    RC -->|Miss| populate_cache
+    populate_cache --> RC
+
+    style MC fill:#1a4a6e
+    style FC fill:#4a4a8a
+    style RC fill:#6b4c9a
+```
+
+### Cache Class Internals
+
+```mermaid
+flowchart LR
+    A[Cache.get\ncurrent_account] --> B{File exists?}
+    B -->|No| MISS[Return None]
+    B -->|Yes| C{account_id matches?}
+    C -->|No| D[Cache.clear\nDelete file]
+    D --> MISS
+    C -->|Yes| E{TTL expired?}
+    E -->|Yes| MISS
+    E -->|No| HIT[Return data]
+
+    style HIT fill:#2d5a27
+    style MISS fill:#8b4513
+```
+
+**File format** (`~/.cache/aws-network-tools/{namespace}.json`):
+
+```json
+{
+  "data": { ... },
+  "cached_at": "2026-04-06T10:30:00+00:00",
+  "ttl_seconds": 900,
+  "account_id": "123456789012"
+}
+```
+
+### The `_cached()` Pattern
+
+`AWSNetShell._cached()` is the integration point between L1 and L2. Every handler uses it instead of calling modules directly:
+
+```python
+def _cached(self, key: str, fetch_fn, msg: str = "Loading..."):
+    if key not in self._cache or self.no_cache:
+        self._cache[key] = run_with_spinner(fetch_fn, msg)
+    return self._cache[key]
+```
+
+The `fetch_fn` lambda wraps the module call. The module itself may internally hit `Cache.get()` for L2. The two levels are independent: L1 stores the processed Python list; L2 stores the raw serialised API response.
+
+**Account safety detail**: `Cache.get()` accepts `current_account`. If the account ID in the file differs from the caller's account, the file is deleted before `None` is returned. This prevents stale cross-account data from surfacing silently after a `set profile` switch.
+
+### Cache Key Reference
+
+| L1 key | L2 namespace | Refresh alias |
+|---|---|---|
+| `vpcs` | (inline) | `vpc`, `vpcs` |
+| `transit_gateways` | (inline) | `tgw`, `transit-gateway` |
+| `firewalls` | (inline) | `firewall`, `firewalls` |
+| `elbs` | (inline) | `elb`, `elbs` |
+| `vpns` | (inline) | `vpn`, `vpns` |
+| `enis` | (inline) | `eni`, `enis` |
+| `global_networks` | (inline) | `global-network` |
+| `core_networks` | (inline) | `core-network` |
+| `security_groups` | (inline) | `sg`, `sgs` |
+| `ec2_instances` | (inline) | `ec2` |
+| `topology` | `topology` | `populate_cache` |
+| `cloudwan` | `cloudwan` | `refresh all` |
+
+---
+
+## Deep-Dive: Context Navigation
+
+### The HIERARCHY Dictionary
+
+`HIERARCHY` in `shell/base.py` is the single source of truth for what commands are legal in each context. It maps `context_type` (or `None` for root) to three lists:
+
+- `show`: valid subcommands after `show`
+- `set`: valid subcommands after `set`
+- `commands`: top-level commands available (shown by `?` and `do_help`)
+
+`AWSNetShellBase.hierarchy` is a property that returns `HIERARCHY[self.ctx_type]`, defaulting to `HIERARCHY[None]` at root. Both `do_show` and `do_set` in `AWSNetShell` call `self.hierarchy.get("show"|"set", [])` before dispatching to handlers, rejecting anything not in the list with a clear error message.
+
+### Context Stack Mechanics
+
+```mermaid
+flowchart LR
+    subgraph "Before: set vpc 2"
+        S1["context_stack = []"]
+    end
+
+    subgraph "After: set vpc 2"
+        S2["context_stack = [\n  Context(type='vpc',\n    ref='vpc-0abc',\n    name='prod-vpc',\n    data={...},\n    selection_index=2)\n]"]
+    end
+
+    subgraph "After: set route-table 1"
+        S3["context_stack = [\n  Context('vpc', 'vpc-0abc', ...),\n  Context('route-table', 'rtb-0xyz', ...)\n]"]
+    end
+
+    subgraph "After: exit"
+        S4["context_stack = [\n  Context('vpc', 'vpc-0abc', ...)\n]"]
+    end
+
+    subgraph "After: end"
+        S5["context_stack = []"]
+    end
+
+    S1 --> S2 --> S3 --> S4 --> S5
+```
+
+### Prompt Generation
+
+`_update_prompt()` iterates `context_stack` and renders each level with its theme colour. Two styles are supported, controlled by `config.get_prompt_style()`:
+
+**Short style** (compact, single line):
+```
+aws-net>gl:1>cn:2>
+```
+
+**Long style** (multi-line, with names):
+```
+aws-net> gl:1:prod-global-network >
+  cn:2:prod-core-network >
+    rt:1:seg-prod-us-east-1 $
+```
+
+Abbreviation mapping: `global-network` → `gl`, `core-network` → `cn`, `transit-gateway` → `tg`, `ec2-instance` → `ec`, all others use first two characters of context type.
+
+### Command Resolution Flow
+
+```mermaid
+flowchart TD
+    Input([User types command]) --> Precmd[precmd: expand alias]
+    Precmd --> Parse[cmd2 parse: verb + args]
+
+    Parse --> Verb{Verb?}
+
+    Verb -->|show| ShowValidate[Validate in hierarchy show list]
+    Verb -->|set| SetValidate[Validate in hierarchy set list]
+    Verb -->|exit| Exit[Pop context_stack\n_update_prompt]
+    Verb -->|end| End[Clear context_stack\n_update_prompt]
+    Verb -->|refresh| Refresh[Delete from _cache\nby key alias]
+    Verb -->|?| Help[_show_cmds: print hierarchy commands list]
+    Verb -->|unknown| Default[default: print Unknown command error]
+
+    ShowValidate -->|invalid| ShowError[Print valid options list]
+    ShowValidate -->|valid| ShowDispatch[getattr self _show_{opt}]
+    ShowDispatch -->|method exists| ShowRun[Execute handler method]
+    ShowDispatch -->|no method| ShowNotImpl[Print not implemented]
+
+    SetValidate -->|invalid| SetError[Print valid options list]
+    SetValidate -->|valid| SetDispatch[getattr self _set_{opt}]
+    SetDispatch -->|method exists| SetRun[Execute handler method\n→ _enter new context]
+    SetDispatch -->|no method| SetNotImpl[Print not implemented]
+
+    style Input fill:#2d5a27
+    style ShowRun fill:#4a4a8a
+    style SetRun fill:#4a4a8a
+```
+
+---
+
+## Adding a New Service Module
 
 ### Adding a New AWS Service Module
 
@@ -1612,6 +2710,6 @@ cache_mappings = {
 
 ---
 
-**Generated**: 2025-12-09
+**Generated**: 2026-04-06
 **Repository**: <https://github.com/[your-org]/aws-network-shell>
 **Documentation**: See `docs/` for command hierarchy and testing guides

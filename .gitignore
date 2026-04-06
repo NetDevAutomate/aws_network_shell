@@ -174,3 +174,7 @@ hive-mind-prompt-*.txt
 
 # Local extras folder
 **extras/
+
+# Documentation working files (brainstorms and plans)
+docs/brainstorms/
+docs/plans/
