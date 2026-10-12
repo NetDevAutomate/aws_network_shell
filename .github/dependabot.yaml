@@ -5,8 +5,15 @@
 version: 2
 
 updates:
-  # Python dependencies (pip/uv)
-  - package-ecosystem: pip
+  # Python dependencies - uv project (pyproject.toml + uv.lock)
+  #
+  # lockfile-only: Dependabot updates the pinned versions in uv.lock and never
+  # edits the ">=" floors in pyproject.toml. The floors express the minimum we
+  # support and are raised by hand; the lock is what dev/CI actually runs.
+  # Before this (pip ecosystem, no committed lock) every update was a separate
+  # PR editing one adjacent line of pyproject.toml, so each merge conflicted
+  # the rest (#14-#19, #25).
+  - package-ecosystem: uv
     directory: "/"
     schedule:
       interval: weekly
@@ -14,23 +21,24 @@ updates:
       time: "00:00"
       timezone: UTC
     open-pull-requests-limit: 10
+    versioning-strategy: lockfile-only
     commit-message:
       prefix: "chore(deps)"
     labels:
       - dependencies
       - python
     groups:
-      # Group minor and patch updates together
-      python-minor:
-        update-types:
-          - minor
-          - patch
+      # Everything except the AWS SDK lands in one PR per week.
+      # No update-types filter: with lockfile-only a major bump is still just a
+      # lock pin change, and a single PR cannot conflict with itself.
+      python-deps:
         patterns:
           - "*"
         exclude-patterns:
           - boto3
           - botocore
-      # Keep AWS SDK updates separate
+          - aiobotocore
+      # Keep AWS SDK updates separate (they release daily)
       aws-sdk:
         patterns:
           - boto3
