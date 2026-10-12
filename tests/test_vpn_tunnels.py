@@ -1,156 +1,115 @@
-"""Binary test for VPN tunnel display functionality.
+"""VPN tunnel display tests (Issue #6).
 
-Test validates that:
-1. VPN context properly loads tunnel data from AWS API
-2. show tunnels displays complete tunnel information
-3. show detail includes tunnel summary
-4. Both UP and DOWN tunnel statuses are displayed correctly
+Validates that:
+1. Entering a VPN context loads tunnel telemetry through VPNClient.get_vpn_detail
+2. Each tunnel carries outside_ip, status, status_message, accepted_routes
+3. `show tunnels` and `show detail` render UP and DOWN tunnels
 
-BINARY PASS CRITERIA:
-- VPN context data contains 'tunnels' key with list of tunnel dicts
-- Each tunnel has required fields: outside_ip, status, status_message, accepted_routes
-- show tunnels command executes without errors
-- show detail command displays tunnel count and IPs
+boto3 is mocked at the Session boundary, so the real get_vpn_detail()
+extraction code runs against tests/fixtures/vpn.py, where the first VPN has
+two UP tunnels and the second has one UP and one DOWN.
 """
 
-import sys
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+import pytest
 
 from aws_network_tools.shell.main import AWSNetShell
+from tests.fixtures import VPN_CONNECTION_FIXTURES
+from tests.fixtures.command_fixtures import _vpns_list
+
+REQUIRED_TUNNEL_FIELDS = ("outside_ip", "status", "status_message", "accepted_routes")
 
 
-def test_vpn_tunnel_data_extraction():
-    """Test that VPN context loads tunnel data from AWS API.
+def _fake_ec2_client(*_args, **_kwargs) -> MagicMock:
+    """EC2 client whose describe_vpn_connections answers from the fixtures."""
 
-    BINARY: PASS if ctx.data contains 'tunnels' list with valid tunnel dicts
-    """
-    shell = AWSNetShell()
+    def describe_vpn_connections(VpnConnectionIds=None, **_):
+        return {
+            "VpnConnections": [
+                VPN_CONNECTION_FIXTURES[v]
+                for v in VpnConnectionIds or []
+                if v in VPN_CONNECTION_FIXTURES
+            ]
+        }
 
-    # Load VPNs and enter context
-    shell.onecmd("show vpns")
-    shell.onecmd("set vpn 1")  # First VPN with UP tunnels
+    client = MagicMock()
+    client.describe_vpn_connections.side_effect = describe_vpn_connections
+    return client
 
-    # Verify tunnel data exists in context
-    assert shell.ctx_type == "vpn", "Context type must be 'vpn'"
-    assert "tunnels" in shell.ctx.data, "Context data must contain 'tunnels' key"
 
-    tunnels = shell.ctx.data["tunnels"]
-    assert isinstance(tunnels, list), "Tunnels must be a list"
-    assert len(tunnels) > 0, "Tunnels list must not be empty"
+@pytest.fixture
+def shell(capsys):
+    """Shell with VPN discovery and the boto3 session mocked."""
+    session = MagicMock()
+    session.region_name = "eu-west-1"
+    session.client.side_effect = _fake_ec2_client
 
-    # Verify tunnel structure
-    required_fields = ["outside_ip", "status", "status_message", "accepted_routes"]
+    with (
+        patch("aws_network_tools.core.base.boto3.Session", return_value=session),
+        patch(
+            "aws_network_tools.modules.vpn.VPNClient.discover",
+            return_value=_vpns_list(),
+        ),
+    ):
+        s = AWSNetShell()
+        s.no_cache = True
+        s.onecmd("show vpns")
+        capsys.readouterr()  # discard the listing
+        yield s
+        s.context_stack.clear()
+
+
+def _enter_vpn(shell, index: int):
+    shell.onecmd(f"set vpn {index}")
+    assert shell.ctx_type == "vpn", "set vpn must enter the vpn context"
+    return shell.ctx.data["tunnels"]
+
+
+def test_vpn_tunnel_data_extraction(shell):
+    """Context entry maps VgwTelemetry into tunnel dicts with the required fields."""
+    tunnels = _enter_vpn(shell, 1)
+
+    assert isinstance(tunnels, list)
+    assert len(tunnels) == 2
     for tunnel in tunnels:
-        for field in required_fields:
+        for field in REQUIRED_TUNNEL_FIELDS:
             assert field in tunnel, f"Tunnel missing required field: {field}"
-
-    print("✅ PASS: VPN tunnel data extraction")
-    return True
-
-
-def test_show_tunnels_command():
-    """Test that show tunnels command displays tunnel information.
-
-    BINARY: PASS if command executes without errors and displays tunnels
-    """
-    shell = AWSNetShell()
-
-    # Setup context
-    shell.onecmd("show vpns")
-    shell.onecmd("set vpn 1")
-
-    # Execute show tunnels
-    try:
-        shell.onecmd("show tunnels")
-        # If no exception, command executed successfully
-        print("✅ PASS: show tunnels command execution")
-        return True
-    except Exception as e:
-        print(f"❌ FAIL: show tunnels raised exception: {e}")
-        return False
+    assert tunnels[0]["outside_ip"] == "52.31.200.10"
+    assert tunnels[0]["accepted_routes"] == 2
 
 
-def test_tunnel_status_display():
-    """Test that both UP and DOWN tunnel statuses display correctly.
+def test_tunnel_status_for_up_and_down(shell):
+    """VPN 1 is fully UP; VPN 2 has a DOWN tunnel (per fixtures)."""
+    up_tunnels = _enter_vpn(shell, 1)
+    assert {t["status"] for t in up_tunnels} == {"UP"}
 
-    BINARY: PASS if both UP tunnels (VPN 1) and DOWN tunnels (VPN 2) display
-    """
-    shell = AWSNetShell()
-
-    # Test UP tunnels
-    shell.onecmd("show vpns")
-    shell.onecmd("set vpn 1")
-
-    tunnels_up = shell.ctx.data.get("tunnels", [])
-    assert len(tunnels_up) > 0, "VPN 1 must have tunnels"
-    has_up = any(t.get("status") == "UP" for t in tunnels_up)
-    assert has_up, "VPN 1 must have at least one UP tunnel"
-
-    # Exit context and test DOWN tunnels
     shell.onecmd("exit")
-    shell.onecmd("set vpn 2")
-    tunnels_down = shell.ctx.data.get("tunnels", [])
-    assert len(tunnels_down) > 0, "VPN 2 must have tunnels"
-    has_down = any(t.get("status") == "DOWN" for t in tunnels_down)
-    assert has_down, "VPN 2 must have at least one DOWN tunnel"
+    assert shell.ctx is None
 
-    print("✅ PASS: Tunnel status display for UP and DOWN")
-    return True
+    mixed_tunnels = _enter_vpn(shell, 2)
+    assert {t["status"] for t in mixed_tunnels} == {"UP", "DOWN"}
 
 
-def test_show_detail_includes_tunnels():
-    """Test that show detail command includes tunnel summary.
+def test_show_tunnels_renders_each_tunnel(shell, capsys):
+    """show tunnels prints one row per tunnel with IP and status."""
+    _enter_vpn(shell, 2)
+    shell.onecmd("show tunnels")
+    out = capsys.readouterr().out
 
-    BINARY: PASS if show detail executes and tunnel data is in context
-    """
-    shell = AWSNetShell()
-
-    shell.onecmd("show vpns")
-    shell.onecmd("set vpn 1")
-
-    # Verify tunnels are available for show detail
-    assert "tunnels" in shell.ctx.data, "Context must have tunnels for show detail"
-
-    # Execute show detail
-    try:
-        shell.onecmd("show detail")
-        print("✅ PASS: show detail includes tunnel information")
-        return True
-    except Exception as e:
-        print(f"❌ FAIL: show detail raised exception: {e}")
-        return False
+    assert "VPN Tunnels" in out
+    assert "52.31.201.20" in out
+    assert "52.31.201.21" in out
+    assert "UP" in out
+    assert "DOWN" in out
 
 
-if __name__ == "__main__":
-    tests = [
-        test_vpn_tunnel_data_extraction,
-        test_show_tunnels_command,
-        test_tunnel_status_display,
-        test_show_detail_includes_tunnels,
-    ]
+def test_show_detail_includes_tunnel_summary(shell, capsys):
+    """show detail prints the tunnel count and each tunnel's status/IP."""
+    _enter_vpn(shell, 1)
+    shell.onecmd("show detail")
+    out = capsys.readouterr().out
 
-    results = []
-    for test in tests:
-        try:
-            result = test()
-            results.append(result)
-        except AssertionError as e:
-            print(f"❌ FAIL: {test.__name__} - {e}")
-            results.append(False)
-        except Exception as e:
-            print(f"❌ ERROR: {test.__name__} - {e}")
-            results.append(False)
-
-    # Binary overall result
-    all_passed = all(results)
-    total = len(results)
-    passed = sum(results)
-
-    print(f"\n{'=' * 50}")
-    print(f"Results: {passed}/{total} tests passed")
-    print(f"BINARY: {'✅ PASS' if all_passed else '❌ FAIL'}")
-    print(f"{'=' * 50}")
-
-    sys.exit(0 if all_passed else 1)
+    assert "Tunnels (2)" in out
+    assert "52.31.200.10" in out
+    assert "52.31.200.11" in out
