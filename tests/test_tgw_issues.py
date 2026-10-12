@@ -1,12 +1,6 @@
 """TDD Tests for Transit Gateway Issue #5."""
 
-import sys
 from unittest.mock import MagicMock
-
-# Mock cmd2 before imports
-mock_cmd2 = MagicMock()
-mock_cmd2.Cmd = MagicMock
-sys.modules["cmd2"] = mock_cmd2
 
 
 class TestSetRouteTableCacheKey:

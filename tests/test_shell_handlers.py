@@ -55,10 +55,28 @@ class TestShellBase:
         shell._update_prompt()
         assert shell.prompt == "aws-net> "
 
-    def test_update_prompt_with_context(self):
+    def test_update_prompt_with_context_short_style(self):
+        """Default prompt style is short: <abbrev>:<selection index>."""
         shell = AWSNetShellBase()
+        shell._enter("vpc", "vpc-123", "my-vpc", selection_index=3)
+        assert "vp:3" in shell.prompt
+        assert "my-vpc" not in shell.prompt
+
+    def test_update_prompt_with_context_long_style(self, monkeypatch):
+        """Long style without indices shows the resource name."""
+        shell = AWSNetShellBase()
+        monkeypatch.setattr(shell.config, "get_prompt_style", lambda: "long")
+        monkeypatch.setattr(shell.config, "show_indices", lambda: False)
         shell._enter("vpc", "vpc-123", "my-vpc")
         assert "vp:my-vpc" in shell.prompt
+
+    def test_update_prompt_with_context_long_style_with_indices(self, monkeypatch):
+        """Long style with indices shows <abbrev>:<index>:<name>."""
+        shell = AWSNetShellBase()
+        monkeypatch.setattr(shell.config, "get_prompt_style", lambda: "long")
+        monkeypatch.setattr(shell.config, "show_indices", lambda: True)
+        shell._enter("vpc", "vpc-123", "my-vpc", selection_index=2)
+        assert "vp:2:my-vpc" in shell.prompt
 
     def test_enter_context(self):
         shell = AWSNetShellBase()
@@ -205,7 +223,10 @@ class TestMixinIsolation:
         assert hasattr(CloudWANHandlersMixin, "_show_core_networks")
         assert hasattr(CloudWANHandlersMixin, "_show_rib")
         assert hasattr(CloudWANHandlersMixin, "_show_segments")
-        assert hasattr(CloudWANHandlersMixin, "_show_policy")
+        # "show policy" was split into live-policy / policy-documents
+        assert hasattr(CloudWANHandlersMixin, "_show_live_policy")
+        assert hasattr(CloudWANHandlersMixin, "_show_policy_documents")
+        assert hasattr(CloudWANHandlersMixin, "_show_policy_change_events")
         assert hasattr(CloudWANHandlersMixin, "do_find_prefix")
 
     def test_vpc_mixin_methods(self):
