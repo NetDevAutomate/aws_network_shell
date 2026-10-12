@@ -17,6 +17,8 @@ from . import (
     CLOUDWAN_FIXTURES,
     EC2_INSTANCE_FIXTURES,
     ELB_FIXTURES,
+    LISTENER_FIXTURES,
+    TARGET_GROUP_FIXTURES,
     VPN_CONNECTION_FIXTURES,
     NETWORK_FIREWALL_FIXTURES,
     RULE_GROUP_FIXTURES,
@@ -99,17 +101,38 @@ def _core_networks_list():
     ]
 
 
+def _region_from_id(resource_id: str) -> str:
+    """Map a fixture ID to the region its name pattern encodes."""
+    if "prod" in resource_id:
+        return "eu-west-1"
+    if "stag" in resource_id:
+        return "us-east-1"
+    if "dev" in resource_id:
+        return "ap-southeast-2"
+    return "us-east-1"
+
+
+def _region_from_arn(arn: str) -> str:
+    """Extract the region field from an ARN."""
+    parts = arn.split(":")
+    return parts[3] if len(parts) > 3 else "us-east-1"
+
+
 def _firewalls_list():
-    """Generate firewall list."""
+    """Generate firewall list in ANFWClient.discover() format."""
     return [
         {
             "name": fw["FirewallName"],
+            "id": fw.get("FirewallId", ""),
             "arn": fw["FirewallArn"],
-            "region": "eu-west-1",
+            "region": _region_from_arn(fw["FirewallArn"]),
             "vpc_id": fw["VpcId"],
+            "subnets": [m["SubnetId"] for m in fw.get("SubnetMappings", [])],
             "status": fw.get("FirewallStatus", {}).get("Status", "READY"),
             "policy_arn": fw.get("FirewallPolicyArn", ""),
+            "policy": {},
             "rule_groups": [],
+            "logging": {},
         }
         for fw in NETWORK_FIREWALL_FIXTURES.values()
     ]
@@ -167,6 +190,213 @@ def _vpns_list():
 
 
 # =============================================================================
+# DETAIL BUILDERS - Match the dicts the real get_*_detail() methods return
+#
+# The raw fixtures are boto3 response shapes. The shell never sees those; it
+# sees the client-format dicts below (see modules/<x>.py get_*_detail), and
+# the context handlers index them by these keys. Patch get_*_detail with one
+# of these, never with the raw fixture.
+# =============================================================================
+
+
+def vpc_detail(vpc_id: str, region: str | None = None) -> dict[str, Any]:
+    """Build VPCClient.get_vpc_detail() output from the raw VPC fixtures."""
+    fixture = get_vpc_detail(vpc_id)
+    if not fixture:
+        return {}
+    vpc = fixture["vpc"]
+    return {
+        "id": vpc_id,
+        "name": get_tag_value(vpc) or vpc_id,
+        "region": region or _region_from_id(vpc_id),
+        "cidrs": [vpc["CidrBlock"]],
+        "azs": [],
+        "subnets": [
+            {
+                "id": s["SubnetId"],
+                "name": get_tag_value(s) or s["SubnetId"],
+                "az": s["AvailabilityZone"],
+                "cidr": s["CidrBlock"],
+            }
+            for s in fixture["subnets"]
+        ],
+        "igws": [],
+        "nats": [],
+        "route_tables": [
+            {
+                "id": rt["RouteTableId"],
+                "name": get_tag_value(rt) or rt["RouteTableId"],
+                "is_main": any(
+                    a.get("Main", False) for a in rt.get("Associations", [])
+                ),
+                "subnets": [
+                    a["SubnetId"]
+                    for a in rt.get("Associations", [])
+                    if a.get("SubnetId")
+                ],
+                "routes": [],
+            }
+            for rt in fixture["route_tables"]
+        ],
+        "security_groups": [
+            {
+                "id": sg["GroupId"],
+                "name": sg.get("GroupName", ""),
+                "description": sg.get("Description", ""),
+                "ingress": [
+                    {
+                        "protocol": rule.get("IpProtocol", "-1"),
+                        "ports": "all",
+                        "source": ip.get("CidrIp", "N/A"),
+                    }
+                    for rule in sg.get("IpPermissions", [])
+                    for ip in rule.get("IpRanges", [])
+                ],
+                "egress": [
+                    {
+                        "protocol": rule.get("IpProtocol", "-1"),
+                        "ports": "all",
+                        "dest": ip.get("CidrIp", "N/A"),
+                    }
+                    for rule in sg.get("IpPermissionsEgress", [])
+                    for ip in rule.get("IpRanges", [])
+                ],
+            }
+            for sg in fixture["security_groups"]
+        ],
+        "nacls": [
+            {
+                "id": nacl["NetworkAclId"],
+                "name": get_tag_value(nacl) or nacl["NetworkAclId"],
+                "is_default": nacl.get("IsDefault", False),
+                "entries": nacl.get("Entries", []),
+            }
+            for nacl in fixture["nacls"]
+        ],
+        "attachments": [],
+        "endpoints": [],
+        "encrypted": [],
+        "no_ingress": [],
+        "tags": {},
+    }
+
+
+def elb_detail(elb_arn: str, region: str | None = None) -> dict[str, Any]:
+    """Build ELBClient.get_elb_detail() output from the raw ELB fixtures."""
+    elb = ELB_FIXTURES.get(elb_arn)
+    if not elb:
+        return {}
+    return {
+        "arn": elb["LoadBalancerArn"],
+        "name": elb["LoadBalancerName"],
+        "dns_name": elb["DNSName"],
+        "type": elb["Type"],
+        "scheme": elb["Scheme"],
+        "vpc_id": elb.get("VpcId"),
+        "state": elb["State"]["Code"],
+        "azs": [az["ZoneName"] for az in elb.get("AvailabilityZones", [])],
+        "region": region or _region_from_arn(elb_arn),
+        "listeners": [
+            {
+                "arn": lis["ListenerArn"],
+                "port": lis["Port"],
+                "protocol": lis["Protocol"],
+                "ssl_certs": lis.get("Certificates", []),
+                "default_actions": [],
+                "rules": [],
+            }
+            for lis in LISTENER_FIXTURES.values()
+            if lis.get("LoadBalancerArn") == elb_arn
+        ],
+        "target_groups": [
+            {
+                "arn": tg["TargetGroupArn"],
+                "name": tg["TargetGroupName"],
+                "protocol": tg.get("Protocol"),
+                "port": tg.get("Port"),
+                "vpc_id": tg.get("VpcId"),
+                "target_type": tg.get("TargetType"),
+                "targets": [],
+            }
+            for tg in TARGET_GROUP_FIXTURES.values()
+            if elb_arn in tg.get("LoadBalancerArns", [])
+        ],
+        "target_health": [],
+    }
+
+
+def ec2_instance_detail(instance_id: str, region: str | None = None) -> dict[str, Any]:
+    """Build EC2Client.get_instance_detail() output from the raw EC2 fixtures."""
+    inst = EC2_INSTANCE_FIXTURES.get(instance_id)
+    if not inst:
+        return {}
+    az = inst.get("Placement", {}).get("AvailabilityZone", "")
+    return {
+        "id": instance_id,
+        "name": get_tag_value(inst) or instance_id,
+        "region": region or (az[:-1] if az else "us-east-1"),
+        "type": inst.get("InstanceType", ""),
+        "state": inst.get("State", {}).get("Name", ""),
+        "az": az,
+        "private_ip": inst.get("PrivateIpAddress", ""),
+        "public_ip": inst.get("PublicIpAddress", ""),
+        "vpc_id": inst.get("VpcId", ""),
+        "key_name": inst.get("KeyName", ""),
+        "launch_time": str(inst.get("LaunchTime", "")),
+        "ami_id": inst.get("ImageId", ""),
+        "enis": [
+            {
+                "id": eni["NetworkInterfaceId"],
+                "subnet_id": eni.get("SubnetId", ""),
+                "private_ip": eni.get("PrivateIpAddress", ""),
+                "public_ip": eni.get("Association", {}).get("PublicIp", ""),
+                "sg_ids": [g["GroupId"] for g in eni.get("Groups", [])],
+            }
+            for eni in inst.get("NetworkInterfaces", [])
+        ],
+        "security_groups": [
+            {
+                "id": sg["GroupId"],
+                "name": sg.get("GroupName", ""),
+                "ingress": [],
+                "egress": [],
+            }
+            for sg in inst.get("SecurityGroups", [])
+        ],
+        "subnets": [],
+        "route_tables": [],
+        "tags": {},
+    }
+
+
+def vpn_detail(vpn_id: str, region: str | None = None) -> dict[str, Any]:
+    """Build VPNClient.get_vpn_detail() output from the raw VPN fixtures."""
+    vpn = VPN_CONNECTION_FIXTURES.get(vpn_id)
+    if not vpn:
+        return {}
+    return {
+        "id": vpn_id,
+        "name": get_tag_value(vpn) or None,
+        "state": vpn.get("State"),
+        "type": vpn.get("Type"),
+        "gateway_id": vpn.get("TransitGatewayId") or vpn.get("VpnGatewayId"),
+        "customer_gw": vpn.get("CustomerGatewayId"),
+        "region": region or "eu-west-1",
+        "tunnels": [
+            {
+                "outside_ip": tel.get("OutsideIpAddress"),
+                "status": tel.get("Status"),
+                "status_message": tel.get("StatusMessage"),
+                "accepted_routes": tel.get("AcceptedRouteCount", 0),
+                "last_change": str(tel.get("LastStatusChange", "")),
+            }
+            for tel in vpn.get("VgwTelemetry", [])
+        ],
+        "options": vpn.get("Options", {}),
+    }
+
+
+# =============================================================================
 # COMMAND MOCK CONFIGURATION - Using actual Client.discover() paths
 # =============================================================================
 
@@ -207,20 +437,20 @@ COMMAND_MOCKS: dict[str, dict[str, Any]] = {
     # =========================================================================
     "vpc.show detail": {
         "mock_target": "aws_network_tools.modules.vpc.VPCClient.get_vpc_detail",
-        "fixture_data": lambda vpc_id=None: get_vpc_detail(
-            vpc_id or list(VPC_FIXTURES.keys())[0]
-        )
-        or {
-            "id": vpc_id,
-            "name": "test-vpc",
-            "region": "eu-west-1",
-            "cidr": "10.0.0.0/16",
-            "cidrs": ["10.0.0.0/16"],
-            "state": "available",
-            "route_tables": [],
-            "security_groups": [],
-            "nacls": [],
-        },
+        "fixture_data": lambda vpc_id=None: (
+            get_vpc_detail(vpc_id or list(VPC_FIXTURES.keys())[0])
+            or {
+                "id": vpc_id,
+                "name": "test-vpc",
+                "region": "eu-west-1",
+                "cidr": "10.0.0.0/16",
+                "cidrs": ["10.0.0.0/16"],
+                "state": "available",
+                "route_tables": [],
+                "security_groups": [],
+                "nacls": [],
+            }
+        ),
     },
     "vpc.show subnets": {
         "mock_target": "aws_network_tools.modules.vpc.VPCClient.get_vpc_detail",

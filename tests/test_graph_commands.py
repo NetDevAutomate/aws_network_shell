@@ -15,8 +15,11 @@ from tests.fixtures.command_fixtures import (
     _ec2_instances_list,
     _elbs_list,
     _vpns_list,
+    ec2_instance_detail,
+    elb_detail,
+    vpc_detail,
+    vpn_detail,
 )
-from tests.fixtures import get_vpc_detail
 
 
 def build_command_graph() -> dict:
@@ -131,24 +134,14 @@ class TestContextEntry:
         """Test entering VPC context."""
         vpcs = _vpcs_list()
         vpc_id = vpcs[0]["id"] if vpcs else "vpc-test123"
-        vpc_detail = get_vpc_detail(vpc_id) or {
-            "id": vpc_id,
-            "name": "test",
-            "region": "eu-west-1",
-            "cidr": "10.0.0.0/16",
-            "cidrs": ["10.0.0.0/16"],
-            "state": "available",
-            "route_tables": [],
-            "security_groups": [],
-            "nacls": [],
-        }
+        detail = vpc_detail(vpc_id)
 
         with patch(
             "aws_network_tools.modules.vpc.VPCClient.discover", return_value=vpcs
         ):
             with patch(
                 "aws_network_tools.modules.vpc.VPCClient.get_vpc_detail",
-                return_value=vpc_detail,
+                return_value=detail,
             ):
                 shell.onecmd("show vpcs")
                 result = shell.onecmd("set vpc 1")
@@ -180,35 +173,34 @@ class TestContextEntry:
     def test_ec2_context_entry(self, shell):
         """Test entering EC2 instance context."""
         instances = _ec2_instances_list()
+        detail = ec2_instance_detail(instances[0]["id"])
 
-        with patch(
-            "aws_network_tools.modules.ec2.EC2Client.discover", return_value=instances
+        with (
+            patch(
+                "aws_network_tools.modules.ec2.EC2Client.discover",
+                return_value=instances,
+            ),
+            patch(
+                "aws_network_tools.modules.ec2.EC2Client.get_instance_detail",
+                return_value=detail,
+            ),
         ):
             shell.onecmd("show ec2-instances")
             result = shell.onecmd("set ec2-instance 1")
             assert result in (None, False)
+            assert shell.ctx_type == "ec2-instance"
 
     def test_elb_context_entry(self, shell):
         """Test entering ELB context."""
         elbs = _elbs_list()
-        elb_detail = (
-            {
-                "arn": elbs[0]["arn"],
-                "name": elbs[0]["name"],
-                "type": elbs[0]["type"],
-                "listeners": [],
-                "target_groups": [],
-            }
-            if elbs
-            else {}
-        )
+        detail = elb_detail(elbs[0]["arn"])
 
         with patch(
             "aws_network_tools.modules.elb.ELBClient.discover", return_value=elbs
         ):
             with patch(
                 "aws_network_tools.modules.elb.ELBClient.get_elb_detail",
-                return_value=elb_detail,
+                return_value=detail,
             ):
                 shell.onecmd("show elbs")
                 result = shell.onecmd("set elb 1")
@@ -217,13 +209,22 @@ class TestContextEntry:
     def test_vpn_context_entry(self, shell):
         """Test entering VPN context."""
         vpns = _vpns_list()
+        detail = vpn_detail(vpns[0]["id"])
 
-        with patch(
-            "aws_network_tools.modules.vpn.VPNClient.discover", return_value=vpns
+        with (
+            patch(
+                "aws_network_tools.modules.vpn.VPNClient.discover",
+                return_value=vpns,
+            ),
+            patch(
+                "aws_network_tools.modules.vpn.VPNClient.get_vpn_detail",
+                return_value=detail,
+            ),
         ):
             shell.onecmd("show vpns")
             result = shell.onecmd("set vpn 1")
             assert result in (None, False)
+            assert shell.ctx_type == "vpn"
 
 
 class TestVPCContextCommands:
@@ -239,44 +240,7 @@ class TestVPCContextCommands:
 
         vpcs = _vpcs_list()
         vpc_id = vpcs[0]["id"] if vpcs else "vpc-test"
-        vpc_detail = get_vpc_detail(vpc_id) or {
-            "id": vpc_id,
-            "name": "test",
-            "region": "eu-west-1",
-            "cidr": "10.0.0.0/16",
-            "cidrs": ["10.0.0.0/16"],
-            "state": "available",
-            "route_tables": [
-                {
-                    "id": "rtb-1",
-                    "name": "main",
-                    "is_main": True,
-                    "routes": [],
-                    "subnets": [],
-                }
-            ],
-            "security_groups": [
-                {
-                    "id": "sg-1",
-                    "name": "default",
-                    "description": "",
-                    "ingress": [],
-                    "egress": [],
-                }
-            ],
-            "nacls": [
-                {"id": "acl-1", "name": "default", "is_default": True, "entries": []}
-            ],
-            "subnets": [
-                {
-                    "id": "subnet-1",
-                    "name": "public",
-                    "cidr": "10.0.1.0/24",
-                    "az": "eu-west-1a",
-                    "state": "available",
-                }
-            ],
-        }
+        detail = vpc_detail(vpc_id)
 
         # Start patches
         p1 = patch(
@@ -284,7 +248,7 @@ class TestVPCContextCommands:
         )
         p2 = patch(
             "aws_network_tools.modules.vpc.VPCClient.get_vpc_detail",
-            return_value=vpc_detail,
+            return_value=detail,
         )
         p1.start()
         p2.start()
@@ -292,7 +256,7 @@ class TestVPCContextCommands:
         shell.onecmd("show vpcs")
         shell.onecmd("set vpc 1")
 
-        yield shell, vpc_detail
+        yield shell, detail
 
         p1.stop()
         p2.stop()
@@ -413,14 +377,17 @@ class TestEC2ContextCommands:
         shell.no_cache = True
 
         instances = _ec2_instances_list()
-        if instances:
-            instances[0]["security_groups"] = [{"id": "sg-1", "name": "default"}]
-            instances[0]["enis"] = [{"id": "eni-1", "private_ip": "10.0.1.10"}]
+        detail = ec2_instance_detail(instances[0]["id"])
 
         p1 = patch(
             "aws_network_tools.modules.ec2.EC2Client.discover", return_value=instances
         )
+        p2 = patch(
+            "aws_network_tools.modules.ec2.EC2Client.get_instance_detail",
+            return_value=detail,
+        )
         p1.start()
+        p2.start()
 
         shell.onecmd("show ec2-instances")
         shell.onecmd("set ec2-instance 1")
@@ -428,6 +395,7 @@ class TestEC2ContextCommands:
         yield shell
 
         p1.stop()
+        p2.stop()
         shell._cache.clear()
         shell.context_stack.clear()
 
@@ -450,20 +418,14 @@ class TestELBContextCommands:
         shell.no_cache = True
 
         elbs = _elbs_list()
-        elb_detail = {
-            "arn": elbs[0]["arn"] if elbs else "arn:...",
-            "name": elbs[0]["name"] if elbs else "test-elb",
-            "type": "application",
-            "listeners": [{"port": 443, "protocol": "HTTPS"}],
-            "target_groups": [{"name": "tg-1", "targets": []}],
-        }
+        detail = elb_detail(elbs[0]["arn"])
 
         p1 = patch(
             "aws_network_tools.modules.elb.ELBClient.discover", return_value=elbs
         )
         p2 = patch(
             "aws_network_tools.modules.elb.ELBClient.get_elb_detail",
-            return_value=elb_detail,
+            return_value=detail,
         )
         p1.start()
         p2.start()
@@ -497,16 +459,17 @@ class TestVPNContextCommands:
         shell.no_cache = True
 
         vpns = _vpns_list()
-        if vpns:
-            vpns[0]["tunnels"] = [
-                {"outside_ip": "203.0.113.1", "status": "UP"},
-                {"outside_ip": "203.0.113.2", "status": "UP"},
-            ]
+        detail = vpn_detail(vpns[0]["id"])
 
         p1 = patch(
             "aws_network_tools.modules.vpn.VPNClient.discover", return_value=vpns
         )
+        p2 = patch(
+            "aws_network_tools.modules.vpn.VPNClient.get_vpn_detail",
+            return_value=detail,
+        )
         p1.start()
+        p2.start()
 
         shell.onecmd("show vpns")
         shell.onecmd("set vpn 1")
@@ -514,6 +477,7 @@ class TestVPNContextCommands:
         yield shell
 
         p1.stop()
+        p2.stop()
         shell._cache.clear()
         shell.context_stack.clear()
 

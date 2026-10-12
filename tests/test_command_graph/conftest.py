@@ -23,12 +23,10 @@ from tests.fixtures import (
     EC2_INSTANCE_FIXTURES,
     ENI_FIXTURES,
     ELB_FIXTURES,
-    TARGET_GROUP_FIXTURES,
-    LISTENER_FIXTURES,
     VPN_CONNECTION_FIXTURES,
     NETWORK_FIREWALL_FIXTURES,
-    get_vpc_detail,
 )
+from tests.fixtures.command_fixtures import elb_detail, vpc_detail
 
 
 @pytest.fixture
@@ -170,96 +168,8 @@ def mock_vpc_client():
             return vpcs
 
         def get_vpc_detail(self, vpc_id, region=None):
-            """Return detailed VPC information matching VPCClient format.
-
-            Real VPCClient returns: {id, name, region, cidrs, subnets, route_tables, ...}
-            NOT the fixture format: {vpc: {}, subnets: []}
-            """
-            # Get fixture data
-            fixture_detail = get_vpc_detail(vpc_id)
-            if not fixture_detail:
-                return {}
-
-            vpc_data = fixture_detail["vpc"]
-
-            # Transform to VPCClient format
-            return {
-                "id": vpc_id,
-                "name": next(
-                    (
-                        t["Value"]
-                        for t in vpc_data.get("Tags", [])
-                        if t["Key"] == "Name"
-                    ),
-                    vpc_id,
-                ),
-                "region": region or self._get_region_from_id(vpc_id),
-                "cidrs": [vpc_data["CidrBlock"]],
-                "azs": [],
-                "subnets": [
-                    {
-                        "id": s["SubnetId"],
-                        "name": next(
-                            (
-                                t["Value"]
-                                for t in s.get("Tags", [])
-                                if t["Key"] == "Name"
-                            ),
-                            s["SubnetId"],
-                        ),
-                        "az": s["AvailabilityZone"],
-                        "cidr": s["CidrBlock"],
-                    }
-                    for s in fixture_detail["subnets"]
-                ],
-                "igws": [],
-                "nats": [],
-                "route_tables": [
-                    {
-                        "id": rt["RouteTableId"],
-                        "name": next(
-                            (
-                                t["Value"]
-                                for t in rt.get("Tags", [])
-                                if t["Key"] == "Name"
-                            ),
-                            rt["RouteTableId"],
-                        ),
-                        "main": any(
-                            a.get("Main", False) for a in rt.get("Associations", [])
-                        ),
-                        "routes": [],
-                    }
-                    for rt in fixture_detail["route_tables"]
-                ],
-                "security_groups": [
-                    {
-                        "id": sg["GroupId"],
-                        "name": sg.get("GroupName", ""),
-                        "description": sg.get("Description", ""),
-                    }
-                    for sg in fixture_detail["security_groups"]
-                ],
-                "nacls": [
-                    {
-                        "id": nacl["NetworkAclId"],
-                        "name": next(
-                            (
-                                t["Value"]
-                                for t in nacl.get("Tags", [])
-                                if t["Key"] == "Name"
-                            ),
-                            nacl["NetworkAclId"],
-                        ),
-                    }
-                    for nacl in fixture_detail["nacls"]
-                ],
-                "attachments": [],
-                "endpoints": [],
-                "encrypted": [],
-                "no_ingress": [],
-                "tags": {},
-            }
+            """Return VPC detail in VPCClient.get_vpc_detail() format."""
+            return vpc_detail(vpc_id, region or self._get_region_from_id(vpc_id))
 
         def _get_region_from_id(self, vpc_id: str) -> str:
             """Extract region from VPC ID pattern."""
@@ -616,53 +526,8 @@ def mock_elb_client():
             return parts[3] if len(parts) > 3 else "us-east-1"
 
         def get_elb_detail(self, elb_arn, region=None):
-            """Return detailed ELB information.
-
-            Args:
-                elb_arn: ELB ARN to get details for
-                region: Optional region (ignored in mock)
-
-            Returns:
-                Dict with ELB details including listeners and target groups
-            """
-            elb_data = ELB_FIXTURES.get(elb_arn)
-            if not elb_data:
-                return {}
-
-            # Get associated listeners and target groups
-            listeners = [
-                {
-                    "arn": lis["ListenerArn"],
-                    "port": lis["Port"],
-                    "protocol": lis["Protocol"],
-                }
-                for lis in LISTENER_FIXTURES.values()
-                if lis.get("LoadBalancerArn") == elb_arn
-            ]
-
-            target_groups = [
-                {
-                    "arn": tg["TargetGroupArn"],
-                    "name": tg["TargetGroupName"],
-                    "port": tg["Port"],
-                    "protocol": tg["Protocol"],
-                }
-                for tg in TARGET_GROUP_FIXTURES.values()
-                if tg.get("LoadBalancerArns") and elb_arn in tg["LoadBalancerArns"]
-            ]
-
-            return {
-                "arn": elb_arn,
-                "name": elb_data["LoadBalancerName"],
-                "type": elb_data["Type"],
-                "scheme": elb_data["Scheme"],
-                "state": elb_data["State"]["Code"],
-                "vpc_id": elb_data["VpcId"],
-                "dns_name": elb_data["DNSName"],
-                "region": self._get_region_from_arn(elb_arn),
-                "listeners": listeners,
-                "target_groups": target_groups,
-            }
+            """Return ELB detail in ELBClient.get_elb_detail() format."""
+            return elb_detail(elb_arn, region or self._get_region_from_arn(elb_arn))
 
     return MockELBClient
 
