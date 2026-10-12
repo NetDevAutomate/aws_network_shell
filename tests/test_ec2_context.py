@@ -5,14 +5,8 @@ Root Cause: MRO places RootHandlersMixin._show_enis before EC2HandlersMixin._sho
 The fix: Root handlers should check ctx_type and skip when in specific context.
 """
 
-import sys
 from unittest.mock import MagicMock, patch
 from dataclasses import dataclass
-
-# Mock cmd2 BEFORE importing shell modules
-mock_cmd2 = MagicMock()
-mock_cmd2.Cmd = MagicMock
-sys.modules["cmd2"] = mock_cmd2
 
 
 @dataclass
