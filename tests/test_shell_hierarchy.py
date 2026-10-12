@@ -130,12 +130,20 @@ class TestContextNavigation:
         assert len(shell.context_stack) == 0
 
     def test_prompt_updates_with_context(self):
-        """Prompt must reflect current context."""
+        """Prompt must reflect current context (short style: gl:<index>)."""
         shell = AWSNetShell()
         shell._enter("global-network", "gn-123", "my-network", {})
 
-        assert "gl:" in shell.prompt
-        assert "my-network" in shell.prompt
+        assert "gl:1" in shell.prompt
+
+    def test_prompt_long_style_shows_name(self, monkeypatch):
+        """Long prompt style without indices shows the resource name."""
+        shell = AWSNetShell()
+        monkeypatch.setattr(shell.config, "get_prompt_style", lambda: "long")
+        monkeypatch.setattr(shell.config, "show_indices", lambda: False)
+        shell._enter("global-network", "gn-123", "my-network", {})
+
+        assert "gl:my-network" in shell.prompt
 
 
 class TestResolveResource:

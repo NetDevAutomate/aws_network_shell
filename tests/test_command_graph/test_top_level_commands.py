@@ -284,7 +284,8 @@ class TestTopLevelSetCommands:
         result = command_runner.run("set output-format invalid")
 
         assert_success(result, "Command executes but shows error")
-        assert_output_contains(result, "table|json|yaml")
+        assert_output_contains(result, "Invalid format: 'invalid'")
+        assert_output_contains(result, "Valid formats: json, table, yaml")
 
     def test_set_output_file(self, command_runner, isolated_shell):
         """Test: set output-file <path> - sets output file."""

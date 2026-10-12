@@ -10,16 +10,16 @@ class EC2HandlersMixin:
     """Handlers for EC2 instance context."""
 
     def _show_ec2_instances(self, _):
-        key = f"ec2-instance:{','.join(self.regions) if self.regions else 'all'}"
-        if key not in self._cache or self.no_cache:
-            from ...modules.ec2 import EC2Client
-            from ...core import run_with_spinner
+        from ...modules.ec2 import EC2Client
 
-            self._cache[key] = run_with_spinner(
-                lambda: EC2Client(self.profile).discover(self.regions or None),
-                "Fetching EC2 instances",
-            )
-        instances = self._cache.get(key, [])
+        # Plain key: _set_ec2_instance and `refresh` read "ec2_instances", and
+        # `set regions` / `set profile` already clear the whole cache, so a
+        # region-scoped key only served to hide the list from `set`.
+        instances = self._cached(
+            "ec2_instances",
+            lambda: EC2Client(self.profile).discover(self.regions or None),
+            "Fetching EC2 instances",
+        )
         if self.output_format == "json":
             self._emit_json_or_table(instances, lambda: None)
             return

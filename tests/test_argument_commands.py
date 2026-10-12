@@ -49,12 +49,11 @@ class TestArgumentRegistry:
         assert arg is not None
         assert "." in arg  # Must be an IP address
 
-    def test_reachability_has_default_arg(self):
-        """BINARY: reachability must have a default test argument."""
+    def test_removed_reachability_command_has_no_arg(self):
+        """BINARY: reachability was removed (duplicate of trace) - no test arg."""
         from aws_network_tools.shell.arguments import ArgumentRegistry
 
-        arg = ArgumentRegistry.get_test_arg("reachability")
-        assert arg is not None
+        assert ArgumentRegistry.get_test_arg("reachability") is None
 
     def test_unknown_command_returns_none(self):
         """BINARY: Unknown commands return None."""
@@ -140,7 +139,7 @@ class TestAllArgumentCommands:
         """BINARY: All argument-required commands have test args defined."""
         from aws_network_tools.shell.arguments import ArgumentRegistry
 
-        required_commands = ["find_prefix", "trace", "find_ip", "reachability"]
+        required_commands = ["find_prefix", "trace", "find_ip"]
         for cmd in required_commands:
             arg = ArgumentRegistry.get_test_arg(cmd)
             assert arg is not None, f"Missing test arg for {cmd}"
