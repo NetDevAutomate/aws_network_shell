@@ -143,8 +143,8 @@ def mock_vpc_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all VPCs as list."""
+        def discover(self, regions=None):
+            """Return all VPCs as list (regions filter accepted, ignored)."""
             vpcs = []
             for vpc_id, vpc_data in VPC_FIXTURES.items():
                 vpcs.append(
@@ -282,8 +282,8 @@ def mock_tgw_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all Transit Gateways as list."""
+        def discover(self, regions=None):
+            """Return all Transit Gateways as list (regions filter accepted, ignored)."""
             tgws = []
             for tgw_id, tgw_data in TGW_FIXTURES.items():
                 # Get attachments for this TGW
@@ -506,11 +506,11 @@ def mock_ec2_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self, region=None):
+        def discover(self, regions=None):
             """Return all EC2 instances as list.
 
             Args:
-                region: Optional region filter (ignored in mock, returns all)
+                regions: Optional region filter (ignored in mock, returns all)
             """
             instances = []
             for instance_id, instance_data in EC2_INSTANCE_FIXTURES.items():
@@ -592,8 +592,8 @@ def mock_elb_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all ELBs as list."""
+        def discover(self, regions=None):
+            """Return all ELBs as list (regions filter accepted, ignored)."""
             elbs = []
             for elb_arn, elb_data in ELB_FIXTURES.items():
                 elbs.append(
@@ -675,8 +675,8 @@ def mock_vpn_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all VPN connections as list."""
+        def discover(self, regions=None):
+            """Return all VPN connections as list (regions filter accepted, ignored)."""
             vpns = []
             for vpn_id, vpn_data in VPN_CONNECTION_FIXTURES.items():
                 vpns.append(
@@ -708,8 +708,8 @@ def mock_firewall_client():
         def __init__(self, profile=None):
             self.profile = profile
 
-        def discover(self):
-            """Return all firewalls as list."""
+        def discover(self, regions=None):
+            """Return all firewalls as list (regions filter accepted, ignored)."""
             firewalls = []
             for fw_name, fw_data in NETWORK_FIREWALL_FIXTURES.items():
                 firewalls.append(
